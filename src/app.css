@@ -1,0 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Averia+Libre&family=Averia+Sans+Libre&family=Averia+Serif+Libre&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Solway:wght@400&display=swap');
+
+/* reset CSS */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+/* font size */
+html {
+	font-size: 16px;
+}
+
+/* variables */
+:root {
+	--body-bg: #151515;
+	--accent: hsl(140, 84%, 80%);
+	--accent-dim: hsl(178, 59%, 40%);
+	--outline: #696969;
+	--bg: #1e2024;
+	--font: #eeeeee;
+	--font-dim: #393e46;
+	--font-color: #7c7c7c;
+	--hover-color: #f0f0f0;
+	--white: hsl(0, 0%, 100%);
+	--font-ui: 'Averia Libre', sans-serif;
+	--font-read: 'Hanken Grotesk', serif;
+}
+
+/* Light mode theme toggle variables and styles */
+[data-theme='light'] {
+	--body-bg: hsl(15, 15%, 95%);
+	--accent: hsl(205, 100%, 40%);
+	--accent-dim: hsl(205, 35%, 60%);
+	--outline: hsl(0, 0%, 50%);
+	--bg: #ffffff;
+	--font: #374864;
+	--font-dim: hsl(0, 0%, 65%);
+	--font-color: hsl(0, 0%, 65%);
+	--hover-color: black;
+	--white: hsl(220, 5%, 20%);
+	--font-ui: 'Averia Serif Libre', serif;
+	--font-read: 'Solway', serif;
+}
+#theme-toggler {
+	cursor: pointer;
+	position: absolute;
+	right: 1rem;
+	top: 1rem;
+	font-size: 1.5rem;
+	background: none;
+	border: none;
+	color: var(--font-color);
+	transition: color 0.3s;
+}
+#theme-toggler:hover {
+	color: var(--accent);
+}
+#dark {
+	display: none;
+}
+[data-theme='light'] #light {
+	display: none;
+}
+[data-theme='light'] #dark {
+	display: block;
+}
+
+body {
+	display: flex;
+	height: 100vh;
+	flex-direction: column;
+	align-items: center;
+	background: var(--body-bg) center center/cover no-repeat;
+}
+
+p {
+	font-size: 1rem;
+	color: var(--font);
+	font-family: var(--font-ui);
+}
+
+footer {
+	width: 100%;
+	user-select: none;
+	text-align: center;
+	padding: 1rem;
+}
+footer p {
+	font-family: var(--font-ui);
+	color: var(--font-dim);
+	transition: color 0.3s;
+}
+footer p:hover {
+	color: var(--accent);
+}
+
+.fira-code-normal {
+	font-family: 'Fira Code', monospace;
+	font-optical-sizing: auto;
+	font-weight: 400;
+	font-style: normal;
+}
