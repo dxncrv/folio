@@ -87,8 +87,12 @@ p {
 }
 
 footer {
+	display: flex;
 	position: absolute;
+	justify-content: center;
+	align-items: center;
 	bottom: 0;
+	gap: 3rem;
 	width: 100%;
 	user-select: none;
 	text-align: center;
@@ -96,10 +100,21 @@ footer {
 }
 footer p {
 	font-family: var(--font-ui);
-	color: var(--font-dim);
+	color: var(--font);
 	transition: color 0.3s;
 }
 footer p:hover {
+	color: var(--accent);
+}
+
+footer a {
+	display: flex;
+	font-family: var(--font-ui);
+	color: var(--font);
+	text-decoration: none;
+	transition: color 0.3s;
+}
+footer a:hover {
 	color: var(--accent);
 }
 
