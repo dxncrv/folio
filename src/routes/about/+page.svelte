@@ -6,19 +6,30 @@
 </svelte:head>
 
 <main>
-	<div class="container">
+	<div class="label">
 		<h1>Aashay Mehta</h1>
-		<p>UX Engineer</p>
+		<p>
+			Interface and Experience <b>Designer</b>;<br /> Web, App and Games <b>Developer</b>;<br />&
+			<b>Human</b>.
+		</p>
 	</div>
 	<div class="letter">
+		<h2>Hi you,</h2>
 		<p>
-			From 2015 to 2020, I spent 4 years freelancing for architects, sculptors and small business
-			owners, building on my skills like visual design, spatial design, problem solving, and design
-			thinking.<br /><br />
-
-			In 2021, I graduated with a Master of Digital Media from the Centre for Digital Media in
-			Vancouver, and since then, I have been focused on building software products that are
-			user-centric and backed by the science of human behavior.
+			In the past, I spent the years 2015 to 2020 freelancing for architects, artists and small
+			business owners. This is where I built on skills like visual design, spatial design, problem
+			solving, and design thinking.
+		</p>
+		<p>
+			Since 2021, after becoming a Master in Digital Media, I have been focused on building software
+			products that are user-centric, backed by cognitive and behavioral science, engaging and
+			impactful to use.
+		</p>
+		<p>
+			These days, I aspire to put these skills and subject expertise to use in building digital
+			products that flux into a real and positive influence on the world. <a href="/projects"
+				>See my projects?</a
+			>
 		</p>
 	</div>
 </main>
@@ -27,25 +38,43 @@
 	main {
 		display: flex;
 		margin: auto;
+		justify-content: center;
+		align-items: center;
+		gap: 5rem;
 	}
 	h1 {
 		font-family: var(--font-ui);
 		color: var(--accent);
 		font-size: 2.5rem;
 	}
+	.label {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
 	.letter {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding: 4rem;
 		width: 30%;
 		line-height: 2;
 		background: var(--bg);
 		border-radius: 1rem;
 	}
+	.letter > h2 {
+		font-family: var(--font-ui);
+		font-size: 1.5rem;
+		color: var(--accent);
+	}
 	.letter > p {
 		font-size: medium;
 	}
-
+	a {
+		color: var(--accent);
+	}
 	p {
 		font-family: var(--font-read);
 		font-size: 1.2rem;
-		padding: 1rem;
 	}
 </style>

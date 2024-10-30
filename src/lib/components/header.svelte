@@ -46,11 +46,11 @@
 			</button>
 		{/each}
 	</menu>
-	<form method="post" use:enhance={submitUpdateTheme}>
-		<button id="theme-toggler" formaction="/?/setTheme&theme=light">
+	<form id="theme-toggler" method="post" use:enhance={submitUpdateTheme}>
+		<button formaction="/?/setTheme&theme=light">
 			<Light id="light" />
 		</button>
-		<button id="theme-toggler" formaction="/?/setTheme&theme=dark">
+		<button formaction="/?/setTheme&theme=dark">
 			<Dark id="dark" />
 		</button>
 	</form>
