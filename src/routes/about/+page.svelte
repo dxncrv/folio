@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Stack from '$lib/components/stack.svelte';
 </script>
 
 <svelte:head>
@@ -7,11 +8,13 @@
 
 <main>
 	<div class="label">
+		<img src="./assets/aashay.png" alt="Aashay Mehta" />
 		<h1>Aashay Mehta</h1>
 		<p>
 			Interface and Experience <b>Designer</b>;<br /> Web, App and Games <b>Developer</b>;<br />&
 			<b>Human</b>.
 		</p>
+		<Stack />
 	</div>
 	<div class="letter">
 		<h2>Hi you,</h2>
@@ -35,11 +38,14 @@
 </main>
 
 <style>
+	img {
+		width: 15rem;
+		border-radius: 2rem;
+	}
 	main {
 		display: flex;
-		margin: auto;
+		margin: 2rem auto;
 		justify-content: center;
-		align-items: center;
 		gap: 5rem;
 	}
 	h1 {
@@ -48,8 +54,11 @@
 		font-size: 2.5rem;
 	}
 	.label {
+		margin-top: 2rem;
 		display: flex;
 		flex-direction: column;
+		align-items: center;
+		text-align: center;
 		gap: 1rem;
 	}
 	.letter {
