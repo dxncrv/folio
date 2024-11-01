@@ -5,16 +5,16 @@
 	<title>Home</title>
 </svelte:head>
 
-<main></main>
+<main><img src="./assets/hero-placeholder.png" alt="Hero" /></main>
 
 <style>
+	img {
+		width: 70%;
+	}
 	main {
-		position: fixed;
-		top: 5rem;
-		left: 5rem;
-		bottom: 5rem;
-		right: 5rem;
-		background: url('/assets/hero-placeholder.png') no-repeat center center;
-		background-size: contain;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		height: 100vh;
 	}
 </style>

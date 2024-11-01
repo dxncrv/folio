@@ -90,6 +90,7 @@
 
 <style>
 	main {
+		margin: 2rem auto;
 		display: flex;
 		width: 95%;
 		flex-direction: column;

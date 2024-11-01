@@ -42,9 +42,10 @@
 	main {
 		gap: 2rem;
 		display: flex;
-		margin: auto;
+		margin: 2rem auto;
 		flex-direction: column;
-		border: 1px solid var(--font-dim);
+		border: 1px solid var(--outline);
+		background: var(--bg);
 		border-radius: 1rem;
 		padding: 2rem 0;
 	}
@@ -71,8 +72,8 @@
 		font-family: var(--font-read);
 		color: var(--font);
 		padding: 1rem;
-		background-color: var(--bg);
-		border: 1px solid var(--font-dim);
+		background-color: var(--body-bg);
+		border: 1px solid var(--outline);
 		border-radius: 1.75rem;
 		resize: vertical;
 	}
@@ -87,8 +88,8 @@
 		flex-grow: 1;
 		font-family: var(--font-read);
 		color: var(--font);
-		background-color: var(--bg);
-		border: 1px solid var(--font-dim);
+		background-color: var(--body-bg);
+		border: 1px solid var(--outline);
 		border-radius: 0.5rem;
 		resize: vertical;
 	}
