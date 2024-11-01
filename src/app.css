@@ -89,10 +89,8 @@ p {
 
 footer {
 	display: flex;
-	position: absolute;
 	justify-content: center;
 	align-items: center;
-	bottom: 0;
 	gap: 3rem;
 	width: 100%;
 	user-select: none;

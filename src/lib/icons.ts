@@ -13,6 +13,12 @@ import Python from '~icons/vscode-icons/file-type-python';
 import React from '~icons/vscode-icons/file-type-reactjs';
 import Tailwind from '~icons/vscode-icons/file-type-tailwind';
 
+//socials
+import Email from '~icons/line-md/email';
+import GitHub from '~icons/line-md/github-twotone';
+import LinkedIn from '~icons/line-md/linkedin';
+import Instagram from '~icons/line-md/instagram';
+
 export {
 	Link,
 	Git,
@@ -27,5 +33,11 @@ export {
 	Csharp,
 	Python,
 	React,
-	Tailwind
+	Tailwind,
+
+	//socials
+	Email,
+	GitHub,
+	LinkedIn,
+	Instagram
 };

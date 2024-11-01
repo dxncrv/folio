@@ -80,6 +80,10 @@
 		font-size: medium;
 	}
 	a {
+		color: var(--accent-dim);
+		transition: color 0.5s;
+	}
+	a:hover {
 		color: var(--accent);
 	}
 	p {

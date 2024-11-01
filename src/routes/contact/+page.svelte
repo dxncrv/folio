@@ -1,17 +1,128 @@
+<script lang="ts">
+	import { Email, GitHub, LinkedIn, Instagram } from '$lib/icons';
+</script>
+
 <svelte:head>
 	<title>Contact</title>
 </svelte:head>
 
-<main></main>
+<main>
+	<h1>Say hi</h1>
+	<form>
+		<textarea placeholder=""></textarea>
+		<div>
+			<label for="email">Address</label>
+			<input type="email" placeholder="Email" />
+			<button type="submit"> Submit </button>
+			<p>Status: <span>Submit not hooked up yet</span></p>
+		</div>
+	</form>
+	<h1>Connect with me</h1>
+	<div class="socials">
+		<a href="mailto:doncorve@gmail.com" target="_blank" rel="noopener noreferrer">
+			<Email />
+		</a>
+		<a href="https://github.com/dxncrv" target="_blank" rel="noopener noreferrer">
+			<GitHub />
+		</a>
+		<a href="https://www.linkedin.com/in/dxncrv/" target="_blank" rel="noopener noreferrer">
+			<LinkedIn />
+		</a>
+
+		<a href="https://www.instagram.com/dxncrv/" target="_blank" rel="noopener noreferrer">
+			<Instagram />
+		</a>
+	</div>
+</main>
 
 <style>
+	span {
+		color: salmon;
+	}
 	main {
-		position: absolute;
-		top: 5rem;
-		left: 0;
-		bottom: 5rem;
-		right: 0;
-		background: url('/assets/contact-placeholder.png') no-repeat center center;
-		background-size: contain;
+		gap: 2rem;
+		display: flex;
+		margin: auto;
+		flex-direction: column;
+		border: 1px solid var(--font-dim);
+		border-radius: 1rem;
+		padding: 2rem 0;
+	}
+	main > * {
+		margin: 0 2rem;
+	}
+	h1 {
+		font-family: var(--font-ui);
+		color: var(--accent);
+		font-size: 1.5rem;
+	}
+	form {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+	form *:focus {
+		outline: var(--accent) 1px solid;
+	}
+	form textarea {
+		min-height: 10rem;
+		max-height: 20rem;
+
+		font-family: var(--font-read);
+		color: var(--font);
+		padding: 1rem;
+		background-color: var(--bg);
+		border: 1px solid var(--font-dim);
+		border-radius: 1.75rem;
+		resize: vertical;
+	}
+	form div {
+		display: flex;
+		gap: 1rem;
+	}
+	form div * {
+		padding: 0.5rem;
+	}
+	form input {
+		flex-grow: 1;
+		font-family: var(--font-read);
+		color: var(--font);
+		background-color: var(--bg);
+		border: 1px solid var(--font-dim);
+		border-radius: 0.5rem;
+		resize: vertical;
+	}
+	form label {
+		font-family: var(--font-ui);
+		color: var(--font);
+	}
+	form button {
+		min-width: 6rem;
+		font-family: var(--font-ui);
+		font-size: 1rem;
+		color: var(--accent-dim);
+		background-color: var(--bg);
+		border: 1px solid var(--accent-dim);
+		border-radius: 0.5rem;
+		cursor: pointer;
+		transition: color 0.2s;
+	}
+	form button:hover {
+		color: var(--accent);
+		border: 1px solid var(--accent);
+	}
+
+	div.socials {
+		display: flex;
+		color: var(--accent-dim);
+		gap: 1.5rem;
+	}
+	div.socials a {
+		font-size: 1.5rem;
+		color: var(--accent-dim);
+		transition: color 0.2s;
+	}
+	div.socials a:hover {
+		color: var(--accent);
 	}
 </style>
