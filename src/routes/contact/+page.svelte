@@ -1,5 +1,30 @@
 <script lang="ts">
 	import { Email, GitHub, LinkedIn, Instagram } from '$lib/icons';
+	let status = 'Ready';
+
+	const handleSubmit = async (event: Event) => {
+		status = 'Sending...';
+		event.preventDefault();
+		const form = event.target as HTMLFormElement;
+		const data = new FormData(form);
+		const json = JSON.stringify(Object.fromEntries(data.entries()));
+
+		const response = await fetch('https://api.web3forms.com/submit', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Accept: 'application/json'
+			},
+			body: json
+		});
+
+		const result = await response.json();
+		if (result.success) {
+			status = 'Message sent! 🎉';
+		} else {
+			status = 'Failed';
+		}
+	};
 </script>
 
 <svelte:head>
@@ -8,13 +33,14 @@
 
 <main>
 	<h1>Say hi</h1>
-	<form>
+	<form onsubmit={handleSubmit}>
+		<input type="hidden" name="access_key" value="489cc2ff-5a51-4737-a5c9-8491e6cf8038" />
 		<textarea placeholder=""></textarea>
 		<div>
 			<label for="email">Address</label>
 			<input type="email" placeholder="Email" />
 			<button type="submit"> Submit </button>
-			<p>Status: <span>Submit not hooked up yet</span></p>
+			<p>Status: <span class:fail={status === 'Failed'}>{status}</span></p>
 		</div>
 	</form>
 	<h1>Connect with me</h1>
@@ -37,6 +63,9 @@
 
 <style>
 	span {
+		color: var(--accent);
+	}
+	span.fail {
 		color: salmon;
 	}
 	main {
