@@ -1,51 +1,22 @@
 <script lang="ts">
 	import Statusbar from '$lib/components/statusbar.svelte';
-	import { Facets } from '$lib/store.svelte';
-	import data from '$lib/projects.json';
+	import { Facets, Projects } from '$lib/store.svelte';
 	import { Award, Git, YT, Link } from '$lib/icons';
-
-	let range = $state({
-		min: 0,
-		max: 3,
-		prev: () => {
-			range.min -= 3;
-			range.max -= 3;
-		},
-		next: () => {
-			range.min += 3;
-			range.max += 3;
-		},
-		reset: () => {
-			range.min = 0;
-			range.max = 3;
-		}
-	});
-
-	let selectedProjects = $derived(
-		data.filter((project) => project.tags.some((tag) => Facets.selected().includes(tag)))
-	);
-	let projects = $derived(data.slice(range.min, range.max));
-
-	$effect(() => {
-		if (Facets.selected().length === 1) {
-			range.reset();
-		}
-	});
 </script>
 
 <svelte:head>
 	<title>Projects</title>
 </svelte:head>
 
-<main class:no-projects={selectedProjects.length === 0}>
-	{#if selectedProjects.length !== 0}
+<main class:no-projects={Projects.filtered.length === 0}>
+	{#if Projects.filtered.length !== 0}
 		<Statusbar />
 	{/if}
-	{#if selectedProjects.length === 0}
+	{#if Projects.filtered.length === 0}
 		<p>Z z Z</p>
 	{/if}
 	<div id="view">
-		{#each projects as { image, title, desc, tech, link, git, yt, awards, tags }}
+		{#each Projects.inView as { image, title, desc, tech, link, git, yt, awards, tags }}
 			{#if tags.some((tag) => Facets.selected().includes(tag))}
 				<div class="project">
 					<h2>
@@ -78,12 +49,16 @@
 			{/if}
 		{/each}
 	</div>
-	{#if selectedProjects.length !== 0}
+	{#if Projects.filtered.length !== 0}
 		<div class="btn-wrapper">
-			<button onclick={range.prev} disabled={range.min === 0 || selectedProjects.length === 0}
-				>Prev</button
+			<button
+				onclick={Projects.range.prev}
+				disabled={Projects.range.min === 0 || Projects.filtered.length === 0}>Prev</button
 			>
-			<button onclick={range.next} disabled={range.max >= selectedProjects.length}>Next</button>
+			<button
+				onclick={Projects.range.next}
+				disabled={Projects.range.max >= Projects.filtered.length}>Next</button
+			>
 		</div>
 	{/if}
 </main>

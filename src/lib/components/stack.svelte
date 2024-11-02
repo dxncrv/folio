@@ -4,9 +4,9 @@
 
 <main>
 	<Svelte />
+	<Typescript />
 	<React />
 	<Tailwind />
-	<Typescript />
 	<Csharp />
 	<Python />
 </main>
