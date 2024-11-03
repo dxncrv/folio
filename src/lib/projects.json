@@ -6,36 +6,60 @@
         "link": "https://main.d2peu2nd9ijpwu.amplifyapp.com/",
         "git": "https://github.com/CAPS-CPCA/CAPS-CPCA-WebApp",
         
-        "desc": "Led the UX and UI design, and developed the web application for the Society of Obstetricians and Gynaecologists of Canada (SOGC) as part of the CAPS project.",
-        "tech": ["Figma","WordPress","SvelteKit", "Node.js", "TypeScript", "HTML & CSS"]
+        "desc": [
+            {"design": "Led the UI and UX design of the website, created sitemap wireframes, and functional prototypes."},
+            {"development": "Advocated for and developed a refactored build using modern tech for improved performance and maintainability."}
+        ],
+        "tech": [
+            {"design": ["Figma", "Miro"]},
+            {"development": ["WordPress", "SvelteKit", "TypeScript", "HTML & CSS"]}
+        ]
     },
     {
-        "image": "./assets/2.png",
+        "tags": ["Design", "Development"],
         "title": "ALIVE Investigator",
-        "desc": "An open world game with feedback variation, developed as part of a research project to observe user inquiry while solving an ecological issue in a virtual environment.",
-        "tech": ["C#", "Unity", "Blender", "Xcode"],
-        "git": "https://github.com/ALIVE-UBC/ALIVE-Investigator-Demos",
+        "image": "./assets/2.png",
         "link": "",
-        "tags": ["Design", "Development"]
+        "git": "https://github.com/ALIVE-UBC/ALIVE-Investigator-Demos",
+
+        "desc": [
+            {"design": "Designed the characters, revamped the environment, and polished UI elements to enhance user experience."},
+            {"development": "Developed a Unity game with a Qualtrics survey integration to collect user feedback."}
+        ],
+        "tech": [
+            {"design": ["Blender", "Photoshop"]},
+            {"development": ["C#", "Unity", "Xcode", "Qualtrics"]}
+        ]
     },
     {
-        "image": "./assets/3.png",
+        "tags": ["Design", "Development"],
         "title": "FlashoVR",
-        "desc": "A fire investigation simulator that offers students a 3D serious game format to enhance their training experience and practice investigation skills.",
-        "tech": ["C#", "Unity", "Blender", "Adobe Suite"],
-        "git": "",
+        "image": "./assets/3.png",
         "link": "https://firesim.jibc.ca",
-        "yt": "https://www.youtube.com/watch?v=B0u3gJtFoR0",
-        "awards": ["https://www.horizoninteractiveawards.com/web-site-awards/2021/training","https://dfp.ubc.ca/news-and-events/news/dfp-create-design-showcase-2021-success"],
-        "tags": ["Design", "Development"]
+        "git": "",
+
+        "tech": [
+            {"design": ["Blender", "Photoshop"]},
+            {"development": ["C#", "Unity", "Git"]}
+        ],
+        "desc": [
+            {"design": "Designed 3D assets and UI elements, created a technical pipeline for the team, and provided feedback on assets."},
+            {"development": "Managed the git repository, resolved merge conflicts, and implemented new features."}
+        ]
     },
     {
-        "image": "./assets/4.png",
+        "tags": ["Design"],
         "title": "The Immitation Game",
-        "desc": "A Vancouver Artgallery exhibition, for which I coordinated, produced, and sourced digital assets, helped author 2 optical installations, and styled a tooltip for publication.",
-        "tech": ["Unity", "CSS", "aws Polly", "Adobe Suite"],
-        "git": "",
+        "image": "./assets/4.png",
         "link": "https://imitationgameexhibition.ca",
-        "tags": ["Design"]
+        "git": "",
+        
+        "desc": [
+            {"design": "Coordinated, produced, and sourced digital assets, helped author 2 optical installations, and styled a tooltip for publication."}
+        ],
+        "tech": [
+            {"design": ["Premiere Pro", "Photoshop", "Blender", "Unity"]},
+            {"development": ["aws Polly", "CSS"]}
+        ]
     }
 ]

@@ -39,10 +39,28 @@
 						</div>
 					</h2>
 					<img src={image} alt={title} />
-					<p>{desc}</p>
+					<p>
+						{#each desc as { design, development }}
+							{#if Facets.selected().includes('Design') && design}
+								{design}
+							{/if}
+							{#if Facets.selected().includes('Development') && development}
+								{development}
+							{/if}
+						{/each}
+					</p>
 					<ul>
-						{#each tech as t}
-							<li>{t}</li>
+						{#each tech as { design, development }}
+							{#if Facets.selected().includes('Design') && design}
+								{#each design as d}
+									<li>{d}</li>
+								{/each}
+							{/if}
+							{#if Facets.selected().includes('Development') && development}
+								{#each development as d}
+									<li>{d}</li>
+								{/each}
+							{/if}
 						{/each}
 					</ul>
 				</div>
