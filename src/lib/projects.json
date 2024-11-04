@@ -37,6 +37,8 @@
         "image": "./assets/3.png",
         "link": "https://firesim.jibc.ca",
         "git": "",
+        "yt": "https://www.youtube.com/watch?v=B0u3gJtFoR0",
+        "awards": ["https://www.horizoninteractiveawards.com/web-site-awards/2021/training","https://dfp.ubc.ca/news-and-events/news/dfp-create-design-showcase-2021-success"],
 
         "tech": [
             {"design": ["Blender", "Photoshop"]},

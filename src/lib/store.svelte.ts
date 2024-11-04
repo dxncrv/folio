@@ -24,6 +24,25 @@ export let Facets = new facetsClass();
 class projectsClass {
 	// Projects, state store for the projects, fetched from the JSON file.
 	all = $state(data);
+	// Mutated, derived state returns the projects with the mutated 'desc' and 'tech' properties.
+	mutated = $derived(
+		// for each project, for each tag, if tag is present in selected facets; let desc = desc.design or desc.development and tech = tech.design or tech.development
+		this.all.map((project) => ({
+			...project,
+			desc: project.tags.reduce((acc, tag) => {
+				if (Facets.selected().includes(tag)) {
+					acc = project.desc[tag];
+				}
+				return acc;
+			}, ''),
+			tech: project.tags.reduce((acc, tag) => {
+				if (Facets.selected().includes(tag)) {
+					acc = project.tech[tag];
+				}
+				return acc;
+			}, '')
+		}))
+	);
 	// Range, state store for pagination.
 	range = $state({
 		min: 0,

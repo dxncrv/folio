@@ -2,6 +2,8 @@
 	import Statusbar from '$lib/components/statusbar.svelte';
 	import { Facets, Projects } from '$lib/store.svelte';
 	import { Award, Git, YT, Link } from '$lib/icons';
+
+	$inspect(Projects.mutated[0].desc);
 </script>
 
 <svelte:head>
