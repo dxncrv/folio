@@ -171,4 +171,15 @@
 		line-height: 1.5;
 		color: var(--white);
 	}
+
+	@media (max-width: 768px) {
+		main {
+			margin: 1rem;
+			width: 100%;
+		}
+		#view {
+			grid-template-columns: 1fr;
+			padding: 1rem;
+		}
+	}
 </style>

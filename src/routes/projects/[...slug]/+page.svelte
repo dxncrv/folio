@@ -4,7 +4,6 @@
 	import { videos } from '$lib/videos';
 
 	let project = $derived(Projects.mutated[1]);
-	$inspect(project);
 </script>
 
 <svelte:head>
@@ -137,6 +136,17 @@
 	}
 	.article img {
 		border-radius: 1rem;
-		margin: 1rem;
+	}
+
+	@media (max-width: 768px) {
+		.article img {
+			width: 100%;
+		}
+		main {
+			margin: 1rem;
+		}
+		h1 {
+			font-size: 1.5rem;
+		}
 	}
 </style>

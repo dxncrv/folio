@@ -47,17 +47,21 @@ html {
 	--font-read: 'Solway', serif;
 }
 #theme-toggler {
+	display: flex;
+	justify-content: center;
+	align-items: center;
 	user-select: none;
-	position: absolute;
-	right: 1rem;
-	top: 1rem;
+	margin: 0 1rem;
 }
 #theme-toggler button {
+	display: flex;
 	cursor: pointer;
 	font-size: 1.5rem;
 	background: none;
 	border: none;
 	color: var(--font-color);
+	justify-content: center;
+	align-items: center;
 	transition: color 0.3s;
 }
 #theme-toggler button:hover {
@@ -89,6 +93,7 @@ p {
 
 footer {
 	display: flex;
+	flex-wrap: wrap;
 	justify-content: center;
 	align-items: center;
 	gap: 3rem;
@@ -105,7 +110,6 @@ footer p {
 footer p:hover {
 	color: var(--accent);
 }
-
 footer a {
 	display: flex;
 	font-family: var(--font-ui);
@@ -115,6 +119,18 @@ footer a {
 }
 footer a:hover {
 	color: var(--accent);
+}
+
+@media (max-width: 768px) {
+	footer {
+		gap: 0.5rem;
+	}
+	#theme-toggler {
+		margin: 0;
+		position: fixed;
+		top: 1rem;
+		right: 1rem;
+	}
 }
 
 .fira-code-normal {

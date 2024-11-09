@@ -38,27 +38,30 @@
 				{name}
 			</button>
 		{/each}
+		<form id="theme-toggler" method="post" use:enhance={updateTheme}>
+			<button formaction="/?/setTheme&theme=light">
+				<Light id="light" />
+			</button>
+			<button formaction="/?/setTheme&theme=dark">
+				<Dark id="dark" />
+			</button>
+		</form>
 	</menu>
-	<form id="theme-toggler" method="post" use:enhance={updateTheme}>
-		<button formaction="/?/setTheme&theme=light">
-			<Light id="light" />
-		</button>
-		<button formaction="/?/setTheme&theme=dark">
-			<Dark id="dark" />
-		</button>
-	</form>
 </nav>
 
 <style>
 	nav {
-		width: 100%;
 		display: flex;
+		flex-wrap: wrap-reverse;
+		width: 100%;
 		justify-content: space-around;
-		padding: 1rem;
+		margin: 1rem;
 		z-index: 1000;
 	}
-	menu {
+	nav > * {
 		margin: 0.25rem;
+	}
+	menu {
 		position: relative;
 		display: flex;
 		width: fit-content;
@@ -76,7 +79,7 @@
 	}
 	menu > button {
 		user-select: none;
-		color: var(--font-dim);
+		color: var(--font-color);
 		font-size: 1rem;
 		font-family: var(--font-ui);
 		padding: 0.35rem 1rem;
@@ -130,5 +133,11 @@
 		transition:
 			translate 0.3s,
 			opacity 0.3s ease-in-out;
+	}
+
+	@media (max-width: 768px) {
+		nav {
+			gap: 0.25rem;
+		}
 	}
 </style>

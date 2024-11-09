@@ -16,7 +16,7 @@
 		</p>
 		<Stack />
 	</div>
-	<div class="interface letter">
+	<div class="letter">
 		<h2>Hi you,</h2>
 		<p>
 			In the past, I spent the years 2015 to 2020 freelancing for architects, artists and small
@@ -89,5 +89,18 @@
 	p {
 		font-family: var(--font-read);
 		font-size: 1.2rem;
+	}
+
+	@media (max-width: 768px) {
+		main {
+			flex-direction: column;
+			gap: 2rem;
+		}
+		.label {
+			margin-top: 0;
+		}
+		.letter {
+			width: 100%;
+		}
 	}
 </style>

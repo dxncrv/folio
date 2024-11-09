@@ -39,8 +39,8 @@
 		<div>
 			<label for="email">Address</label>
 			<input type="email" placeholder="Email" />
-			<button type="submit"> Submit </button>
 			<p>Status: <span class:fail={status === 'Failed'}>{status}</span></p>
+			<button type="submit"> Submit </button>
 		</div>
 	</form>
 	<h1>Connect with me</h1>
@@ -108,6 +108,7 @@
 	}
 	form div {
 		display: flex;
+		flex-wrap: wrap;
 		gap: 1rem;
 	}
 	form div * {
@@ -154,5 +155,11 @@
 	}
 	div.socials a:hover {
 		color: var(--accent);
+	}
+
+	@media (max-width: 768px) {
+		main {
+			margin: 2rem 1rem;
+		}
 	}
 </style>
