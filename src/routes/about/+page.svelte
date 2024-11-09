@@ -16,7 +16,7 @@
 		</p>
 		<Stack />
 	</div>
-	<div class="letter">
+	<div class="interface letter">
 		<h2>Hi you,</h2>
 		<p>
 			In the past, I spent the years 2015 to 2020 freelancing for architects, artists and small

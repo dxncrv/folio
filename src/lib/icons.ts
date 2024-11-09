@@ -4,6 +4,7 @@ import YT from '~icons/line-md/youtube';
 import Light from '~icons/line-md/lightbulb-twotone';
 import Dark from '~icons/line-md/lightbulb-off-twotone';
 import Award from '~icons/tabler/award-filled';
+import CaseStudy from '~icons/line-md/arrows-diagonal';
 
 //stack
 import Svelte from '~icons/vscode-icons/file-type-svelte';
@@ -26,6 +27,7 @@ export {
 	Award,
 	Light,
 	Dark,
+	CaseStudy,
 
 	//stack
 	Svelte,

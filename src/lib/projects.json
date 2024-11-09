@@ -1,7 +1,8 @@
 [
     {
         "tags": ["Design", "Development"],
-        "title": "CAPS WebApp",
+        "slug": "caps-webapp",
+        "title": "Canadian Abortion Providers Support",
         "image": "./assets/1.png",
         "link": "https://main.d2peu2nd9ijpwu.amplifyapp.com/",
         "git": "https://github.com/CAPS-CPCA/CAPS-CPCA-WebApp",
@@ -17,6 +18,7 @@
     },
     {
         "tags": ["Design", "Development"],
+        "slug": "alive-investigator",
         "title": "ALIVE Investigator",
         "image": "./assets/2.png",
         "link": "",
@@ -29,10 +31,15 @@
         "tech": {
             "design": ["Blender", "Photoshop"],
             "development": ["Unity", "C#", "iOS", "Qualtrics"]
+        },
+
+        "content": {
+            
         }
     },
     {
         "tags": ["Design", "Development"],
+        "slug": "flashovr",
         "title": "FlashoVR",
         "image": "./assets/3.png",
         "link": "https://firesim.jibc.ca",
@@ -51,7 +58,8 @@
     },
     {
         "tags": ["Design"],
-        "title": "The Immitation Game",
+        "slug": "the-imitation-game",
+        "title": "The Imitation Game",
         "image": "./assets/4.png",
         "link": "https://imitationgameexhibition.ca",
         "git": "",

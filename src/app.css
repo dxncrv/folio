@@ -123,3 +123,25 @@ footer a:hover {
 	font-weight: 400;
 	font-style: normal;
 }
+
+/* UI elements */
+button.primary {
+	font-family: var(--font-ui);
+	font-size: 1rem;
+	background: var(--bg);
+	color: var(--font);
+	border: 1px solid var(--outline);
+	border-radius: 0.5rem;
+	padding: 0.5rem 1rem;
+	cursor: pointer;
+}
+button.primary:hover {
+	color: var(--accent);
+	border: 1px solid var(--accent);
+}
+button.primary:disabled {
+	border: 1px solid var(--font-dim);
+	background: var(--bg);
+	color: var(--font-dim);
+	cursor: not-allowed;
+}

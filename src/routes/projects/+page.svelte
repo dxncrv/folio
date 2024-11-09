@@ -1,7 +1,14 @@
 <script lang="ts">
 	import Statusbar from '$lib/components/statusbar.svelte';
 	import { Facets, Projects } from '$lib/store.svelte';
-	import { Award, Git, YT, Link } from '$lib/icons';
+	import { Award, Git, YT, Link, CaseStudy } from '$lib/icons';
+
+	function slugify(str: string) {
+		return str
+			.toLowerCase()
+			.replace(/\s+/g, '-')
+			.replace(/[^a-z0-9-]/g, '');
+	}
 </script>
 
 <svelte:head>
@@ -36,6 +43,9 @@
 							{#if link}
 								<a href={link} target="_blank" rel="noopener noreferrer"><Link /></a>
 							{/if}
+							{#if title === 'ALIVE Investigator'}
+								<a style="color: var(--font)" href={'projects/' + slugify(title)}><CaseStudy /></a>
+							{/if}
 						</div>
 					</h2>
 					<img src={image} alt={title} />
@@ -54,10 +64,12 @@
 	{#if Projects.filtered.length !== 0}
 		<div class="btn-wrapper">
 			<button
+				class="primary"
 				onclick={Projects.range.prev}
 				disabled={Projects.range.min === 0 || Projects.filtered.length === 0}>Prev</button
 			>
 			<button
+				class="primary"
 				onclick={Projects.range.next}
 				disabled={Projects.range.max >= Projects.filtered.length}>Next</button
 			>
@@ -90,6 +102,8 @@
 	.btn-wrapper {
 		display: flex;
 		justify-content: center;
+		margin: 1rem;
+		gap: 1rem;
 	}
 
 	h2 {
@@ -143,6 +157,7 @@
 		border-radius: 2rem;
 	}
 	a {
+		display: flex;
 		color: var(--accent-dim);
 		text-decoration: none;
 		transition: color 0.3s;
@@ -150,32 +165,10 @@
 	a:hover {
 		color: var(--accent);
 	}
-
 	p {
 		font-family: var(--font-read);
 		font-size: 1rem;
 		line-height: 1.5;
 		color: var(--white);
-	}
-	button {
-		font-family: var(--font-ui);
-		font-size: 1rem;
-		background: var(--bg);
-		color: var(--font);
-		border: 1px solid var(--outline);
-		border-radius: 0.5rem;
-		padding: 0.5rem 1rem;
-		margin: 1rem;
-		cursor: pointer;
-	}
-	button:hover {
-		color: var(--accent);
-		border: 1px solid var(--accent);
-	}
-	button:disabled {
-		border: 1px solid var(--font-dim);
-		background: var(--bg);
-		color: var(--font-dim);
-		cursor: not-allowed;
 	}
 </style>

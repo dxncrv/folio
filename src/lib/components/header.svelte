@@ -1,20 +1,13 @@
 <script lang="ts">
+	// Importing the icons and utility functions
 	import { Light, Dark } from '$lib/icons';
-	import { page } from '$app/stores';
-	import { initDot, moveDot } from '$lib/utils';
+	import { initDot, moveDot, updateTheme } from '$lib/utils';
 	import { Facets } from '$lib/store.svelte';
-	import { onMount } from 'svelte';
-	import type { SubmitFunction } from '@sveltejs/kit';
+	import { page } from '$app/stores';
 	import { enhance } from '$app/forms';
+	import { onMount } from 'svelte';
 
-	const submitUpdateTheme: SubmitFunction = ({ action }) => {
-		const theme = action.searchParams.get('theme');
-
-		if (theme) {
-			document.documentElement.setAttribute('data-theme', theme);
-		}
-	};
-
+	// Initialising the navigation links
 	let nav = [
 		{ name: 'Home', href: '/' },
 		{ name: 'About', href: '/about' },
@@ -46,7 +39,7 @@
 			</button>
 		{/each}
 	</menu>
-	<form id="theme-toggler" method="post" use:enhance={submitUpdateTheme}>
+	<form id="theme-toggler" method="post" use:enhance={updateTheme}>
 		<button formaction="/?/setTheme&theme=light">
 			<Light id="light" />
 		</button>
@@ -65,7 +58,7 @@
 		z-index: 1000;
 	}
 	menu {
-		padding: 0.25rem;
+		margin: 0.25rem;
 		position: relative;
 		display: flex;
 		width: fit-content;
