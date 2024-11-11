@@ -19,7 +19,7 @@ html {
 :root {
 	--body-bg: #151515;
 	--accent: hsl(140, 84%, 80%);
-	--accent-dim: hsl(178, 59%, 40%);
+	--accent-dim: hsl(180, 59%, 40%);
 	--outline: #696969;
 	--bg: #1e2024;
 	--font: #eeeeee;
@@ -107,13 +107,11 @@ footer p {
 	color: var(--font);
 	transition: color 0.3s;
 }
-footer p:hover {
-	color: var(--accent);
-}
+
 footer a {
 	display: flex;
 	font-family: var(--font-ui);
-	color: var(--font);
+	color: var(--accent-dim);
 	text-decoration: none;
 	transition: color 0.3s;
 }
@@ -144,7 +142,7 @@ footer a:hover {
 button.primary {
 	font-family: var(--font-ui);
 	font-size: 1rem;
-	background: var(--bg);
+	background: linear-gradient(25deg, var(--body-bg), var(--bg));
 	color: var(--font);
 	border: 1px solid var(--outline);
 	border-radius: 0.5rem;

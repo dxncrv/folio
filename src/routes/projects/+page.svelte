@@ -44,7 +44,11 @@
 								<a href={link} target="_blank" rel="noopener noreferrer"><Link /></a>
 							{/if}
 							{#if title === 'ALIVE Investigator'}
-								<a style="color: var(--font)" href={'projects/' + slugify(title)}><CaseStudy /></a>
+								<a
+									data-sveltekit-preload-data
+									style="color: var(--font)"
+									href={'projects/' + slugify(title)}><CaseStudy /></a
+								>
 							{/if}
 						</div>
 					</h2>
