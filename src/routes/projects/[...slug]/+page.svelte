@@ -107,11 +107,9 @@
 		font-size: 2rem;
 	}
 	p {
-		font-family: var(--font-read);
-		font-size: 1.15rem;
-		color: var(--font);
+		font-size: calc(var(--font-size) * 1.15);
 		padding: 1rem;
-		line-height: 1.75;
+		line-height: calc(var(--line-height) * 2);
 	}
 	.article {
 		display: flex;
@@ -121,7 +119,7 @@
 		border-top: 1px solid var(--font-dim);
 		font-family: var(--font-ui);
 		color: var(--accent);
-		font-size: 1.5rem;
+		font-size: calc(var(--font-size) * 1.5);
 		padding: 1rem;
 	}
 	.article ul {
@@ -129,9 +127,9 @@
 		margin-bottom: 1rem;
 	}
 	.article li {
-		line-height: 1.5;
+		line-height: calc(var(--line-height) * 1.5);
 		font-family: var(--font-read);
-		font-size: 1.15rem;
+		font-size: calc(var(--font-size) * 1.15);
 		color: var(--font);
 	}
 	.article img {

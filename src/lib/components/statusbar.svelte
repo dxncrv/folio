@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { Facets } from '$lib/store.svelte';
+	import { Facets, Projects } from '$lib/store.svelte';
 </script>
 
 <div class="statusbar">
 	{#if Facets.selected().length > 0}
 		<p>
-			Showing projects in:
+			Showing <span class="accent">{Projects.mutated.length}</span> projects in:
 			{#each Facets.selected() as facet, i}
 				{#if i === Facets.selected().length - 1 && i !== 0}
-					{' and ' + facet}
+					{' and '} <span class="accent">{facet}</span>
 				{:else if i === 0}
-					{facet}
+					<span class="accent">{facet}</span>
 				{:else}
-					{facet + ', '}
+					<span class="accent">{facet + ', '}</span>
 				{/if}
 			{/each}
 		</p>
@@ -20,6 +20,9 @@
 </div>
 
 <style>
+	.accent {
+		color: var(--accent);
+	}
 	.statusbar {
 		display: flex;
 		justify-content: center;

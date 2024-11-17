@@ -118,6 +118,9 @@
 		display: flex;
 		gap: 1rem;
 	}
+	.project p {
+		line-height: calc(var(--line-height) * 1.5);
+	}
 
 	img {
 		width: 100%;
@@ -139,12 +142,6 @@
 	.project:hover {
 		border: 1px solid var(--accent);
 		box-shadow: 0 0 0.5rem var(--accent-dim);
-	}
-
-	h2 {
-		font-size: 1rem;
-		font-family: var(--font-ui);
-		color: var(--white);
 	}
 	ul {
 		display: flex;
@@ -168,12 +165,6 @@
 	}
 	a:hover {
 		color: var(--accent);
-	}
-	p {
-		font-family: var(--font-read);
-		font-size: 1rem;
-		line-height: 1.5;
-		color: var(--white);
 	}
 
 	@media (max-width: 1440px) {

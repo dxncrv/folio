@@ -60,19 +60,22 @@
 		text-align: center;
 		gap: 1rem;
 	}
+	.label p {
+		font-size: calc(var(--font-size) * 1.15);
+		line-height: calc(var(--line-height) * 1.5);
+	}
 	.letter {
 		display: flex;
 		flex-direction: column;
 		gap: 2rem;
 		padding: 4rem;
 		width: 40%;
-		line-height: 2;
 		background: var(--bg);
 		border-radius: 1rem;
 		border: 1px solid var(--outline);
 	}
-	.letter > p {
-		font-size: medium;
+	.letter p {
+		line-height: calc(var(--line-height) * 2);
 	}
 	a {
 		color: var(--accent-dim);
@@ -80,10 +83,6 @@
 	}
 	a:hover {
 		color: var(--accent);
-	}
-	p {
-		font-family: var(--font-read);
-		font-size: 1.2rem;
 	}
 
 	@media (max-width: 768px) {
