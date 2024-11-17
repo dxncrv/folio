@@ -9,11 +9,11 @@
         
         "desc": {
             "design": "Led the UI and UX design of the website, created sitemap wireframes, and functional prototypes.",
-            "development": "Advocated for and developed a refactored build using modern tech for improved performance and maintainability."
+            "development": "Advocated for and developed a refactored build using modern tech for improved performance."
         },
         "tech": {
             "design": ["Figma", "Miro"],
-            "development": ["WordPress", "SvelteKit", "TypeScript", "HTML & CSS"]
+            "development": ["SvelteKit", "TypeScript", "HTML & CSS"]
         }
     },
     {
@@ -53,7 +53,7 @@
         },
         "desc": {
             "design": "Designed 3D assets and UI elements, created a technical pipeline for the team, and provided feedback on assets.",
-            "development": "Managed the git repository, resolved merge conflicts, and implemented new features."
+            "development": "Managed the git repository, resolved merge conflicts, and added new features."
         }
     },
     {

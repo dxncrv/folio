@@ -20,7 +20,7 @@ class facetsClass {
 	}
 }
 // Export the Facets class as a singleton instance.
-export let Facets = new facetsClass();
+export const Facets = new facetsClass();
 
 // Projects class to manage the projects state.
 class projectsClass {
@@ -69,3 +69,4 @@ class projectsClass {
 }
 // Export the Projects class as a singleton instance.
 export let Projects = new projectsClass();
+

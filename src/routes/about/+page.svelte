@@ -17,16 +17,15 @@
 		<Stack />
 	</div>
 	<div class="letter">
-		<h2>Hi you,</h2>
 		<p>
-			In the past, I spent the years 2015 to 2020 freelancing for architects, artists and small
-			business owners. This is where I built on skills like visual design, spatial design, problem
+			I spent the years 2015 to 2020 freelancing for architects, artists and small
+			business owners. These experiences made me build skills like visual design, spatial design, problem
 			solving, and design thinking.
 		</p>
 		<p>
-			Since 2021, after becoming a Master in Digital Media, I have been focused on building software
+			Since 2021, after becoming a Master in Digital Media, I have been building software
 			products that are user-centric, backed by cognitive and behavioral science, engaging and
-			impactful to use.
+			easy to use.
 		</p>
 		<p>
 			These days, I aspire to put these skills and subject expertise to use in building digital
@@ -64,17 +63,13 @@
 	.letter {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 2rem;
 		padding: 4rem;
-		width: 30%;
+		width: 40%;
 		line-height: 2;
 		background: var(--bg);
 		border-radius: 1rem;
-	}
-	.letter > h2 {
-		font-family: var(--font-ui);
-		font-size: 1.5rem;
-		color: var(--accent);
+		border: 1px solid var(--outline);
 	}
 	.letter > p {
 		font-size: medium;

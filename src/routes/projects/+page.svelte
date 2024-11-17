@@ -99,7 +99,7 @@
 		min-height: 50vh;
 		width: 100%;
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(30rem, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(25rem, 1fr));
 		padding: 2rem;
 		gap: 2rem;
 	}
@@ -142,7 +142,7 @@
 	}
 
 	h2 {
-		font-size: 1.25rem;
+		font-size: 1rem;
 		font-family: var(--font-ui);
 		color: var(--white);
 	}
@@ -174,6 +174,23 @@
 		font-size: 1rem;
 		line-height: 1.5;
 		color: var(--white);
+	}
+
+	@media (max-width: 1440px) {
+		#view {
+			grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+		}
+	}
+	@media (max-width: 1152px) and (min-width: 769px) {
+		main {
+			width: auto;
+		}
+		#view {
+			grid-template-columns: 1fr;
+		}
+		.project {
+			max-width: 30rem;
+		}
 	}
 
 	@media (max-width: 768px) {
