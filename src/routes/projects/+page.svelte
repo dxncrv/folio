@@ -27,27 +27,28 @@
 			{#if tags.some((tag) => Facets.selected().includes(tag))}
 				<div class="project">
 					<h2>
-						{title}
-						<div style="color:var(--accent-dim)">
+						{#if title === 'ALIVE Investigator'}
+							<a
+								class="case-study"
+								data-sveltekit-preload-data
+								href={'projects/' + slugify(title)}><span class="title">{title}</span><CaseStudy style="margin-left:0.5rem;" /></a>
+						{:else}
+							{title}
+						{/if}
+						<div>
 							{#if awards}
 								{#each awards as award}
-									<a href={award} target="_blank" rel="noopener noreferrer"><Award /></a>
+									<a class="icon" href={award} target="_blank" rel="noopener noreferrer"><Award /></a>
 								{/each}
 							{/if}
 							{#if git}
-								<a href={git} target="_blank" rel="noopener noreferrer"><Git /></a>
+								<a class="icon" href={git} target="_blank" rel="noopener noreferrer"><Git /></a>
 							{/if}
 							{#if yt}
-								<a href={yt} target="_blank" rel="noopener noreferrer"><YT /></a>
+								<a class="icon" href={yt} target="_blank" rel="noopener noreferrer"><YT /></a>
 							{/if}
 							{#if link}
-								<a href={link} target="_blank" rel="noopener noreferrer"><Link /></a>
-							{/if}
-							{#if title === 'ALIVE Investigator'}
-								<a
-									data-sveltekit-preload-data
-									href={'projects/' + slugify(title)}><CaseStudy /></a
-								>
+								<a class="icon" href={link} target="_blank" rel="noopener noreferrer"><Link /></a>
 							{/if}
 						</div>
 					</h2>
@@ -116,10 +117,25 @@
 	}
 	h2 div {
 		display: flex;
-		gap: 1rem;
+		gap: 0.5rem;
 	}
 	.project p {
 		line-height: calc(var(--line-height) * 1.5);
+	}
+	.title {
+		color: var(--contrast);
+	} .title:hover {
+		color: var(--accent);
+		animation: none;
+	}
+
+	@keyframes color-oscillate {
+		0% {
+			color: var(--accent);
+		}
+		100% {
+			color: var(--accent-dim);
+		}
 	}
 
 	img {
@@ -159,12 +175,18 @@
 	}
 	a {
 		display: flex;
-		color: var(--accent-dim);
 		text-decoration: none;
 		transition: color 0.3s;
 	}
+	a.icon {
+		color: var(--accent-dim);
+	}
+	a.case-study {
+		animation: color-oscillate 1.5s alternate infinite;
+	}
 	a:hover {
 		color: var(--accent);
+		animation: none;
 	}
 
 	@media (max-width: 1440px) {
@@ -193,6 +215,13 @@
 		}
 		main > * {
 			padding: 1rem;
+		}
+		.project {
+			border: 1px solid var(--font-dim);
+		}
+		.project:hover {
+			border: 1px solid var(--outline);
+			box-shadow: none;
 		}
 		#view {
 			grid-template-columns: 1fr;

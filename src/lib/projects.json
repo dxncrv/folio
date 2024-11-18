@@ -1,8 +1,8 @@
 [
     {
         "tags": ["Design", "Development"],
-        "slug": "caps-webapp",
-        "title": "Canadian Abortion Providers Support",
+        "slug": "caps-website",
+        "title": "CAPS Website",
         "image": "./assets/1.png",
         "link": "https://main.d2peu2nd9ijpwu.amplifyapp.com/",
         "git": "https://github.com/CAPS-CPCA/CAPS-CPCA-WebApp",
@@ -39,8 +39,8 @@
     },
     {
         "tags": ["Design", "Development"],
-        "slug": "flashovr",
-        "title": "FlashoVR",
+        "slug": "fire-investigation",
+        "title": "Fire Investigation",
         "image": "./assets/3.png",
         "link": "https://firesim.jibc.ca",
         "git": "",

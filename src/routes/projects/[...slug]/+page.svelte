@@ -130,7 +130,7 @@
 		line-height: calc(var(--line-height) * 1.5);
 		font-family: var(--font-read);
 		font-size: calc(var(--font-size) * 1.15);
-		color: var(--font);
+		color: var(--contrast);
 	}
 	.article img {
 		border-radius: 1rem;
