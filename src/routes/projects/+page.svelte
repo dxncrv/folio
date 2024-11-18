@@ -46,7 +46,6 @@
 							{#if title === 'ALIVE Investigator'}
 								<a
 									data-sveltekit-preload-data
-									style="color: var(--font)"
 									href={'projects/' + slugify(title)}><CaseStudy /></a
 								>
 							{/if}
@@ -83,9 +82,9 @@
 
 <style>
 	main {
+		width: 95%;
 		margin: 2rem auto;
 		display: flex;
-		width: 95%;
 		flex-direction: column;
 		align-items: center;
 		justify-content: space-between;
@@ -95,19 +94,20 @@
 	main.no-projects {
 		border: none;
 	}
+	main > * {
+		padding: 2rem 2rem 0;
+	}
 	#view {
-		min-height: 50vh;
 		width: 100%;
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(25rem, 1fr));
-		padding: 2rem;
 		gap: 2rem;
 	}
 	.btn-wrapper {
 		display: flex;
 		justify-content: center;
-		margin: 1rem;
-		gap: 1rem;
+		gap: 2rem;
+		margin: 0 0 2rem;
 	}
 
 	h2 {
@@ -152,7 +152,7 @@
 	li {
 		font-family: sans-serif;
 		font-size: 0.7rem;
-		color: var(--white);
+		color: var(--contrast);
 		padding: 0.25rem 0.5rem;
 		border: 1px solid var(--accent-dim);
 		border-radius: 2rem;
@@ -188,10 +188,17 @@
 		main {
 			margin: 1rem;
 			width: 100%;
+			border-left: none;
+			border-right: none;
+		}
+		main > * {
+			padding: 1rem;
 		}
 		#view {
 			grid-template-columns: 1fr;
-			padding: 1rem;
+		}
+		.btn-wrapper {
+			margin-bottom: 1rem;
 		}
 	}
 </style>

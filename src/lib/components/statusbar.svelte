@@ -21,6 +21,7 @@
 
 <style>
 	.accent {
+		font-family: var(--font-ui);
 		color: var(--accent);
 	}
 	.statusbar {

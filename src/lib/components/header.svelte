@@ -89,7 +89,7 @@
 	}
 	menu > button:hover {
 		cursor: pointer;
-		color: var(--font);
+		color: var(--contrast);
 	}
 	menu > button.isOn {
 		color: var(--accent);
@@ -116,7 +116,7 @@
 	}
 	menu > a:hover:not(.active) {
 		cursor: pointer;
-		color: var(--hover-color);
+		color: var(--contrast);
 	}
 	menu > a:active:not(.active) {
 		color: var(--accent);

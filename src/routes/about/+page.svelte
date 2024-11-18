@@ -72,7 +72,7 @@
 		width: 40%;
 		background: var(--bg);
 		border-radius: 1rem;
-		border: 1px solid var(--outline);
+		border: 1px solid var(--font-dim);
 	}
 	.letter p {
 		line-height: calc(var(--line-height) * 2);
@@ -95,6 +95,8 @@
 		}
 		.letter {
 			width: 100%;
+			border-left: none;
+			border-right: none;
 		}
 	}
 </style>

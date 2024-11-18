@@ -22,11 +22,9 @@ html {
 	--accent-dim: hsl(180, 59%, 40%);
 	--outline: #696969;
 	--bg: #1e2024;
-	--font: #eeeeee;
 	--font-dim: #393e46;
 	--font-color: #7c7c7c;
-	--hover-color: #f0f0f0;
-	--white: hsl(0, 0%, 100%);
+	--contrast: hsl(0, 0%, 90%);
 	--font-ui: 'Averia Libre', sans-serif;
 	--font-read: 'Hanken Grotesk', serif;
 	--line-height: 1;
@@ -40,11 +38,9 @@ html {
 	--accent-dim: hsl(205, 35%, 60%);
 	--outline: hsl(0, 0%, 50%);
 	--bg: #ffffff;
-	--font: #374864;
 	--font-dim: hsl(0, 0%, 65%);
 	--font-color: hsl(0, 0%, 65%);
-	--hover-color: black;
-	--white: hsl(220, 5%, 20%);
+	--contrast: hsl(220, 5%, 20%);
 	--font-ui: 'Averia Serif Libre', serif;
 	--font-read: 'Solway', serif;
 	--line-height: 1.1;
@@ -91,13 +87,13 @@ body {
 
 p {
 	font-size: var(--font-size);
-	color: var(--font);
+	color: var(--contrast);
 	font-family: var(--font-read);
 }
 h2 {
-	font-size: calc(var(--font-size) * 1.15);
+	font-size: calc(var(--font-size) * 1.2);
 	font-family: var(--font-ui);
-	color: var(--white);
+	color: var(--contrast);
 }
 
 footer {
@@ -113,7 +109,7 @@ footer {
 }
 footer p {
 	font-family: var(--font-ui);
-	color: var(--font);
+	color: var(--contrast);
 	transition: color 0.3s;
 }
 
@@ -152,7 +148,7 @@ button.primary {
 	font-family: var(--font-ui);
 	font-size: 1rem;
 	background: linear-gradient(25deg, var(--body-bg), var(--bg));
-	color: var(--font);
+	color: var(--contrast);
 	border: 1px solid var(--outline);
 	border-radius: 0.5rem;
 	padding: 0.5rem 1rem;

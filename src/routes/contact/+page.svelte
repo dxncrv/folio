@@ -32,18 +32,18 @@
 </svelte:head>
 
 <main>
-	<h1>Say hi</h1>
+	<h2>Say hi</h2>
 	<form onsubmit={handleSubmit}>
 		<input type="hidden" name="access_key" value="489cc2ff-5a51-4737-a5c9-8491e6cf8038" />
 		<textarea placeholder=""></textarea>
 		<div>
-			<label for="email">Address</label>
+			<label for="email">Address:</label>
 			<input type="email" placeholder="Email" />
 			<p>Status: <span class:fail={status === 'Failed'}>{status}</span></p>
 			<button type="submit"> Submit </button>
 		</div>
 	</form>
-	<h1>Connect with me</h1>
+	<h2>Connect with me</h2>
 	<div class="socials">
 		<a href="mailto:doncorve@gmail.com" target="_blank" rel="noopener noreferrer">
 			<Email />
@@ -81,11 +81,6 @@
 	main > * {
 		margin: 0 2rem;
 	}
-	h1 {
-		font-family: var(--font-ui);
-		color: var(--accent);
-		font-size: 1.5rem;
-	}
 	form {
 		display: flex;
 		flex-direction: column;
@@ -99,7 +94,7 @@
 		max-height: 20rem;
 
 		font-family: var(--font-read);
-		color: var(--font);
+		color: var(--contrast);
 		padding: 1rem;
 		background-color: var(--body-bg);
 		border: 1px solid var(--outline);
@@ -117,15 +112,15 @@
 	form input {
 		flex-grow: 1;
 		font-family: var(--font-read);
-		color: var(--font);
+		color: var(--contrast);
 		background-color: var(--body-bg);
 		border: 1px solid var(--outline);
 		border-radius: 0.5rem;
 		resize: vertical;
 	}
 	form label {
-		font-family: var(--font-ui);
-		color: var(--font);
+		font-family: var(--font-read);
+		color: var(--contrast);
 	}
 	form button {
 		min-width: 6rem;
