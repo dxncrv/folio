@@ -15,26 +15,22 @@
 	<title>Projects</title>
 </svelte:head>
 
-<main class:no-projects={Projects.filtered.length === 0}>
-	{#if Projects.filtered.length !== 0}
+<main class:no-projects={Projects.selected.length === 0}>
+	{#if Projects.selected.length !== 0}
 		<Statusbar />
 	{/if}
-	{#if Projects.filtered.length === 0}
+	{#if Projects.selected.length === 0}
 		<p>Z z Z</p>
 	{/if}
 	<div id="view">
-		{#each Projects.inView as { image, title, desc, tech, link, git, yt, awards, tags }}
+		{#each Projects.selected.slice(Projects.range.min, Projects.range.max) as { image, title, desc, tech, link, git, yt, awards, tags }}
 			{#if tags.some((tag) => Facets.selected().includes(tag))}
 				<div class="project">
 					<h2>
-						{#if title === 'ALIVE Investigator'}
 							<a
 								class="case-study"
 								data-sveltekit-preload-data
 								href={'projects/' + slugify(title)}><span class="title">{title}</span><CaseStudy style="margin-left:0.5rem;" /></a>
-						{:else}
-							{title}
-						{/if}
 						<div>
 							{#if awards}
 								{#each awards as award}
@@ -65,17 +61,17 @@
 			{/if}
 		{/each}
 	</div>
-	{#if Projects.filtered.length !== 0}
+	{#if Projects.selected.length !== 0}
 		<div class="btn-wrapper">
 			<button
 				class="primary"
 				onclick={Projects.range.prev}
-				disabled={Projects.range.min === 0 || Projects.filtered.length === 0}>Prev</button
+				disabled={Projects.range.min === 0 || Projects.selected.length === 0}>Prev</button
 			>
 			<button
 				class="primary"
 				onclick={Projects.range.next}
-				disabled={Projects.range.max >= Projects.filtered.length}>Next</button
+				disabled={Projects.range.max >= Projects.selected.length}>Next</button
 			>
 		</div>
 	{/if}
@@ -157,7 +153,6 @@
 	}
 	.project:hover {
 		border: 1px solid var(--accent);
-		box-shadow: 0 0 0.5rem var(--accent-dim);
 	}
 	ul {
 		display: flex;

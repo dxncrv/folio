@@ -33,8 +33,11 @@
             "development": ["Unity", "C#", "iOS", "Qualtrics"]
         },
 
-        "content": {
-            
+        "study": {
+            "overview": "Challenges: Our team Skyfall was asked to build a product for iOS and work with TestFlight. We were asked to analyze the previous prototype and consider a way forward, and we chose to reprogram from scratch. We were also asked to develop a user data metrics collection module to store data in an online database.",
+            "roles": "Project Manager, Scrum Master, 3D & UX Designer. I was mainly responsible for Project management and Scrum duties. Although, I also helped out in art, design and implementation wherever opportunity presented itself.",
+            "goals": "Goals: (1) making a scalable iOS Application for iPad Minis. (2) Developing the backend module for collecting data. (3) And running a usability test round to iterate on controls and UI.",
+            "results": "Results: We successfully developed a scalable iOS application for iPad Minis. We also developed a backend module for collecting data. We ran a usability test round to iterate on controls and UI. We also developed a user data metrics collection module to store data in an online database."
         }
     },
     {

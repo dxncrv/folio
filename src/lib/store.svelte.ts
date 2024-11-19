@@ -1,16 +1,35 @@
 import data from './projects.json';
 
+interface Project {
+	tags: string[];
+	slug: string;
+	title: string;
+	image: string;
+	link: string;
+	git: string;
+	yt?: string;
+	awards?: string[];
+    desc: { [key: string]: string };
+    tech: { [key: string]: string[] };
+	study?: { [key: string]: string };
+}
+
+interface Facet {
+    name: string;
+    bool: boolean;
+}
+
 // Facets class to manage the filter state of the projects.
 class facetsClass {
 	// State store for the facets
-	facets = $state([
+	facets = $state<Facet[]>([
 		{ name: 'Design', bool: true },
 		{ name: 'Development', bool: true }
 	]);
 	// toggle method manages the state of the facets, toggling 'bool' value of the 'name' parameter
 	toggle(name: string) {
 		this.facets = this.facets.map((f) => (f.name === name ? { ...f, bool: !f.bool } : f));
-		if (Projects.range.min > Projects.mutated.length - 1) {
+		if (Projects.range.min > Projects.selected.length - 1) {
 			Projects.range.reset();
 		}
 	}
@@ -22,32 +41,11 @@ class facetsClass {
 // Export the Facets class as a singleton instance.
 export const Facets = new facetsClass();
 
-// Projects class to manage the projects state.
+// Projects class to manage the projects state and pagination.
 class projectsClass {
-	// Projects, state store for the projects, fetched from the JSON file.
-	all = $state(data);
-	// filtered, derived state returns the projects filtered by the selected facets.
-	filtered = $derived(
-		this.all.filter((project) => project.tags.some((tag) => Facets.selected().includes(tag)))
-	);
-	// derived state returns the projects with the description and technologies based on the selected facets.
-	mutated = $derived(
-		this.filtered.map((project) => {
-			let desc = '';
-			let tech: any[] = [];
-			if (Facets.selected().includes('Design') && project.desc.design) {
-				desc += project.desc.design;
-				tech = tech.concat(project.tech.design);
-			}
-			if (Facets.selected().includes('Development') && project.desc.development) {
-				if (desc) desc += ' ';
-				desc += project.desc.development;
-				tech = tech.concat(project.tech.development);
-			}
-			return { ...project, desc, tech };
-		})
-	);
-	// Range, state store for pagination.
+	// PRIVATE all, state for the projects, fetched from the JSON file.
+	#all = $state<Project[]>(data as Project[]);
+	// PUBLIC range, state for pagination.
 	range = $state({
 		min: 0,
 		max: 3,
@@ -64,8 +62,19 @@ class projectsClass {
 			this.range.max = 3;
 		}
 	});
-	// inView, derived state returns the projects in view based on the range.
-	inView = $derived(this.mutated.slice(this.range.min, this.range.max));
+	// PUBLIC selected, derived state returns the projects based on the selected facets.
+	selected = $derived.by(() => {
+		// Get the selected facets
+		const selectedFacets = Facets.selected();
+		// Filter the projects based on the selected facets and return the projects with the 'desc' and 'tech' properties updated.
+		return this.#all
+			.filter(project => project.tags.some(tag => selectedFacets.includes(tag)))
+			.map(project => ({
+				...project,
+				desc: selectedFacets.map(facet => project.desc[facet.toLowerCase()]).join(' '),
+				tech: selectedFacets.flatMap(facet => project.tags.includes(facet) ? project.tech[facet.toLowerCase()] : [])
+			}))
+	});
 }
 // Export the Projects class as a singleton instance.
 export let Projects = new projectsClass();

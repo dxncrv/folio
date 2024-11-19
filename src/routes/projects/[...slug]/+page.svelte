@@ -1,22 +1,26 @@
 <script lang="ts">
+	import { page } from '$app/stores';
 	import { Projects } from '$lib/store.svelte';
 	import { goto } from '$app/navigation';
 	import { videos } from '$lib/videos';
 
-	let project = $derived(Projects.mutated[1]);
+	let project = $derived(Projects.selected.find((project) => project.slug === $page.params.slug));
+	let projectIndex = $derived(Projects.selected.findIndex((project) => project.slug === $page.params.slug));
 </script>
 
 <svelte:head>
-	<title>Case Study</title>
+	<title>Study - {project?.title}</title>
 </svelte:head>
 
+<h2>Projects /</h2>
 <main>
 	<header>
-		<button class="primary" onclick={() => goto('/projects')}>Back</button>
-		<h1><span style="color: var(--accent)">{Projects.mutated[1].title}</span></h1>
+		<button class="primary" disabled={projectIndex === 0} onclick={() => goto(`/projects/${Projects.selected[projectIndex - 1].slug}`)}>Prev</button>
+		<h1><span style="color: var(--accent)">{project?.title}</span></h1>
+		<button class="primary" disabled={projectIndex === Projects.selected.length - 1} onclick={() => goto(`/projects/${Projects.selected[projectIndex + 1].slug}`)}>Next</button>
 	</header>
 	<div class="article">
-		{#if project}
+		{#if project?.title === 'ALIVE Investigator'}
 			<video controls>
 				<source type="video/mp4" src={videos.a1mdemo_skyfall} />
 				<track kind="captions" srclang="en" label="English" />
@@ -57,7 +61,7 @@
 					panels, ambient sound, zone names, etc.
 				</li>
 			</ul>
-			<h2>Extra miles</h2>
+			<h2>Other Contributions</h2>
 			<p>
 				Besides facilitating meetings with the clients, weekly scrum management, facilitating
 				sprints, UX wireframes, and documentation; I also storyboarded a lot, made 3D assets in
@@ -79,6 +83,9 @@
 				also concepted and modelled the science station below.
 			</p>
 			<img src="/assets/alive.a1m6.png" alt="Skyfall" />
+		{:else}
+			<p>📝 - Writing in progress...
+			</p>
 		{/if}
 	</div>
 </main>
@@ -98,6 +105,7 @@
 		display: flex;
 		padding: 1rem;
 		gap: 1rem;
+		justify-content: space-between;
 		align-items: center;
 		border-bottom: 1px solid var(--font-dim);
 	}
