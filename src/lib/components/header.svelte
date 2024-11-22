@@ -1,11 +1,10 @@
 <script lang="ts">
 	// Importing the icons and utility functions
 	import { Light, Dark } from '$lib/icons';
-	import { initDot, moveDot, updateTheme } from '$lib/utils';
+	import { moveDot, updateTheme } from '$lib/utils';
 	import { Facets } from '$lib/store.svelte';
 	import { page } from '$app/stores';
 	import { enhance } from '$app/forms';
-	import { onMount } from 'svelte';
 
 	// Initialising the navigation links
 	let nav = [
@@ -15,18 +14,23 @@
 		{ name: 'Contact', href: '/contact' }
 	];
 
-	onMount(() => {
-		initDot();
+	// Move the dot to the active link
+	$effect(() => {
+		moveDot(document.querySelector(`a[href='${$page.route.id}']`));
 	});
+
+	// function to check if the link is active
+	function isActive(routeId: string, href: string) {
+		return routeId === href || (href !== '/' && routeId.startsWith(href));
+	}
 </script>
 
 <nav>
 	<menu>
 		{#each nav as { name, href }}
 			<a
-				class:active={href === $page.route.id}
+				class:active={isActive($page.route.id, href)}
 				{href}
-				onclick={(e) => moveDot(e.target as HTMLElement)}
 				>{name}
 			</a>
 			<div class="dot"></div>

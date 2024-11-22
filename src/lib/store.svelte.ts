@@ -1,23 +1,5 @@
 import data from './projects.json';
-
-interface Project {
-	tags: string[];
-	slug: string;
-	title: string;
-	image: string;
-	link: string;
-	git: string;
-	yt?: string;
-	awards?: string[];
-    desc: { [key: string]: string };
-    tech: { [key: string]: string[] };
-	study?: { [key: string]: string };
-}
-
-interface Facet {
-    name: string;
-    bool: boolean;
-}
+import type { Project, Facet } from './types';
 
 // Facets class to manage the filter state of the projects.
 class facetsClass {

@@ -11,13 +11,6 @@ export const moveDot = (e: HTMLElement | null) => {
 	dot.style.translate = `calc(${e.offsetLeft + e.offsetWidth / 2}px - 100%) 150%`; // positions the dot at the center of (e)
 };
 
-// Function to initialize the dot element in the DOM
-export const initDot = () => {
-	// get active element and move the dot to it
-	const e = document.querySelector('.active') as HTMLElement | null;
-	moveDot(e);
-};
-
 // Submit function, gets the theme from the form and sets it as the document theme
 export const updateTheme: SubmitFunction = ({ action }) => {
 	const theme = action.searchParams.get('theme');

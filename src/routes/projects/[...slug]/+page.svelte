@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Back } from '$lib/icons';
 	import { page } from '$app/stores';
 	import { Projects } from '$lib/store.svelte';
 	import { goto } from '$app/navigation';
@@ -12,11 +13,13 @@
 	<title>Study - {project?.title}</title>
 </svelte:head>
 
-<h2>Projects /</h2>
 <main>
 	<header>
 		<button class="primary" disabled={projectIndex === 0} onclick={() => goto(`/projects/${Projects.selected[projectIndex - 1].slug}`)}>Prev</button>
-		<h1><span style="color: var(--accent)">{project?.title}</span></h1>
+			<a href="/projects" class="back">
+				<Back />
+				<h1><span style="color: var(--accent)">{project?.title}</span></h1>
+			</a>
 		<button class="primary" disabled={projectIndex === Projects.selected.length - 1} onclick={() => goto(`/projects/${Projects.selected[projectIndex + 1].slug}`)}>Next</button>
 	</header>
 	<div class="article">
@@ -108,6 +111,17 @@
 		justify-content: space-between;
 		align-items: center;
 		border-bottom: 1px solid var(--font-dim);
+	}
+	.back {
+		display: flex;
+		align-items: center;
+		color: var(--accent-dim);
+		font-size: 1.5rem;
+		text-decoration: none;
+		gap: 1rem;
+	}
+	.back:hover {
+		color: var(--accent);
 	}
 	h1 {
 		font-family: var(--font-ui);

@@ -5,6 +5,7 @@ import Light from '~icons/line-md/lightbulb-twotone';
 import Dark from '~icons/line-md/lightbulb-off-twotone';
 import Award from '~icons/tabler/award-filled';
 import CaseStudy from '~icons/line-md/text-box-twotone';
+import Back from '~icons/line-md/navigation-left-down';
 
 //stack
 import Svelte from '~icons/vscode-icons/file-type-svelte';
@@ -28,6 +29,7 @@ export {
 	Light,
 	Dark,
 	CaseStudy,
+	Back,
 
 	//stack
 	Svelte,
