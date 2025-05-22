@@ -9,20 +9,28 @@
 		const data = new FormData(form);
 		const json = JSON.stringify(Object.fromEntries(data.entries()));
 
-		const response = await fetch('https://api.web3forms.com/submit', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				Accept: 'application/json'
-			},
-			body: json
-		});
+		try {
+			const response = await fetch('https://api.web3forms.com/submit', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json'
+				},
+				body: json
+			});
 
-		const result = await response.json();
-		if (result.success) {
-			status = 'Message sent! 🎉';
-		} else {
-			status = 'Failed';
+			const result = await response.json();
+
+			if (response.ok && result.success) {
+				status = 'Message sent! 🎉';
+				form.reset();
+			} else {
+				console.error('Submission failed:', result);
+				status = `Failed: ${result.message || 'Please try again.'}`;
+			}
+		} catch (error) {
+			console.error('Error submitting form:', error);
+			status = 'Failed: An error occurred.';
 		}
 	};
 </script>
@@ -35,11 +43,11 @@
 	<h2>Say hi</h2>
 	<form onsubmit={handleSubmit}>
 		<input type="hidden" name="access_key" value="489cc2ff-5a51-4737-a5c9-8491e6cf8038" />
-		<textarea placeholder=""></textarea>
+		<textarea name="message" placeholder="Your message here..."></textarea>
 		<div>
 			<label for="email">Address:</label>
-			<input type="email" placeholder="Email" />
-			<p>Status: <span class:fail={status === 'Failed'}>{status}</span></p>
+			<input id="email" name="email" type="email" placeholder="Email" required />
+			<p>Status: <span class:fail={status.startsWith('Failed')}>{status}</span></p>
 			<button type="submit"> Submit </button>
 		</div>
 	</form>
