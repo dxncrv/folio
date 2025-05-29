@@ -1,0 +1,172 @@
+@import url('https://fonts.googleapis.com/css2?family=Averia+Libre&family=Averia+Sans+Libre&family=Averia+Serif+Libre&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Solway:wght@400&display=swap');
+
+/* reset CSS */
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+}
+
+/* font size */
+html {
+	font-size: 16px;
+}
+
+/* variables */
+:root {
+	--body-bg: #151515;
+	--accent: hsl(140, 84%, 80%);
+	--accent-dim: hsl(180, 59%, 40%);
+	--outline: #696969;
+	--bg: #1e2024;
+	--font-dim: #393e46;
+	--font-color: #7c7c7c;
+	--contrast: hsl(0, 0%, 90%);
+	--font-ui: 'Averia Libre', sans-serif;
+	--font-read: 'Hanken Grotesk', serif;
+	--line-height: 1;
+	--font-size: 1rem;
+}
+
+/* Light mode theme toggle variables and styles */
+[data-theme='light'] {
+	--body-bg: hsl(15, 15%, 95%);
+	--accent: hsl(205, 100%, 40%);
+	--accent-dim: hsl(205, 35%, 60%);
+	--outline: hsl(0, 0%, 50%);
+	--bg: #ffffff;
+	--font-dim: hsl(0, 0%, 65%);
+	--font-color: hsl(0, 0%, 65%);
+	--contrast: hsl(220, 5%, 20%);
+	--font-ui: 'Averia Serif Libre', serif;
+	--font-read: 'Solway', serif;
+	--line-height: 1.1;
+	--font-size: 0.91rem;
+}
+#theme-toggler {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	user-select: none;
+	margin: 0 1rem;
+}
+#theme-toggler button {
+	display: flex;
+	cursor: pointer;
+	font-size: 1.5rem;
+	background: none;
+	border: none;
+	color: var(--font-color);
+	justify-content: center;
+	align-items: center;
+	transition: color 0.3s;
+}
+#theme-toggler button:hover {
+	color: var(--accent);
+}
+#dark {
+	display: none;
+}
+[data-theme='light'] #light {
+	display: none;
+}
+[data-theme='light'] #dark {
+	display: block;
+}
+
+body {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh; /* Ensures body fills viewport */
+	align-items: center;
+	background: var(--body-bg) center center/cover no-repeat;
+}
+
+main {
+	width: 100%;
+	flex: 1 0 auto; /* Allows main content to grow and push footer down */
+}
+
+p {
+	font-size: var(--font-size);
+	color: var(--contrast);
+	font-family: var(--font-read);
+}
+h2 {
+	font-size: calc(var(--font-size) * 1.2);
+	font-family: var(--font-ui);
+	color: var(--contrast);
+}
+
+footer {
+	width: 100%;
+	margin-top: auto; /* Pushes footer to bottom if content is short */
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	align-items: center;
+	gap: 3rem;
+	user-select: none;
+	text-align: center;
+	padding: 1rem;
+}
+footer p {
+	font-family: var(--font-ui);
+	color: var(--contrast);
+	transition: color 0.3s;
+}
+
+footer a {
+	display: flex;
+	font-family: var(--font-ui);
+	color: orange;
+	text-decoration: none;
+	transition: color 0.3s;
+}
+footer a:hover {
+	color: yellow;
+}
+
+@media (max-width: 768px) {
+	footer {
+		gap: 0.5rem;
+	}
+	#theme-toggler {
+		margin: 0;
+		position: fixed;
+		top: 1rem;
+		right: 1rem;
+	}
+}
+
+.fira-code-normal {
+	font-family: 'Fira Code', monospace;
+	font-optical-sizing: auto;
+	font-weight: 400;
+	font-style: normal;
+}
+
+/* UI elements */
+button.primary {
+	font-family: var(--font-ui);
+	font-size: 1rem;
+	background: linear-gradient(25deg, var(--body-bg), var(--bg));
+	color: var(--contrast);
+	border: 1px solid var(--outline);
+	border-radius: 0.5rem;
+	padding: 0.5rem 1rem;
+	cursor: pointer;
+}
+button.primary:hover {
+	color: var(--accent);
+	border: 1px solid var(--accent);
+}
+button.primary:disabled {
+	border: 1px solid var(--font-dim);
+	background: var(--bg);
+	color: var(--font-dim);
+	cursor: not-allowed;
+}
