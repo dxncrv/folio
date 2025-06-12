@@ -1,57 +1,3 @@
-<script lang="ts">
-	// Importing the icons and utility functions
-	import { moveDot, updateTheme } from '$lib/utils';
-	import { Facets } from '$lib/store.svelte';
-	import { page } from '$app/stores';
-	import { enhance } from '$app/forms';
-
-	// Initialising the navigation links
-	let nav = [
-		{ name: 'Home', href: '/' },
-		{ name: 'About', href: '/about' },
-		{ name: 'Projects', href: '/projects' },
-		{ name: 'Contact', href: '/contact' }
-	];
-
-	// Move the dot to the active link
-	$effect(() => {
-		moveDot(document.querySelector(`a[href='${$page.route.id}']`));
-	});
-
-	// function to check if the link is active
-	function isActive(routeId: string, href: string) {
-		return routeId === href || (href !== '/' && routeId.startsWith(href));
-	}
-</script>
-
-<nav>
-	<menu>
-		{#each nav as { name, href }}
-			<a
-				class:active={isActive($page.route.id ?? '', href)}
-				{href}
-				>{name}
-			</a>
-			<div class="dot"></div>
-		{/each}
-	</menu>
-	<menu>
-		{#each Facets.facets as { name, bool }}
-			<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
-				{name}
-			</button>
-		{/each}
-		<form id="theme-toggler" method="post" use:enhance={updateTheme}>
-			<button formaction="/?/setTheme&theme=light" aria-label="Toggle Light Theme">
-				<iconify-icon id="light" icon="line-md:lightbulb-twotone" width="28" height="28"></iconify-icon>
-			</button>
-			<button formaction="/?/setTheme&theme=dark" aria-label="Toggle Dark Theme">
-				<iconify-icon id="dark" icon="line-md:lightbulb-off-twotone" width="28" height="28"></iconify-icon>
-			</button>
-		</form>
-	</menu>
-</nav>
-
 <style>
 	nav {
 		display: flex;
@@ -144,3 +90,58 @@
 		}
 	}
 </style>
+
+<script lang="ts">
+	// Importing the icons and utility functions
+	import { moveDot, updateTheme } from '$lib/utils';
+	import { Facets } from '$lib/store.svelte';
+	import { page } from '$app/state';
+	import { enhance } from '$app/forms';
+
+	// Initialising the navigation links
+	let nav = [
+		{ name: 'Home', href: '/' },
+		{ name: 'Projects', href: '/projects' },
+		{ name: 'About', href: '/about' },
+		{ name: 'Contact', href: '/contact' }
+	];
+
+	// Move the dot to the active link
+	$effect(() => {
+		moveDot(document.querySelector(`a[href='${page.route.id}']`));
+	});
+
+	// function to check if the link is active
+	function isActive(routeId: string, href: string) {
+		return routeId === href || (href !== '/' && routeId.startsWith(href));
+	}
+</script>
+
+<nav>
+	<menu>
+		{#each nav as { name, href }}
+			<a
+				class:active={isActive(page.route.id ?? '', href)}
+				{href}
+				>{name}
+			</a>
+			{/each}
+			<div class="dot"></div>
+	</menu>
+	<menu>
+		{#each Facets.facets as { name, bool }}
+			<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
+				{name}
+			</button>
+		{/each}
+		<form id="theme-toggler" method="post" use:enhance={updateTheme}>
+			<button formaction="/?/setTheme&theme=light" aria-label="Toggle Light Theme">
+				<iconify-icon id="light" icon="line-md:lightbulb-twotone" width="28" height="28"></iconify-icon>
+			</button>
+			<button formaction="/?/setTheme&theme=dark" aria-label="Toggle Dark Theme">
+				<iconify-icon id="dark" icon="line-md:lightbulb-off-twotone" width="28" height="28"></iconify-icon>
+			</button>
+		</form>
+	</menu>
+</nav>
+

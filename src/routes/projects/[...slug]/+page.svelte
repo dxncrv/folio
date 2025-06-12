@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { Projects } from '$lib/store.svelte';
 	import { goto } from '$app/navigation';
-	import { videos } from '$lib/videos';
+	import { videos } from '$lib/vids';
 
 	let project = $derived(Projects.selected.find((project) => project.slug === $page.params.slug));
 	let projectIndex = $derived(Projects.selected.findIndex((project) => project.slug === $page.params.slug));
