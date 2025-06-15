@@ -33,11 +33,11 @@ html {
 
 /* Light mode theme toggle variables and styles */
 [data-theme='light'] {
-	--body-bg: hsl(15, 15%, 95%);
+	--body-bg: hsl(15, 20%, 93.5%);
 	--accent: hsl(205, 100%, 40%);
 	--accent-dim: hsl(205, 35%, 60%);
 	--outline: hsl(0, 0%, 50%);
-	--bg: #ffffff;
+	--bg: hsl(0, 0%, 100%);
 	--font-dim: hsl(0, 0%, 65%);
 	--font-color: hsl(0, 0%, 65%);
 	--contrast: hsl(220, 5%, 20%);

@@ -8,7 +8,7 @@
 
 <main>
 	<div class="label">
-		<img src="./assets/aashay.png" alt="Aashay Mehta" />
+		<img src="./assets/aashay.jpg" alt="Aashay Mehta" />
 		<h1>Aashay Mehta</h1>
 		<p>
 			Interface and Experience <b>Designer</b>;<br /> Web, App and Games <b>Developer</b>;<br />&
@@ -38,7 +38,9 @@
 
 <style>
 	img {
+		height: 15rem;
 		width: 15rem;
+		object-fit: cover;
 		border-radius: 2rem;
 	}
 	main {
