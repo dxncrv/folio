@@ -70,19 +70,6 @@
 	menu > a:active:not(.active) {
 		color: var(--accent);
 	}
-	.dot {
-		position: absolute;
-		bottom: 0;
-		width: 0.35rem;
-		height: 0.2rem;
-		translate: -100% 50%;
-		border-radius: 50%;
-		background: var(--accent);
-		opacity: 0;
-		transition:
-			translate 0.3s,
-			opacity 0.3s ease-in-out;
-	}
 
 	@media (max-width: 768px) {
 		nav {
@@ -92,30 +79,31 @@
 </style>
 
 <script lang="ts">
-	// Importing the icons and utility functions
-	import { moveDot, updateTheme } from '$lib/utils';
+	// Importing and utility functions
+	import { updateTheme } from '$lib/utils';
 	import { Facets } from '$lib/store.svelte';
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
+	import Dot from './plugins/Dot.svelte';
 
 	// Initialising the navigation links
 	let nav = [
 		{ name: 'Home', href: '/' },
-		{ name: 'Projects', href: '/projects' },
 		{ name: 'About', href: '/about' },
+		{ name: 'Projects', href: '/projects' },
 		{ name: 'Contact', href: '/contact' }
 	];
-
-	// Move the dot to the active link
-	$effect(() => {
-		moveDot(document.querySelector(`a[href='${page.route.id}']`));
-	});
 
 	// function to check if the link is active
 	function isActive(routeId: string, href: string) {
 		return routeId === href || (href !== '/' && routeId.startsWith(href));
 	}
 </script>
+	{#snippet formBtn(action: string, label: string, id: string, icon: string)}
+		<button formaction={action} aria-label={label}>
+			<iconify-icon id={id} icon={icon} width="28" height="28"></iconify-icon>
+		</button>
+	{/snippet}
 
 <nav>
 	<menu>
@@ -126,7 +114,7 @@
 				>{name}
 			</a>
 			{/each}
-			<div class="dot"></div>
+			<Dot />
 	</menu>
 	<menu>
 		{#each Facets.facets as { name, bool }}
@@ -135,12 +123,8 @@
 			</button>
 		{/each}
 		<form id="theme-toggler" method="post" use:enhance={updateTheme}>
-			<button formaction="/?/setTheme&theme=light" aria-label="Toggle Light Theme">
-				<iconify-icon id="light" icon="line-md:lightbulb-twotone" width="28" height="28"></iconify-icon>
-			</button>
-			<button formaction="/?/setTheme&theme=dark" aria-label="Toggle Dark Theme">
-				<iconify-icon id="dark" icon="line-md:lightbulb-off-twotone" width="28" height="28"></iconify-icon>
-			</button>
+			{@render formBtn('/?/setTheme&theme=light','Toggle Light Theme','light','line-md:lightbulb-twotone')}
+			{@render formBtn('/?/setTheme&theme=dark','Toggle Dark Theme','dark','line-md:lightbulb-off-twotone')}
 		</form>
 	</menu>
 </nav>

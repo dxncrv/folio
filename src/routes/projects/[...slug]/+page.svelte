@@ -1,11 +1,12 @@
 <script lang="ts">
+	import {slugify} from '$lib/utils';
 	import { page } from '$app/stores';
 	import { Projects } from '$lib/store.svelte';
 	import { goto } from '$app/navigation';
 	import { videos } from '$lib/vids';
 
-	let project = $derived(Projects.selected.find((project) => project.slug === $page.params.slug));
-	let projectIndex = $derived(Projects.selected.findIndex((project) => project.slug === $page.params.slug));
+	let project = $derived(Projects.selected.find((project) => slugify(project.title) === $page.params.slug));
+	let projectIndex = $derived(Projects.selected.findIndex((project) => slugify(project.title) === $page.params.slug));
 </script>
 
 <svelte:head>
@@ -14,12 +15,12 @@
 
 <main>
 	<header>
-		<button class="primary" disabled={projectIndex === 0} onclick={() => goto(`/projects/${Projects.selected[projectIndex - 1].slug}`)}>Prev</button>
+		<button class="primary" disabled={projectIndex === 0} onclick={() => goto(`/projects/${slugify(Projects.selected[projectIndex - 1].title)}`)}>Prev</button>
 			<a href="/projects" class="back">
-				<iconify-icon icon="line-md:arrow-left" width="24" height="24"></iconify-icon>
+				<iconify-icon icon="mdi:arrow-up-left" width="24" height="24"></iconify-icon>
 				<h1><span style="color: var(--accent)">{project?.title}</span></h1>
 			</a>
-		<button class="primary" disabled={projectIndex === Projects.selected.length - 1} onclick={() => goto(`/projects/${Projects.selected[projectIndex + 1].slug}`)}>Next</button>
+		<button class="primary" disabled={projectIndex === Projects.selected.length - 1} onclick={() => goto(`/projects/${slugify(Projects.selected[projectIndex + 1].title)}`)}>Next</button>
 	</header>
 	<div class="article">
 		{#if project?.title === 'ALIVE Investigator'}

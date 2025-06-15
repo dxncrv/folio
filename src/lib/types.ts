@@ -1,6 +1,5 @@
 export interface Project {
 	tags: string[];
-	slug: string;
 	title: string;
 	image: string;
 	link: string;

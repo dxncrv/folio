@@ -5,8 +5,8 @@ import type { Project, Facet } from './types';
 class facetsClass {
 	// State store for the facets
 	facets = $state<Facet[]>([
+		{ name: 'Code', bool: true },
 		{ name: 'Design', bool: true },
-		{ name: 'Development', bool: true }
 	]);
 	// toggle method manages the state of the facets, toggling 'bool' value of the 'name' parameter
 	toggle(name: string) {
@@ -60,4 +60,3 @@ class projectsClass {
 }
 // Export the Projects class as a singleton instance.
 export let Projects = new projectsClass();
-
