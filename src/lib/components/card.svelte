@@ -51,7 +51,7 @@
     <p>
         {displayDesc}
         {#if project.desc.length > MAX_LENGTH}
-            <button class="toggleDesc" type="button" onclick={toggleDescription}>
+            <button class="description" type="button" onclick={toggleDescription}>
                 {isTruncated ? 'More' : 'Less'}
             </button>
         {/if}
@@ -100,7 +100,7 @@
         border-radius: 0.5rem;
         background: var(--body-bg);
     }   
-    .toggleDesc {
+    .description {
         background: none;
         border: none;
         color: var(--accent-dim);
@@ -109,6 +109,9 @@
         padding: 0.25rem 0.5rem;
         border-radius: 0.25rem;
         transition: color 0.3s, background-color 0.3s;
+    }
+    .description:hover {
+        color: var(--accent);
     }
     .title {
         color: var(--contrast);

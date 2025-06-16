@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Socials from "$lib/components/socials.svelte";
+
 	let status = 'Ready';
 
 	const handleSubmit = async (event: Event) => {
@@ -52,20 +54,7 @@
 			</div>
 		</form>
 		<h2>Connect with me</h2>
-		<div class="socials">
-			<a href="mailto:hello@dxncrv.com" target="_blank" rel="noopener noreferrer" aria-label="Email">
-				<iconify-icon icon="line-md:email" width="28" height="28"></iconify-icon>
-			</a>
-			<a href="https://github.com/dxncrv" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
-				<iconify-icon icon="line-md:github-twotone" width="28" height="28"></iconify-icon>
-			</a>
-			<a href="https://www.linkedin.com/in/dxncrv/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
-				<iconify-icon icon="line-md:linkedin" width="28" height="28"></iconify-icon>
-			</a>
-			<a href="https://www.instagram.com/dxncrv/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-				<iconify-icon icon="line-md:instagram" width="28" height="28"></iconify-icon>
-			</a>
-		</div>
+		<Socials />
 	</div>
 </main>
 
@@ -148,19 +137,5 @@
 	form button:hover {
 		color: var(--accent);
 		border: 1px solid var(--accent);
-	}
-
-	div.socials {
-		display: flex;
-		color: var(--accent-dim);
-		gap: 1.5rem;
-	}
-	div.socials a {
-		font-size: 1.5rem;
-		color: var(--accent-dim);
-		transition: color 0.2s;
-	}
-	div.socials a:hover {
-		color: var(--accent);
 	}
 </style>

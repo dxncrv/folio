@@ -1,12 +1,19 @@
 <style>
 	.stack-icons {
 		display: flex;
+		flex-wrap: wrap; /* Allow wrapping */
 		gap: 1rem;
 		background: var(--bg);
 		padding: 1rem;
 		border-radius: 0.5rem;
 		align-items: center;
+		justify-content: center;
 		width: fit-content;
+		max-width: calc(3 * 2.5rem + 3 * 1rem + 2rem); /* 4 icons + 3 gaps + padding */
+	}
+	.stack-icons p {
+		font-size: 0.9em;
+		color: var(--outline);
 	}
 	.icon {
 		position: relative;
@@ -40,16 +47,24 @@
 <script lang="ts">
 // Array of stack items with icon name and label
 const stack = [
-    { icon: 'material-icon-theme:svelte', label: 'Svelte' },
-    { icon: 'vscode-icons:file-type-typescript', label: 'TypeScript' },
-    { icon: 'material-icon-theme:react', label: 'React' },
-    { icon: 'vscode-icons:file-type-csharp', label: 'C#' },
-    { icon: 'material-icon-theme:python', label: 'Python' }
+	{ label: 'Excalidraw', icon: 'material-icon-theme:excalidraw' },
+	{ label: 'VSCode', icon: 'material-icon-theme:vscode' },
+	{ label: 'pnpm', icon: 'material-icon-theme:pnpm'},
+	{ label: 'Git', icon: 'material-icon-theme:git' },
+
+	{ label: 'Svelte', icon: 'material-icon-theme:svelte' },
+	{ label: 'TypeScript', icon: 'vscode-icons:file-type-typescript' },
+	{ label: 'React', icon: 'material-icon-theme:react'},
+	{ label: 'Tailwind CSS', icon: 'logos:tailwindcss-icon' },
+
+	{ label: 'Python', icon: 'material-icon-theme:python' },
+	{ label: 'C Sharp', icon: 'material-icon-theme:csharp' },
 ];
 </script>
 
 <main class="stack-icons">
 	{#each stack as { icon, label } }
 		<iconify-icon class="icon" {icon} height="18px" width="18px" data-label={label} aria-label={label}></iconify-icon>
-	{/each}
+	{/each} 
+	<p>..and more</p> 
 </main>

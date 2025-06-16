@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Stack from '$lib/components/stack.svelte';
+	import Socials from '$lib/components/socials.svelte';
 </script>
 
 <svelte:head>
@@ -11,12 +12,15 @@
 		<img src="./assets/aashay.jpg" alt="Aashay Mehta" />
 		<h1>Aashay Mehta</h1>
 		<p>
-			Interface and Experience <b>Designer</b>;<br /> Web, App and Games <b>Developer</b>;<br />&
-			<b>Human</b>.
+			Interface and Experience <b>Designer</b>;<br />
+			Full-stack <b>Developer</b>;<br />
+			& <b>Human</b>.
 		</p>
 		<Stack />
+		<Socials />
 	</div>
 	<div class="letter">
+		<h2>Hello <span style="color: var(--font-dim); font-size: 1rem;">.txt</span></h2>
 		<p>
 			I spent the years 2015 to 2020 freelancing for architects, artists and small
 			business owners. These experiences made me build skills like visual design, spatial design, problem
@@ -38,7 +42,7 @@
 
 <style>
 	img {
-		height: 15rem;
+		height: 13rem;
 		width: 15rem;
 		object-fit: cover;
 		border-radius: 2rem;
@@ -53,6 +57,9 @@
 		font-family: var(--font-ui);
 		color: var(--accent);
 		font-size: 2.5rem;
+	}
+	h2 {
+		margin-left: 1.5rem;
 	}
 	.label {
 		margin-top: 2rem;
@@ -80,10 +87,16 @@
 	}
 	.letter p {
 		line-height: calc(var(--line-height) * 2);
-	}
+        height: 100%;
+        color: var(--contrast);
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        background: var(--body-bg);
+    }
 	a {
 		color: var(--accent-dim);
 		transition: color 0.5s;
+		text-decoration: none;
 	}
 	a:hover {
 		color: var(--accent);
@@ -98,6 +111,7 @@
 			margin-top: 0;
 		}
 		.letter {
+			padding: 2rem;
 			width: 100%;
 			border-left: none;
 			border-right: none;
