@@ -39,7 +39,7 @@
 		justify-content: center;
 		gap: 2rem;
 		text-align: center;
-		border: 1px solid var(--outline);
+		border: 1px solid var(--font-dim);
 		border-radius: 1rem;
 		padding: 2rem;
 		background: var(--body-bg);
