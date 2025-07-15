@@ -12,8 +12,8 @@ export const updateTheme: SubmitFunction = ({ action }) => {
 
 // Function to slugify a string
 export function slugify(str: string) {
-		return str
-			.toLowerCase()
-			.replace(/\s+/g, '-')
-			.replace(/[^a-z0-9-]/g, '');
+	return str
+		.toLowerCase()
+		.replace(/\s+/g, '-')
+		.replace(/[^a-z0-9-]/g, '');
 }

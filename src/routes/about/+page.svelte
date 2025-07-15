@@ -22,14 +22,13 @@
 	<div class="letter">
 		<h2>Hello <span style="color: var(--font-dim); font-size: 1rem;">.txt</span></h2>
 		<p>
-			I spent the years 2015 to 2020 freelancing for architects, artists and small
-			business owners. These experiences made me build skills like visual design, spatial design, problem
-			solving, and design thinking.
+			I spent the years 2015 to 2020 freelancing for architects, artists and small business owners.
+			These experiences made me build skills like visual design, spatial design, problem solving,
+			and design thinking.
 		</p>
 		<p>
-			Since 2021, after becoming a Master in Digital Media, I have been building software
-			products that are user-centric, backed by cognitive and behavioral science, engaging and
-			easy to use.
+			Since 2021, after becoming a Master in Digital Media, I have been building software products
+			that are user-centric, backed by cognitive and behavioral science, engaging and easy to use.
 		</p>
 		<p>
 			These days, I aspire to put these skills and subject expertise to use in building digital
@@ -87,12 +86,12 @@
 	}
 	.letter p {
 		line-height: calc(var(--line-height) * 2);
-        height: 100%;
-        color: var(--contrast);
-        padding: 0.75rem 1.25rem;
-        border-radius: 0.5rem;
-        background: var(--body-bg);
-    }
+		height: 100%;
+		color: var(--contrast);
+		padding: 0.75rem 1.25rem;
+		border-radius: 0.5rem;
+		background: var(--body-bg);
+	}
 	a {
 		color: var(--accent-dim);
 		transition: color 0.5s;

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Socials from "$lib/components/socials.svelte";
+	import Socials from '$lib/components/socials.svelte';
 
 	let status = 'Ready';
 

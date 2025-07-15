@@ -6,7 +6,7 @@ class facetsClass {
 	// State store for the facets
 	facets = $state<Facet[]>([
 		{ name: 'Code', bool: true },
-		{ name: 'Design', bool: true },
+		{ name: 'Design', bool: true }
 	]);
 	// toggle method manages the state of the facets, toggling 'bool' value of the 'name' parameter
 	toggle(name: string) {
@@ -50,12 +50,14 @@ class projectsClass {
 		const selectedFacets = Facets.selected();
 		// Filter the projects based on the selected facets and return the projects with the 'desc' and 'tech' properties updated.
 		return this.#all
-			.filter(project => project.tags.some(tag => selectedFacets.includes(tag)))
-			.map(project => ({
+			.filter((project) => project.tags.some((tag) => selectedFacets.includes(tag)))
+			.map((project) => ({
 				...project,
-				desc: selectedFacets.map(facet => project.desc[facet.toLowerCase()]).join(' '),
-				tech: selectedFacets.flatMap(facet => project.tags.includes(facet) ? project.tech[facet.toLowerCase()] : [])
-			}))
+				desc: selectedFacets.map((facet) => project.desc[facet.toLowerCase()]).join(' '),
+				tech: selectedFacets.flatMap((facet) =>
+					project.tags.includes(facet) ? project.tech[facet.toLowerCase()] : []
+				)
+			}));
 	});
 }
 // Export the Projects class as a singleton instance.

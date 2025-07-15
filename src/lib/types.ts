@@ -6,12 +6,12 @@ export interface Project {
 	git: string;
 	yt?: string;
 	awards?: string[];
-    desc: { [key: string]: string };
-    tech: { [key: string]: string[] };
+	desc: { [key: string]: string };
+	tech: { [key: string]: string[] };
 	study?: { [key: string]: string };
 }
 
 export interface Facet {
-    name: string;
-    bool: boolean;
+	name: string;
+	bool: boolean;
 }

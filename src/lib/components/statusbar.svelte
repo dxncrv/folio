@@ -5,7 +5,7 @@
 <div class="statusbar">
 	{#if Facets.selected().length > 0}
 		<p>
-			Showing 
+			Showing
 			{#each Facets.selected() as facet, i}
 				{#if i === Facets.selected().length - 1 && i !== 0}
 					{' and '}<span class="accent">{facet}</span>
@@ -15,8 +15,10 @@
 					{', '}<span class="accent">{facet}</span>
 				{/if}
 			{/each}
-			{Facets.selected().length === 1 ? ' work' : ' works'} in 
-			<span class="accent">{Projects.selected.length}</span> project{Projects.selected.length === 1 ? '' : 's'}:
+			{Facets.selected().length === 1 ? ' work' : ' works'} in
+			<span class="accent">{Projects.selected.length}</span> project{Projects.selected.length === 1
+				? ''
+				: 's'}:
 		</p>
 	{/if}
 </div>
