@@ -69,5 +69,58 @@
         "tech": {
             "design": ["Premiere Pro", "Photoshop", "Blender", "Unity"]
         }
+    },
+    {
+        "tags": ["Code"],
+        "title": "Game - Impact Jam (G4C)",
+        "image": "./assets/5.png",
+        "link": "https://play.unity.com/en/games/6a73a0ec-66e9-47c2-8149-9297fb3836b0/healing-heart",
+        "git": "",
+
+        "desc": {
+            "code": "Created a game in 10 days with three other students from around the world during the Impact Jam hosted by Games for Change. Our project earned an honorable mention for the most creative concept."
+        },
+        "tech": {
+            "code": [
+                "Unity",
+                "Photoshop", 
+                "Blender" 
+            ]
+        }
+    },
+    {
+        "tags": ["Design"],
+        "title": "Sharin",
+        "image": "./assets/ph.png",
+        "link": "",
+        "git": "",
+
+        "desc": {
+            "design": "For a wedding, I created an animated short story. I also produced 50 personalized interactive videos for guests. These videos were triggered live as guests 'wrote' their invitation cards, known as a Kankotri."
+        },
+        "tech": {
+            "design": [
+                "Photoshop", 
+                "After Effects",
+                "Premiere Pro"
+            ]
+        }
+    },
+    {
+        "tags": ["Design"],
+        "title": "Evokar",
+        "image": "./assets/ph.png",
+        "link": "",
+        "git": "",
+
+        "desc": {
+            "design": "I designed an eco-friendly packaging system for six lampshades, available in two sizes. Inspired by origami, the entire package is made solely from cardboard. The outer structure encases the lampshades, while an inner form provides cushioning and protection."
+        },
+        "tech": {
+            "design": [
+                "Rhino",
+                "Illustrator"
+            ]
+        }
     }
 ]

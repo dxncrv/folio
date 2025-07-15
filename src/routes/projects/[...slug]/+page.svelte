@@ -131,7 +131,7 @@
 	p {
 		font-size: calc(var(--font-size) * 1.15);
 		padding: 1rem;
-		line-height: calc(var(--line-height) * 2);
+		line-height: calc(var(--line-height) * 1.75);
 	}
 	.article {
 		display: flex;

@@ -1,40 +1,33 @@
 <script lang="ts">
     import { slugify } from '$lib/utils';
+    import { createTypewriter } from '$lib/store.svelte';
     let { project } = $props();
 
-    // make a hashmap that maps tech names to their icons
+    // hashmap for tech icons
     const techIcons: Record<string, string> = {
         'Svelte': 'material-icon-theme:svelte',
         'TypeScript': 'material-icon-theme:typescript',
         'Figma': 'material-icon-theme:figma',
         'Blender': 'logos:blender',
         'Photoshop': 'logos:adobe-photoshop',
+        'After Effects': 'logos-adobe-after-effects',
         'Illustrator': 'logos:adobe-illustrator',
         'Premiere Pro': 'logos:adobe-premiere',
         'Unity': 'material-icon-theme:unity',
         'C Sharp': 'material-icon-theme:csharp',
+        'Rhino': 'simple-icons:rhinoceros',
     };
 
-    const MAX_LENGTH = 35;
-    let isTruncated = $state(true);
-    let displayDesc = $state('');
+    // Typewriter and truncation logic for descriptions
+    const typewriter = createTypewriter(30, 20, 10);
 
     function toggleDescription() {
-        isTruncated = !isTruncated;
+        typewriter.toggle();
     }
 
+    // Watch for project description changes
     $effect(() => {
-        if (isTruncated && project.desc.length > MAX_LENGTH) {
-            let truncated = project.desc.slice(0, MAX_LENGTH);
-            // Truncate at the last space to avoid cutting a word
-            const lastSpace = truncated.lastIndexOf(' ');
-            if (lastSpace > 0) {
-                truncated = truncated.slice(0, lastSpace);
-            }
-            displayDesc = truncated + '...';
-        } else {
-            displayDesc = project.desc;
-        }
+        typewriter.processText(project.desc);
     });
 </script>
 
@@ -49,10 +42,13 @@
         </h2>
     </a>
     <p>
-        {displayDesc}
-        {#if project.desc.length > MAX_LENGTH}
+        <span class="typewriter-text">{typewriter.text}</span>
+        {#if typewriter.isTyping}
+            <span class="cursor">|</span>
+        {/if}
+        {#if typewriter.shouldShowButton(project.desc.length)}
             <button class="description" type="button" onclick={toggleDescription}>
-                {isTruncated ? 'More' : 'Less'}
+                {typewriter.getButtonText()}
             </button>
         {/if}
     </p>
@@ -112,6 +108,19 @@
     }
     .description:hover {
         color: var(--accent);
+    }
+    .typewriter-text {
+        display: inline;
+    }
+    .cursor {
+        display: inline-block;
+        animation: blink 1s infinite;
+        color: var(--accent);
+        font-weight: bold;
+    }
+    @keyframes blink {
+        0%, 50% { opacity: 1; }
+        51%, 100% { opacity: 0; }
     }
     .title {
         color: var(--contrast);

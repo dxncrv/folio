@@ -17,7 +17,9 @@
 	<div id="view">
 		{#each Projects.selected.slice(Projects.range.min, Projects.range.max) as project}
 			{#if project.tags.some((tag) => Facets.selected().includes(tag))}
-				<Card {project} />
+				{#key project.title}
+					<Card {project} />
+				{/key}
 			{/if}
 		{/each}
 	</div>
