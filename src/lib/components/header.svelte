@@ -73,7 +73,19 @@
 
 	@media (max-width: 768px) {
 		nav {
-			gap: 0.25rem;
+			position: sticky;
+			flex-wrap: wrap;
+			top: 0;
+			margin: 0;
+			padding: 0.25rem;
+			background: var(--bg);
+			border-bottom: 1px solid var(--font-dim);
+		}
+		.nav-links a{
+			background: var(--body-bg);
+		}
+		.nav-filters button{
+			display:none;
 		}
 	}
 </style>
@@ -106,7 +118,7 @@
 	{/snippet}
 
 <nav>
-	<menu>
+	<menu class="nav-links">
 		{#each nav as { name, href }}
 			<a
 				class:active={isActive(page.route.id ?? '', href)}
@@ -116,7 +128,7 @@
 			{/each}
 			<Dot />
 	</menu>
-	<menu>
+	<menu class="nav-filters">
 		{#each Facets.facets as { name, bool }}
 			<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
 				{name}

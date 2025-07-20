@@ -61,4 +61,10 @@
     opacity: 1;
     transform: translateX(0) scaleX(1);
 }
+
+@media (max-width: 768px) {
+    .timemachine-btn {
+        display: none;
+    }
+}
 </style>

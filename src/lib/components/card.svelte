@@ -186,6 +186,7 @@
     }
     @media (max-width: 768px) {
         .project {
+            margin-top: 1.5rem;
             border: 1px solid var(--font-dim);
         }
         .project:hover {
