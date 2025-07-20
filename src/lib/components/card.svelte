@@ -25,13 +25,19 @@
         typewriter.toggle();
     }
 
+    // Removes 'https://','www.', and everything after '.com' or '.org' etc.
+    function cleanLink(link: string): string {
+        return link.replace(/^(https?:\/\/)?(www\.)?/, '').split(/[/?#]/)[0];
+    }
+
     // Watch for project description changes
     $effect(() => {
         typewriter.processText(project.desc);
     });
 </script>
-
 <div class="project">
+    <a class="toastylink" href={project.link} target="_blank" rel="noopener noreferrer">{cleanLink(project.link)}
+    </a>
     <a
         data-sveltekit-preload-data
         href={'projects/' + slugify(project.title)}>
@@ -64,7 +70,19 @@
 </div>
 
 <style>
+    :global(.toastylink) {
+        position:absolute;
+        top:-2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgb(15, 166, 236);
+        font-family: var(--font-ui);
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
     .project {
+        position: relative;
         max-width: 25rem;
         width: 100%;
         margin: 0 auto;

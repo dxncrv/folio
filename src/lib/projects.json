@@ -1,9 +1,9 @@
 [
     {
         "tags": ["Design", "Code"],
-        "title": "CAPS Website",
+        "title": "CAPS-CPCA WebApp",
         "image": "./assets/1.png",
-        "link": "https://main.d2peu2nd9ijpwu.amplifyapp.com/",
+        "link": "https://staging.caps.sogc.org",
         "git": "https://github.com/CAPS-CPCA/CAPS-CPCA-WebApp",
         
         "desc": {
