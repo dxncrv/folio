@@ -12,6 +12,6 @@ _2021 - 2022_
 
 ---
 
-**Masters in Digital Media** • Centre for Digital Media, CA  
+**Master of Digital Media** • Centre for Digital Media, CA  
 ![Centre for Digital Media Logo](https://dxncrv.github.io/v3-react-portfolio/assets/Insignias.0c65ca2b.png)  
 _2020 - 2021_
