@@ -2,7 +2,6 @@
 	import { page } from '$app/state';
 	import { slugify } from '$lib/utils';
 	import { Projects } from '$lib/store.svelte';
-	import { videos } from '$lib/vids';
 	import StudyHeader from './studyHeader.svelte';
 	import StudyBody from './studyBody.svelte';
 

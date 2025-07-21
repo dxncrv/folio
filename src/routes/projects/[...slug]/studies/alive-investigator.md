@@ -1,4 +1,4 @@
-!![Falling Skies Demo](/src/lib/vids/A1mdemo_Skyfall.webm)
+!![Falling Skies Demo](/videos/A1mdemo_Skyfall.webm)
 
 ## Overview
 
@@ -29,7 +29,7 @@
 
 Besides facilitating client meetings, weekly Scrum management, sprint planning, UX wireframes, and documentation, I also contributed by storyboarding, creating 3D assets in Blender, and developing systems in Unity.
 
-!![Prologue Prototype](/src/lib/vids/Alive.A1m4.webm)
+!![Prologue Prototype](/videos/Alive.A1m4.webm)
 
 After our first client meeting, I created this prologue prototype in the second week of the project to kick off the storyline narrative. This helped us raise questions and address key aspects of the project early on.
 
