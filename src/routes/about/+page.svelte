@@ -8,12 +8,10 @@
 	const files = [
 		{
 			name: 'Hello',
-			ext: '.md',
 			content: helloMd
 		},
 		{
 			name: 'Resume',
-			ext: '.md',
 			content: resumeMd
 		}
 	]

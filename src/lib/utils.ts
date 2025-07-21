@@ -18,109 +18,91 @@ export function slugify(str: string) {
 			.replace(/[^a-z0-9-]/g, '');
 }
 
-// Robust markdown parser for portfolio content
+// Function to parse markdown into HTML
 export function parseMarkdown(markdown: string): string {
     if (!markdown) return '';
-    
-    let html = markdown;
-    
-    // 1. Handle line breaks FIRST (two spaces at end of line)
-    html = html.replace(/ {2,}\r?\n/g, '<br>');
-    
-    // 2. Convert headings (h1-h6)
-    html = html.replace(/^#{6}\s*(.+)$/gm, '<h6>$1</h6>');
-    html = html.replace(/^#{5}\s*(.+)$/gm, '<h5>$1</h5>');
-    html = html.replace(/^#{4}\s*(.+)$/gm, '<h4>$1</h4>');
-    html = html.replace(/^#{3}\s*(.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^#{2}\s*(.+)$/gm, '<h2>$1</h2>');
-    html = html.replace(/^#{1}\s*(.+)$/gm, '<h1>$1</h1>');
-    
-    // 3. Convert unordered lists (- or *)
-    html = html.replace(/^[\s]*[-*+]\s+(.+)$/gm, '<li>$1</li>');
-    
-    // 4. Convert ordered lists (1. 2. etc.)
-    html = html.replace(/^[\s]*\d+\.\s+(.+)$/gm, '<li>$1</li>');
-    
-    // 5. Wrap consecutive list items in appropriate list tags
-    html = html.replace(/(<li>.*?<\/li>(?:\s*<li>.*?<\/li>)*)/gs, (match) => {
-        // Check if this came from ordered or unordered list
-        const originalLines = markdown.split('\n');
-        let isOrdered = false;
-        
-        // Simple heuristic: if we find numbered lists in original, assume ordered
-        for (let line of originalLines) {
-            if (line.trim().match(/^\d+\.\s+/)) {
-                isOrdered = true;
-                break;
-            }
+
+    // Normalize line endings and split into blocks
+    const blocks = markdown
+        .replace(/\r\n/g, '\n') 
+        .split(/\n{2,}/); 
+
+    // Processing each block
+    const htmlBlocks = blocks.map(block => {
+        block = block.trim();
+        if (!block) return '';
+
+        // 1. Headings (h1-h6) - `#`, `##`, `###`, etc.
+        const headingMatch = block.match(/^(#{1,6})\s+(.+)$/);
+        if (headingMatch) {
+            const level = headingMatch[1].length;
+            const content = parseInline(headingMatch[2]);
+            return `<h${level}>${content}</h${level}>`;
         }
         
-        return isOrdered ? `<ol>${match}</ol>` : `<ul>${match}</ul>`;
+        // 2. Horizontal Rule - `---`, `***`, or `___`
+        if (/^[-*_]{3,}$/.test(block)) {
+            return '<hr>';
+        }
+
+        // 3. Blockquotes - `>`
+        if (block.startsWith('>')) {
+            const content = block.split('\n').map(line => line.replace(/^>\s?/, '')).join('\n');
+            return `<blockquote>${parseMarkdown(content)}</blockquote>`;
+        }
+
+        // 4. Lists (unordered or ordered) - `*`, `+`, `-` for unordered, and `1.`, `2.`, etc. for ordered
+        if (/^([*+-]|\d+\.)\s/.test(block)) {
+            const lines = block.split('\n');
+            const isOrdered = /^\d+\.\s/.test(lines[0]);
+            const tag = isOrdered ? 'ol' : 'ul';
+            
+            const items = lines.map(line => {
+                // Strips *, +, -, or #. from the start of the line
+                const itemContent = line.replace(/^([*+-]|\d+\.)\s+/, '');
+                return `<li>${parseInline(itemContent)}</li>`;
+            }).join('');
+            
+            return `<${tag}>${items}</${tag}>`;
+        }
+
+        // 5. Standalone Image or Video - `![alt](src)` or `!![alt](src)`
+        if (/^!?\!\[[^\]]*\]\([^)]+\)\s*$/.test(block)) {
+            return parseInline(block);
+        }
+
+        // 6. Treats remaining text as a paragraph
+        const pContent = block.replace(/ {2,}\n/g, '<br>\n');
+        return `<p>${parseInline(pContent)}</p>`;
     });
-    
-    // 6. Handle inline formatting
-    // Bold (strong) - **text** or __text__
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    html = html.replace(/__(.*?)__/g, '<strong>$1</strong>');
-    
-    // Italic (emphasis) - *text* or _text_ (but not when surrounded by other * or _)
-    html = html.replace(/(?<!\*)\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
-    html = html.replace(/(?<!_)_([^_\n]+?)_(?!_)/g, '<em>$1</em>');
-    
-    // Inline code - `code`
+
+    return htmlBlocks.filter(Boolean).join('\n');
+}
+
+/**
+ * Parses inline markdown elements like images, links, strong/emphasis, and inline code.
+ */
+function parseInline(text: string): string {
+    let html = text;
+
+    // Videos, Images, Links - `!![alt](src)`, `![alt](src)`, `[text](url)`
+    html = html.replace(/!!\[([^\]]*)\]\(([^)]+?)(?:\s+"([^"]*)")?\)/g, (_, alt, src, title) => 
+        title ? `<video controls src="${src}" alt="${alt}" title="${title}"></video>` : `<video controls src="${src}" alt="${alt}"></video>`
+    );
+    html = html.replace(/!\[([^\]]*)\]\(([^)]+?)(?:\s+"([^"]*)")?\)/g, (_, alt, src, title) => 
+        title ? `<img src="${src}" alt="${alt}" title="${title}">` : `<img src="${src}" alt="${alt}">`
+    );
+    html = html.replace(/\[([^\]]+)\]\(([^)]+?)(?:\s+"([^"]*)")?\)/g, (_, linkText, url, title) => 
+        title ? `<a href="${url}" title="${title}">${linkText}</a>` : `<a href="${url}">${linkText}</a>`
+    );
+
+    // Strong/Emphasis
+    html = html.replace(/\*\*([^*]+)\*\*|__([^_]+)__/g, '<strong>$1$2</strong>');
+    html = html.replace(/\*([^*]+)\*|_([^_]+)_/g, '<em>$1$2</em>');
+
+    // Inline code
     html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-    
-    // Images - ![alt](src) and ![alt](src "title")
-    html = html.replace(/!\[([^\]]*)\]\(([^)]+?)(?:\s+"([^"]*)")?\)/g, (match, alt, src, title) => {
-        return title ? `<img src="${src}" alt="${alt}" title="${title}">` : `<img src="${src}" alt="${alt}">`;
-    });
-    // Links - [text](url) and [text](url "title")
-    html = html.replace(/\[([^\]]+)\]\(([^)]+?)(?:\s+"([^"]*)")?\)/g, (match, text, url, title) => {
-        return title ? `<a href="${url}" title="${title}">${text}</a>` : `<a href="${url}">${text}</a>`;
-    });
-    
-    // 7. Handle blockquotes
-    html = html.replace(/^>\s*(.+)$/gm, '<blockquote>$1</blockquote>');
-    
-    // 8. Handle horizontal rules
-    html = html.replace(/^[-*_]{3,}$/gm, '<hr>');
-    
-    // 9. Convert paragraphs (group text by empty lines)
-    const blocks = html.split(/\n\s*\n/);
-    
-    html = blocks
-        .map(block => {
-            const trimmed = block.trim();
-            if (!trimmed) return '';
-            
-            // Skip blocks that are already wrapped in block-level elements
-            if (trimmed.match(/^<(?:h[1-6]|ul|ol|li|blockquote|hr|div|p|pre|code)/i)) {
-                return trimmed;
-            }
-            
-            // If block contains only list items, wrap in appropriate list tag
-            if (trimmed.match(/^<li>.*<\/li>$/s)) {
-                return `<ul>${trimmed}</ul>`;
-            }
-            
-            // Convert single newlines to spaces within paragraphs, but preserve <br> tags
-            const paragraphContent = trimmed
-                .split('<br>')
-                .map(part => part.replace(/\s*\n\s*/g, ' ').trim())
-                .join('<br>')
-                .trim();
-            
-            return paragraphContent ? `<p>${paragraphContent}</p>` : '';
-        })
-        .filter(Boolean)
-        .join('\n\n');
-    
-    // 10. Clean up any remaining issues
-    html = html
-        .replace(/<\/li>\s*<li>/g, '</li><li>') // Clean up list spacing
-        .replace(/<\/blockquote>\s*<blockquote>/g, '</blockquote><blockquote>') // Clean up blockquote spacing
-        .replace(/\n{3,}/g, '\n\n') // Remove excessive newlines
-        .trim();
-    
-    return html;
+
+    // Treat remaining newlines as spaces
+    return html.replace(/\n/g, ' ');
 }
