@@ -3,12 +3,20 @@
     import { parseMarkdown } from '$lib/utils';
     import aliveMd from './studies/alive-investigator.md?raw';
     import imitationMd from './studies/the-imitation-game.md?raw';
+    import fireMd from './studies/fire-investigation.md?raw';
+    import g4cMd from './studies/g4c-game.md?raw';
+    import sharinMd from './studies/sharin.md?raw';
+    import evokarMd from './studies/evokar.md?raw';
 
     // HashMap to store markdown files
     // TODO make better lol
     const files: Record<string, string> = {
         'alive-investigator': aliveMd,
-        'the-imitation-game': imitationMd
+        'the-imitation-game': imitationMd,
+        'fire-investigation': fireMd,
+        'game-impact-jam-g4c': g4cMd,
+        'sharin': sharinMd,
+        'evokar': evokarMd
     };
 
     let markdownContent = $derived(files[page.params.slug] || '');
@@ -54,7 +62,6 @@
     }
 	:global(.article img) {
         width: 100%;
-		border-radius: 1rem;
 	}
     @media (max-width: 768px) {
 		:global(.article img) {

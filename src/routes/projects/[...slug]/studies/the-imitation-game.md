@@ -1,4 +1,4 @@
-![Imitation game exhibition](https://dxncrv.github.io/v3-react-portfolio/assets/cover.vag.dc8cb130.jpg)
+!![Imitation game exhibition](/videos/the-imitation-game-demo.mp4)
 
 ## The Imitation Game
 
