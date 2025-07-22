@@ -1,6 +1,7 @@
 <script lang="ts">
     import { page } from '$app/state';
     import { parseMarkdown } from '$lib/utils';
+    import capsMd from './studies/caps.md?raw';
     import aliveMd from './studies/alive-investigator.md?raw';
     import imitationMd from './studies/the-imitation-game.md?raw';
     import fireMd from './studies/fire-investigation.md?raw';
@@ -11,6 +12,7 @@
     // HashMap to store markdown files
     // TODO make better lol
     const files: Record<string, string> = {
+        'caps-cpca-webapp': capsMd,
         'alive-investigator': aliveMd,
         'the-imitation-game': imitationMd,
         'fire-investigation': fireMd,
@@ -31,6 +33,11 @@
 </div>
 
 <style>
+    :global(.article a) {
+        color: rgb(15, 166, 236);
+        font-family: var(--font-ui);
+        text-decoration: none;
+    }
     :global(.article video) {
         width: 100%;
     }

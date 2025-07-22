@@ -78,7 +78,6 @@
         color: rgb(15, 166, 236);
         font-family: var(--font-ui);
         text-decoration: none;
-        transition: color 0.3s;
     }
 
     .project {
