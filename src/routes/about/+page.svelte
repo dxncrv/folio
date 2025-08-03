@@ -1,20 +1,20 @@
 <script lang="ts">
-	import Stack from '$lib/components/stack.svelte';
-	import Socials from '$lib/components/socials.svelte';
-	import Letter from './blocks/letter.svelte';
-	import helloMd from './blocks/hello.md?raw';
-	import resumeMd from './blocks/resume.md?raw';
+import Stack from '$lib/components/stack.svelte';
+import Letter from './blocks/letter.svelte';
+import helloMd from './blocks/hello.md?raw';
+import resumeMd from './blocks/resume.md?raw';
+import Contact from '$lib/components/contact.svelte';
 
-	const files = [
-		{
-			name: 'Hello',
-			content: helloMd
-		},
-		{
-			name: 'Resume',
-			content: resumeMd
-		}
-	]
+const files = [
+	{
+		name: 'Hello',
+		content: helloMd
+	},
+	{
+		name: 'Resume',
+		content: resumeMd
+	}
+];
 </script>
 
 <svelte:head>
@@ -23,26 +23,26 @@
 
 <main>
 	<div class="label">
-		<img src="./assets/aashay.jpg" alt="Aashay Mehta" />
+		<!-- <img src="./assets/aashay.jpg" alt="Aashay Mehta" /> -->
 		<h1>Aashay Mehta</h1>
 		<p>
-			Interface and Experience <b>Designer</b>;<br />
+			Interaction and Experience <b>Designer</b>;<br />
 			Full-stack <b>Developer</b>;<br />
 			& <b>Human</b>.
 		</p>
-		<Stack />
-		<Socials />
+		<Stack/>
+		<Contact initialStatus="Ready" />
 	</div>
 	<Letter {files} />
 </main>
 
 <style>
-	img {
-		height: 13rem;
-		width: 15rem;
+	/* img {
+		height: 6.5rem;
+		width: 7.5rem;
 		object-fit: cover;
 		border-radius: 2rem;
-	}
+	} */
 	main {
 		display: flex;
 		margin: 2rem auto;
