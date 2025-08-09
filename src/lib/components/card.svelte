@@ -1,6 +1,6 @@
 <script lang="ts">
+    import { Typer } from '$lib';
     import { slugify } from '$lib/utils';
-    import { createTypewriter } from '$lib/store.svelte';
     let { project } = $props();
 
     // hashmap for tech icons
@@ -18,23 +18,12 @@
         'Rhino': 'simple-icons:rhinoceros',
     };
 
-    // Typewriter and truncation logic for descriptions
-    const typewriter = createTypewriter(30, 20, 10);
-
-    function toggleDescription() {
-        typewriter.toggle();
-    }
-
     // Removes 'https://','www.', and everything after '.com' or '.org' etc.
     function cleanLink(link: string): string {
         return link.replace(/^(https?:\/\/)?(www\.)?/, '').split(/[/?#]/)[0];
     }
-
-    // Watch for project description changes
-    $effect(() => {
-        typewriter.processText(project.desc);
-    });
 </script>
+
 <div class="project">
     <a class="toastylink" href={project.link} target="_blank" rel="noopener noreferrer">{cleanLink(project.link)}
     </a>
@@ -47,17 +36,7 @@
             <span class="title">{project.title}</span>
         </h2>
     </a>
-    <p>
-        <span class="typewriter-text">{typewriter.text}</span>
-        {#if typewriter.isTyping}
-            <span class="cursor">|</span>
-        {/if}
-        {#if typewriter.shouldShowButton(project.desc.length)}
-            <button class="description" type="button" onclick={toggleDescription}>
-                {typewriter.getButtonText()}
-            </button>
-        {/if}
-    </p>
+    <Typer text={project.desc} />
     <ul>
         {#each project.tech as t}
             <li>
@@ -104,40 +83,6 @@
     a:hover .case-study, a:hover span{
         color: var(--accent);
         animation: none;
-    }
-    .project p {
-        height: 100%;
-        color: var(--contrast);
-        line-height: calc(var(--line-height) * 1.5);
-        padding: 0.75rem 1.25rem;
-        border-radius: 0.5rem;
-        background: var(--body-bg);
-    }   
-    .description {
-        background: none;
-        border: none;
-        color: var(--accent-dim);
-        cursor: pointer;
-        font-size: 0.8rem;
-        padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
-        transition: color 0.3s, background-color 0.3s;
-    }
-    .description:hover {
-        color: var(--accent);
-    }
-    .typewriter-text {
-        display: inline;
-    }
-    .cursor {
-        display: inline-block;
-        animation: blink 1s infinite;
-        color: var(--accent);
-        font-weight: bold;
-    }
-    @keyframes blink {
-        0%, 50% { opacity: 1; }
-        51%, 100% { opacity: 0; }
     }
     .title {
         color: var(--contrast);

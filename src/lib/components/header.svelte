@@ -96,7 +96,7 @@
 	import { Facets } from '$lib/store.svelte';
 	import { page } from '$app/state';
 	import { enhance } from '$app/forms';
-	import Dot from './plugins/Dot.svelte';
+	import { Dot } from '$lib';
 
 	// Initialising the navigation links
 	let nav = [
