@@ -95,6 +95,7 @@ p {
 	color: var(--contrast);
 	font-family: var(--font-read);
 }
+
 h2 {
 	font-size: calc(var(--font-size) * 1.2);
 	font-family: var(--font-ui);

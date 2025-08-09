@@ -1,27 +1,33 @@
 import data from './projects.json';
-import type { Project, Facet } from './types';
+import type { Project } from './types';
 
-// Facets class to manage the filter state of the projects.
-class facetsClass {
-	// State store for the facets
-	facets = $state<Facet[]>([
-		{ name: 'Code', bool: true },
-		{ name: 'Design', bool: true },
-	]);
-	// toggle method manages the state of the facets, toggling 'bool' value of the 'name' parameter
+// FacetsClass: facets array is derived from unique tags in data
+class FacetsClass {
+	// facets: derived array of unique tags from data, each with a boolean for selection.
+	facets = $derived.by(() => {
+		const uniqueTags = Array.from(
+			new Set((data as Project[]).flatMap(project => project.tags))
+		).sort();
+		return uniqueTags.map(tag => ({ name: tag, bool: true }));
+	});
+
+	// toggle: toggles the boolean value for a given facet name.
 	toggle(name: string) {
-		this.facets = this.facets.map((f) => (f.name === name ? { ...f, bool: !f.bool } : f));
+		this.facets = this.facets.map(f =>
+			f.name === name ? { ...f, bool: !f.bool } : f
+		);
+		// Reset pagination if current min index exceeds selected projects.
 		if (Projects.range.min > Projects.selected.length - 1) {
 			Projects.range.reset();
 		}
 	}
-	// selected method returns the selected facets as an array ['name1', 'name2', ...]
+
+	// selected: returns the names of facets that are currently selected.
 	selected() {
-		return this.facets.filter((f) => f.bool).map((f) => f.name);
+		return this.facets.filter(f => f.bool).map(f => f.name);
 	}
 }
-// Export the Facets class as a singleton instance.
-export const Facets = new facetsClass();
+export const Facets = new FacetsClass();
 
 // Projects class to manage the projects state and pagination.
 class projectsClass {
@@ -47,7 +53,7 @@ class projectsClass {
 	// PUBLIC selected, derived state returns the projects based on the selected facets.
 	selected = $derived.by(() => {
 		// Get the selected facets
-		const selectedFacets = Facets.selected();
+	const selectedFacets = Facets.selected();
 		// Filter the projects based on the selected facets and return the projects with the 'desc' and 'tech' properties updated.
 		return this.#all
 			.filter(project => project.tags.some(tag => selectedFacets.includes(tag)))

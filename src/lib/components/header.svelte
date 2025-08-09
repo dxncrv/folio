@@ -128,7 +128,7 @@
 			<Dot />
 	</menu>
 	<menu class="nav-filters">
-		{#each Facets.facets as { name, bool }}
+	{#each Facets.facets as { name, bool }}
 			<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
 				{name}
 			</button>

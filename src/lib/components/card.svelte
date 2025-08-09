@@ -1,4 +1,5 @@
 <script lang="ts">
+    import images from '$lib/images/index';
     import { Typer } from '$lib';
     import { slugify } from '$lib/utils';
     let { project } = $props();
@@ -30,7 +31,7 @@
     <a
         data-sveltekit-preload-data
         href={'projects/' + slugify(project.title)}>
-        <img src={project.image} alt={project.title} />
+        <enhanced:img src={images[project.image]} alt={project.title} />
         <h2>
             <iconify-icon class="case-study" icon="line-md:folder-multiple-twotone" height=24 width=24></iconify-icon>
             <span class="title">{project.title}</span>
@@ -97,6 +98,7 @@
     }
     a {
         display: flex;
+        height: auto;
         flex-direction: column;
         gap: 1.25rem;
         text-decoration: none;
@@ -106,12 +108,14 @@
         display: flex;
     }
 
-    img {
+    enhanced\:img {
+        height: auto;
         width: 100%;
 		border-radius: 0.5rem;
 		object-fit: contain;
 		transition: scale 0.3s;
     }
+    
     ul {
         display: flex;
         flex-wrap: wrap;

@@ -1,5 +1,4 @@
 <script lang="ts">
-import Socials from '$lib/components/socials.svelte';
 export let initialStatus: string = 'Ready';
 let status: string = initialStatus;
 let showForm = false;
@@ -38,7 +37,6 @@ let showForm = false;
 </script>
 
 <div class="contact-form">
-	<Socials />
 	{#if !showForm}
 		<button type="button" class="primary" onclick={() => showForm = true}>Get in touch</button>
 	{:else}

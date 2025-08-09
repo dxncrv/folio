@@ -10,4 +10,8 @@ declare global {
 	}
 }
 
+declare module '@sveltejs/enhanced-img' {
+  export const enhanced: any;
+}
+
 export {};

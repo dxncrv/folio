@@ -4,6 +4,7 @@ import Letter from './blocks/letter.svelte';
 import helloMd from './blocks/hello.md?raw';
 import resumeMd from './blocks/resume.md?raw';
 import Contact from '$lib/components/contact.svelte';
+	import Socials from '$lib/components/socials.svelte';
 
 const files = [
 	{
@@ -23,7 +24,7 @@ const files = [
 
 <main>
 	<div class="label">
-		<!-- <img src="./assets/aashay.jpg" alt="Aashay Mehta" /> -->
+		<enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" />
 		<h1>Aashay Mehta</h1>
 		<p>
 			Interaction and Experience <b>Designer</b>;<br />
@@ -32,17 +33,18 @@ const files = [
 		</p>
 		<Stack/>
 		<Contact initialStatus="Ready" />
+		<Socials />
 	</div>
 	<Letter {files} />
 </main>
 
 <style>
-	/* img {
-		height: 6.5rem;
-		width: 7.5rem;
+	enhanced\:img {
+		height: 10rem;
+		width: 10rem;
 		object-fit: cover;
 		border-radius: 2rem;
-	} */
+	}
 	main {
 		display: flex;
 		margin: 2rem auto;

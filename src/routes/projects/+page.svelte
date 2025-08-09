@@ -1,7 +1,7 @@
 <script lang="ts">
     import Card from '$lib/components/card.svelte';
 	import Statusbar from '$lib/components/statusbar.svelte';
-	import { Facets, Projects } from '$lib/store.svelte';
+    import { Facets, Projects } from '$lib/store.svelte';
 </script>
 
 <svelte:head>
@@ -16,7 +16,7 @@
     {/if}
 	<div id="view">
 		{#each Projects.selected.slice(Projects.range.min, Projects.range.max) as project}
-			{#if project.tags.some((tag) => Facets.selected().includes(tag))}
+            {#if project.tags.some((tag) => Facets.selected().includes(tag))}
 				{#key project.title}
 					<Card {project} />
 				{/key}

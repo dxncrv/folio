@@ -1,8 +1,9 @@
 <script>
 	import 'iconify-icon';
+	import { Circle } from '$lib';
 	import Header from '$lib/components/header.svelte';
-	import '../app.css';
 	import Timemachine from '$lib/components/timemachine.svelte';
+	import '../app.css';
 </script>
 
 <Header />
@@ -14,3 +15,4 @@
 	<p>© 2024 - handmade with ♡ by @dxncrv</p>
 </footer>
 <Timemachine/>
+<Circle />

@@ -1,8 +1,8 @@
 [
     {
-        "tags": ["Design", "Code"],
+        "tags": ["Code", "Design"],
         "title": "CAPS-CPCA WebApp",
-        "image": "./assets/1.png",
+        "image": "caps",
         "link": "https://staging.caps.sogc.org",
         "git": "https://github.com/CAPS-CPCA/CAPS-CPCA-WebApp",
         
@@ -16,9 +16,9 @@
         }
     },
     {
-        "tags": ["Design", "Code"],
+        "tags": ["Code", "Design"],
         "title": "ALIVE Investigator",
-        "image": "./assets/2.png",
+        "image": "alive",
         "link": "",
         "git": "https://github.com/ALIVE-UBC/ALIVE-Investigator-Demos",
 
@@ -32,9 +32,9 @@
         }
     },
     {
-        "tags": ["Design", "Code"],
+        "tags": ["Code", "Design"],
         "title": "Fire Investigation",
-        "image": "./assets/3.png",
+        "image": "fire",
         "link": "https://firesim.jibc.ca",
         "git": "",
         "yt": "https://www.youtube.com/watch?v=B0u3gJtFoR0",
@@ -52,7 +52,7 @@
     {
         "tags": ["Design"],
         "title": "The Imitation Game",
-        "image": "./assets/4.png",
+        "image": "exhib",
         "link": "https://imitationgameexhibition.ca",
         "git": "",
         
@@ -66,7 +66,7 @@
     {
         "tags": ["Code"],
         "title": "Game, Impact Jam (G4C)",
-        "image": "./assets/5.png",
+        "image": "game",
         "link": "https://play.unity.com/en/games/6a73a0ec-66e9-47c2-8149-9297fb3836b0/healing-heart",
         "git": "",
 
@@ -84,7 +84,7 @@
     {
         "tags": ["Design"],
         "title": "Sharin",
-        "image": "./assets/ph.png",
+        "image": "ph",
         "link": "",
         "git": "",
 
@@ -102,7 +102,7 @@
     {
         "tags": ["Design"],
         "title": "Evokar",
-        "image": "./assets/ph.png",
+        "image": "ph",
         "link": "",
         "git": "",
 

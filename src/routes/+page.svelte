@@ -7,7 +7,7 @@ import Socials from '$lib/components/socials.svelte';
 
 <main>
 	<h1>I solve questions</h1>
-	<p>by analyzing, fragmenting, hypothesizing, prototyping, value testing, and iterating 🔁</p>
+	<p>by fragmenting, analyzing, hypothesizing, prototyping, value testing, and iterating 🔁</p>
 	<div class="links">
 		<a href="/about">who</a>
 		<p>•</p>
