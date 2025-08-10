@@ -45,5 +45,13 @@
 		"ignoredBuiltDependencies": [
 			"sharp"
 		]
+	},
+	"dependencies": {
+		"@fontsource/averia-libre": "^5.2.6",
+		"@fontsource/averia-sans-libre": "^5.2.6",
+		"@fontsource/averia-serif-libre": "^5.2.6",
+		"@fontsource/fira-code": "^5.2.6",
+		"@fontsource/hanken-grotesk": "^5.2.6",
+		"@fontsource/solway": "^5.2.6"
 	}
 }

@@ -7,6 +7,25 @@ settings:
 importers:
 
   .:
+    dependencies:
+      '@fontsource/averia-libre':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fontsource/averia-sans-libre':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fontsource/averia-serif-libre':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fontsource/fira-code':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fontsource/hanken-grotesk':
+        specifier: ^5.2.6
+        version: 5.2.6
+      '@fontsource/solway':
+        specifier: ^5.2.6
+        version: 5.2.6
     devDependencies:
       '@eslint/compat':
         specifier: ^1.3.2
@@ -274,6 +293,24 @@ packages:
   '@eslint/plugin-kit@0.3.5':
     resolution: {integrity: sha512-Z5kJ+wU3oA7MMIqVR9tyZRtjYPr4OC004Q4Rw7pgOKUOKkJfZ3O24nz3WYfGRpMDNmcOi3TwQOmgm7B7Tpii0w==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+
+  '@fontsource/averia-libre@5.2.6':
+    resolution: {integrity: sha512-5i4zfw6rU36w3JGpOkJhDFrSgwAfinlhipS7gNQBCxwa+jk0xNn3hH2k7yqdG0ZRHnbVGwro7M4raNuKvSlYRA==}
+
+  '@fontsource/averia-sans-libre@5.2.6':
+    resolution: {integrity: sha512-Pjz1LFQgaopf9iqBWUVL1K/TJHT0sO9Um7zN6kOv5hSLeb1m3XLU2+jmZl9ruMypMkuhOUivM4dUfZu1WZ1VvA==}
+
+  '@fontsource/averia-serif-libre@5.2.6':
+    resolution: {integrity: sha512-z8dSN1ktkoFskxQY7m+h+whTM2uyl19z2zP5sPu+L8+GcFzkZp8A2Yqg7p010pCuvxKUhHVxJ0w4VZ0sYtbjqQ==}
+
+  '@fontsource/fira-code@5.2.6':
+    resolution: {integrity: sha512-wCkIpPm0BqlkCPLYeY4Vui96ODmVUV0/GpEe3OfJ4v8EJn/BF2SlyxvarFsTs1CKiGjrO2cXlIZbBrKi9F+hUQ==}
+
+  '@fontsource/hanken-grotesk@5.2.6':
+    resolution: {integrity: sha512-VMckO7wW9Gpt9dbghQ0av/06aBIf+Wf+INxrR9i0DyckEBgr2Dt3Lwrz6FreO84fRvZumqiInaZHpauHsH/JHg==}
+
+  '@fontsource/solway@5.2.6':
+    resolution: {integrity: sha512-2vGdnmS8XG72Mhesekd0hjjKfjUObzwSjoZFDa3onVwzYgvyOW+s31PdwOSP8b30oXyD9/FNOhq38cO+aqjmfg==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -1663,6 +1700,18 @@ snapshots:
     dependencies:
       '@eslint/core': 0.15.2
       levn: 0.4.1
+
+  '@fontsource/averia-libre@5.2.6': {}
+
+  '@fontsource/averia-sans-libre@5.2.6': {}
+
+  '@fontsource/averia-serif-libre@5.2.6': {}
+
+  '@fontsource/fira-code@5.2.6': {}
+
+  '@fontsource/hanken-grotesk@5.2.6': {}
+
+  '@fontsource/solway@5.2.6': {}
 
   '@humanfs/core@0.19.1': {}
 
