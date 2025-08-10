@@ -4,6 +4,7 @@
 	import Header from '$lib/components/header.svelte';
 	import Timemachine from '$lib/components/timemachine.svelte';
 	import '../app.css';
+	import Grainy from '$lib/_libfx/Grainy.svelte';
 </script>
 
 <Header />
@@ -16,3 +17,4 @@
 </footer>
 <Timemachine/>
 <Circle />
+<Grainy/>
