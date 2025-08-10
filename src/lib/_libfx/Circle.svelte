@@ -8,46 +8,34 @@
   Commercial licensing: hello@dxncrv.com
 -->
 <script lang="ts">
-
-import { onMount } from 'svelte';
-
-let cursorX = 0, cursorY = 0, showCircle = false, size = 32;
-let lastX = 0, lastY = 0;
+let cursor = $state({ x: 0, y: 0, visible: false, size: 32 });
+let last = $state({ x: 0, y: 0 });
 let decayTimeout: ReturnType<typeof setTimeout> | null = null;
 
-function isBgColored(el: Element | null): boolean {
-    if (!el) return false;
-    const style = getComputedStyle(el);
-    const bg = style.backgroundColor;
-    return typeof bg === 'string' && !['transparent', 'rgba(0, 0, 0, 0)', 'inherit'].includes(bg);
+const isBgColored = (el: Element | null) =>
+    el ? !['transparent', 'rgba(0, 0, 0, 0)', 'inherit'].includes(getComputedStyle(el).backgroundColor) : false;
+
+function resetCursorSize() {
+    cursor.size = 32;
 }
 
 function updateCursor(e: MouseEvent) {
-    cursorX = e.clientX;
-    cursorY = e.clientY;
+    cursor.x = e.clientX;
+    cursor.y = e.clientY;
 
-    const dx = cursorX - lastX;
-    const dy = cursorY - lastY;
-    const dist = Math.hypot(dx, dy);
+    const dist = Math.hypot(cursor.x - last.x, cursor.y - last.y);
+    cursor.size = Math.max(32, Math.min(64, cursor.size + dist * 0.05));
 
-    // Smooth size increase, clamp between 32 and 64
-    size = Math.max(32, Math.min(64, size + dist * 0.05));
-
-    lastX = cursorX;
-    lastY = cursorY;
+    last.x = cursor.x;
+    last.y = cursor.y;
 
     // Find nearest colored ancestor
-    let el = document.elementFromPoint(cursorX, cursorY);
-    while (el && el !== document.body && !isBgColored(el)) {
-        el = el.parentElement;
-    }
-    showCircle = !(el && el !== document.body);
+    let el = document.elementFromPoint(cursor.x, cursor.y);
+    while (el && el !== document.body && !isBgColored(el)) el = el.parentElement;
+    cursor.visible = !(el && el !== document.body);
 
-    // Reset decay timer
     if (decayTimeout) clearTimeout(decayTimeout);
-    decayTimeout = setTimeout(() => {
-        size = 32;
-    }, 700);
+    decayTimeout = setTimeout(resetCursorSize, 700);
 }
 
 function handleMouseMove(e: MouseEvent) {
@@ -55,15 +43,15 @@ function handleMouseMove(e: MouseEvent) {
 }
 
 function handleMouseLeave() {
-    showCircle = false;
+    cursor.visible = false;
     if (decayTimeout) clearTimeout(decayTimeout);
-    size = 32;
+    resetCursorSize();
 }
 
-onMount(() => {
-    // Initialize lastX/Y to avoid jump on first move
-    lastX = window.innerWidth / 2;
-    lastY = window.innerHeight / 2;
+// Prevent jump on first move
+$effect(() => {
+    last.x = cursor.x;
+    last.y = cursor.y;
 });
 </script>
 
@@ -71,7 +59,7 @@ onMount(() => {
 
 <div
   class="cursor-circle"
-  style="--circle-size: {size}px; left: {cursorX}px; top: {cursorY}px; opacity: {showCircle ? 1 : 0};"
+  style="--circle-size: {cursor.size}px; left: {cursor.x}px; top: {cursor.y}px; opacity: {cursor.visible ? 1 : 0};"
 ></div>
 
 <style>
