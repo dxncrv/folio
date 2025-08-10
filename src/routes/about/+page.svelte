@@ -1,21 +1,8 @@
 <script lang="ts">
-import Stack from '$lib/components/stack.svelte';
-import Letter from './blocks/letter.svelte';
-import helloMd from './blocks/hello.md?raw';
-import resumeMd from './blocks/resume.md?raw';
-import Contact from '$lib/components/contact.svelte';
+	import Stack from '$lib/components/stack.svelte';
+	import Letter from './blocks/letter.svelte';
+	import Contact from '$lib/components/contact.svelte';
 	import Socials from '$lib/components/socials.svelte';
-
-const files = [
-	{
-		name: 'Hello',
-		content: helloMd
-	},
-	{
-		name: 'Resume',
-		content: resumeMd
-	}
-];
 </script>
 
 <svelte:head>
@@ -35,7 +22,7 @@ const files = [
 		<Contact initialStatus="Ready" />
 		<Socials />
 	</div>
-	<Letter {files} />
+	<Letter/>
 </main>
 
 <style>

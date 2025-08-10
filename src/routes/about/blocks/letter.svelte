@@ -1,29 +1,87 @@
 <script lang="ts">
+	import helloMd from '../blocks/hello.md?raw';
+	import resumeMd from '../blocks/resume.md?raw';
 	import { parseMarkdown } from '$lib/utils';
-	
-	let { files } = $props();
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
+
+	// File definitions
+	const files = [
+		{ name: 'Hello', content: helloMd },
+		{ name: 'Resume', content: resumeMd }
+	];
+
 	let activeTab = $state(0);
+	let isLoading = $state(!browser);
+
+	const getTabFromHash = (hash: string) => {
+		const index = files.findIndex(f => `#${f.name.toLowerCase()}` === hash);
+		return index !== -1 ? index : null;
+	};
+	const updateActiveTab = (newTab: number | null) => {
+		if (newTab !== null && newTab !== activeTab) {
+			activeTab = newTab;
+		}
+	};
+
+	const selectTab = (index: number) => {
+		if (!isLoading) {
+			activeTab = index;
+			goto(`#${files[index].name.toLowerCase()}`, { replaceState: true, noScroll: true });
+		}
+	};
+	
+	$effect(() => {
+		if (browser) {
+			const hashTab = getTabFromHash(page.url.hash);
+			updateActiveTab(hashTab);
+			if (isLoading) {
+				setTimeout(() => {
+					isLoading = false;
+				}, 100);
+			}
+		}
+	});
 </script>
 
 <div class="letter">
-    <div class="tabs">
-        {#each files as file, i}
-            <button
-                class="tab"
-                class:active={activeTab === i}
-                onclick={() => activeTab = i}
-            >
-                {file.name}
-            </button>
-        {/each}
-    </div>
-    {@html parseMarkdown(files[activeTab].content)}
+	<div class="tabs">
+		{#if isLoading}
+			<div class="loading-tabs">
+				{#each files as file}
+					<div class="tab-skeleton"></div>
+				{/each}
+			</div>
+		{:else}
+			{#each files as file, i}
+				<button
+					class="tab"
+					class:active={activeTab === i}
+					onclick={() => selectTab(i)}
+				>
+					{file.name}
+				</button>
+			{/each}
+		{/if}
+	</div>
+	
+	{#if isLoading}
+		<div class="content-loading">
+			<div class="loading-shimmer"></div>
+			<div class="loading-shimmer"></div>
+			<div class="loading-shimmer"></div>
+		</div>
+	{:else}
+		{@html parseMarkdown(files[activeTab].content)}
+	{/if}
 </div>
 
 <style>
+	/* Layout */
 	.letter {
 		margin-top: 1rem;
-        position: relative;
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		gap: 2rem;
@@ -34,9 +92,11 @@
 		border-radius: 1rem;
 		border: 1px solid var(--font-dim);
 	}
+
+	/* Tabs */
 	.tabs {
-        position: absolute;
-        top: -2.75rem;
+		position: absolute;
+		top: -2.75rem;
 		display: flex;
 		gap: 0.5rem;
 	}
@@ -55,11 +115,49 @@
 
 	.tab.active {
 		background: var(--bg);
-        border-left: 1px solid var(--font-dim);
-        border-right: 1px solid var(--font-dim);
-        border-top: 1px solid var(--accent);
+		border-left: 1px solid var(--font-dim);
+		border-right: 1px solid var(--font-dim);
+		border-top: 1px solid var(--accent);
 		color: var(--accent);
 		z-index: 1;
+	}
+
+	/* Loading States */
+	.loading-tabs {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.tab-skeleton {
+		width: 80px;
+		height: 42px;
+		background: var(--font-dim);
+		opacity: 0.3;
+		border-radius: 0.5rem 0.5rem 0 0;
+		animation: pulse 1.5s ease-in-out infinite;
+	}
+
+	.content-loading {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.loading-shimmer {
+		height: 1.5rem;
+		background: var(--font-dim);
+		opacity: 0.2;
+		border-radius: 0.25rem;
+		animation: pulse 1.5s ease-in-out infinite;
+	}
+
+	.loading-shimmer:nth-child(1) { width: 90%; }
+	.loading-shimmer:nth-child(2) { width: 75%; animation-delay: 0.2s; }
+	.loading-shimmer:nth-child(3) { width: 85%; animation-delay: 0.4s; }
+
+	@keyframes pulse {
+		0%, 100% { opacity: 0.2; }
+		50% { opacity: 0.5; }
 	}
 
     :global(.letter h1) {
