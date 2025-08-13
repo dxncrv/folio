@@ -100,24 +100,26 @@
 		display: flex;
 		gap: 0.5rem;
 	}
-
 	.tab {
 		background: none;
 		border: none;
 		padding: 0.75rem 1.5rem;
 		font-size: 1rem;
 		font-family: var(--font-ui);
-		color: var(--font-dim);
+		color: var(--outline);
 		cursor: pointer;
 		border-radius: 0.5rem 0.5rem 0 0;
 		position: relative;
+		transition: color 0.5s;
+	}
+	.tab:hover {
+		color: var(--accent);
 	}
 
 	.tab.active {
 		background: var(--bg);
-		border-left: 1px solid var(--font-dim);
-		border-right: 1px solid var(--font-dim);
-		border-top: 1px solid var(--accent);
+		border: 1px solid var(--font-dim);
+		border-bottom: none;
 		color: var(--accent);
 		z-index: 1;
 	}

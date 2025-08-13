@@ -1,6 +1,17 @@
 <!-- An adaptation of grainy gradients made by @anatudor https://codepen.io/thebabydino/pen/azONXNb -->
 <script>
   let cardOpacity = $state(0);
+  
+  // Pre-generate all random values once to avoid recalculation
+  const colors = Array.from({ length: 8 }, () => 
+    `#${Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')}`
+  );
+  
+  const ellipseData = [
+    { rx: Math.random() * 15 + 30, ry: Math.random() * 3.75 + 26.25 },
+    { rx: Math.random() * 15 + 22.5, ry: Math.random() * 3.75 + 18.75 },
+    { rx: Math.random() * 11.25 + 15, ry: Math.random() * 3.75 + 11.25 }
+  ];
 
   $effect(() => {
     setTimeout(() => {
@@ -12,31 +23,31 @@
 <main id="grainy">
 <svg width="0" height="0" aria-hidden="true">
     <filter id="grain" color-interpolation-filters="sRGB" primitiveUnits="objectBoundingBox">
-    <feTurbulence type="fractalNoise" baseFrequency=".713" numOctaves="4"></feTurbulence>
-    <feDisplacementMap in="SourceGraphic" scale=".1" xChannelSelector="R"></feDisplacementMap>
-    <feBlend in2="SourceGraphic"></feBlend>
+      <feTurbulence type="fractalNoise" baseFrequency=".713" numOctaves="4"></feTurbulence>
+      <feDisplacementMap in="SourceGraphic" scale=".1" xChannelSelector="R"></feDisplacementMap>
+      <feBlend in2="SourceGraphic"></feBlend>
     </filter>
 </svg>
 <svg class="card" style="opacity: {cardOpacity}; transition: opacity 1s;">
     <linearGradient id="g11">
-      <stop stop-color={`#${Math.floor(Math.random()*16777215).toString(16)}`}></stop>
-      <stop stop-color={`#${Math.floor(Math.random()*16777215).toString(16)}`} offset="1"></stop>
+      <stop stop-color={colors[0]}></stop>
+      <stop stop-color={colors[1]} offset="1"></stop>
     </linearGradient>
     <linearGradient id="g12">
-      <stop stop-color={`#${Math.floor(Math.random()*16777215).toString(16)}`} offset=".2"></stop>
-      <stop stop-color={`#${Math.floor(Math.random()*16777215).toString(16)}`} offset=".6"></stop>
-      <stop stop-color={`#${Math.floor(Math.random()*16777215).toString(16)}`} offset="1"></stop>
+      <stop stop-color={colors[2]} offset=".2"></stop>
+      <stop stop-color={colors[3]} offset=".6"></stop>
+      <stop stop-color={colors[4]} offset="1"></stop>
     </linearGradient>
     <linearGradient id="g13">
-      <stop stop-color={`#${Math.floor(Math.random()*16777215).toString(16)}`} offset=".2"></stop>
-      <stop stop-color={`#${Math.floor(Math.random()*16777215).toString(16)}`} offset=".6"></stop>
-      <stop stop-color={`#${Math.floor(Math.random()*16777215).toString(16)}`} offset="1"></stop>
+      <stop stop-color={colors[5]} offset=".2"></stop>
+      <stop stop-color={colors[6]} offset=".6"></stop>
+      <stop stop-color={colors[7]} offset="1"></stop>
     </linearGradient>
     <g>
       <rect width="100%" height="100%" fill="transparent"></rect>
-      <ellipse rx="{Math.random() * 20 + 40}%" ry="{Math.random() * 10 + 35}%" fill="url(#g11)"></ellipse>
-      <ellipse rx="{Math.random() * 20 + 30}%" ry="{Math.random() * 10 + 25}%" fill="url(#g12)"></ellipse>
-      <ellipse rx="{Math.random() * 15 + 20}%" ry="{Math.random() * 10 + 15}%" fill="url(#g13)"></ellipse>
+      <ellipse rx="{ellipseData[0].rx}%" ry="{ellipseData[0].ry}%" fill="url(#g11)"></ellipse>
+      <ellipse rx="{ellipseData[1].rx}%" ry="{ellipseData[1].ry}%" fill="url(#g12)"></ellipse>
+      <ellipse rx="{ellipseData[2].rx}%" ry="{ellipseData[2].ry}%" fill="url(#g13)"></ellipse>
     </g>
 </svg>
 </main>
