@@ -38,6 +38,7 @@
 		justify-content: center;
 		gap: 5rem;
 	}
+
 	h1 {
 		font-family: var(--font-ui);
 		color: var(--accent);
@@ -55,6 +56,11 @@
 	.label p {
 		font-size: calc(var(--font-size) * 1.15);
 		line-height: calc(var(--line-height) * 1.5);
+	}
+	@media (max-width: 1024px) {
+		main {
+			gap: 2rem;
+		}
 	}
 	@media (max-width: 768px) {
 		main {

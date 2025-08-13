@@ -231,6 +231,12 @@
 	:global(.letter a:hover) {
 		color: var(--accent);
 	}
+	@media (max-width: 1080px) {
+		.letter {
+			padding: 2rem;
+			width: 45%;
+		}
+	}
 
 	@media (max-width: 768px) {
 		.letter {
@@ -241,7 +247,7 @@
 			border-right: none;
 		}
 		.tabs {
-			top: -2.20rem;
+			top: -2.15rem;
 			flex-wrap: wrap;
 			gap: 0.25rem;
 		}
