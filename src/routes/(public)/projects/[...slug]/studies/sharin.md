@@ -1,7 +1,3 @@
-![](/assets/9.png)
-
-## Sharin
-
 A live interactive invitation ceremony for a wedding, to simulate a tradition of relative families writing the kankotri invite card through a digital medium. Starting with an animated short video of concept story-line, followed by a set of 50 personalized videos for guests, all playing in a seamless manner.
 
 ![visualization of the setup](https://dxncrv.github.io/v3-react-portfolio/assets/sharin.m1.f4f6307e.png)

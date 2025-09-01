@@ -20,17 +20,11 @@
         'sharin': sharinMd,
         'evokar': evokarMd
     };
-
-    // Safely derive markdown content only if the slug exists in files
-    let markdownContent = '';
-    if (page.params?.slug && files[page.params.slug]) {
-        markdownContent = files[page.params.slug];
-    }
 </script>
 
 <div class="article">
-    {#if markdownContent}
-        {@html parseMarkdown(markdownContent)}
+    {#if page.params?.slug && files[page.params.slug]}
+        {@html parseMarkdown(files[page.params.slug])}
     {:else}
         <p>📝 - Writing in progress...</p>
     {/if}
