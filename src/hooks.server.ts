@@ -3,34 +3,25 @@ import { isIPWhitelisted } from '$lib/config/whitelist';
 import { error } from '@sveltejs/kit';
 
 export const handle = (async ({ event, resolve }) => {
-	// IP Whitelisting for admin dashboard
-	if (event.url.pathname.startsWith('/dash')) {
-		// Get client IP with fallback for Vercel deployment
-		let clientIP = event.getClientAddress();
-		
-		// On Vercel, check for forwarded headers
-		const forwardedFor = event.request.headers.get('x-forwarded-for');
-		const realIP = event.request.headers.get('x-real-ip');
-		
-		// Use the first IP from x-forwarded-for if available (most accurate on Vercel)
-		if (forwardedFor) {
-			clientIP = forwardedFor.split(',')[0].trim();
-		} else if (realIP) {
-			clientIP = realIP;
+	// IP Whitelisting for start page (compact)
+	if (event.url.pathname.startsWith('/start')) {
+		const h = event.request.headers;
+
+		// prefer first entry of x-forwarded-for, then x-real-ip, then getClientAddress()
+		const clientIP = (
+			(h.get('x-forwarded-for') ?? '').split(',')[0].trim() ||
+			(h.get('x-real-ip') ?? '').trim() ||
+			(event.getClientAddress() ?? '')
+		).trim();
+
+		if (!clientIP || !isIPWhitelisted(clientIP)) {
+			// Log blocked access and throw error
+			console.warn(`BLOCKED /start from ${clientIP}`);
+			throw error(403, 'Access denied: You are not authorized to access this resource.');
 		}
 
-		// Log attempted access with all relevant headers for debugging
-		console.log(`Dashboard access attempt from IP: ${clientIP}`);
-		console.log(`Headers - X-Forwarded-For: ${forwardedFor}, X-Real-IP: ${realIP}`);
-		console.log(`getClientAddress(): ${event.getClientAddress()}`);
-
-		if (!isIPWhitelisted(clientIP)) {
-			console.warn(`❌ BLOCKED: Unauthorized access attempt to /dash from IP: ${clientIP}`);
-			throw error(403, 'Access denied: Your IP address is not authorized to access this resource.');
-		}
-		
-		// Log authorized access
-		console.log(`✅ ALLOWED: Authorized access to /dash from IP: ${clientIP}`);
+		// Log allowed access
+		console.debug(`ALLOWED /start from ${clientIP}`);
 	}
 
 	// Theme handling
