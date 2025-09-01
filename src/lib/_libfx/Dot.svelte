@@ -16,7 +16,7 @@
 		dotEl.style.translate = `calc(${e.offsetLeft + e.offsetWidth / 2}px - 100%) 150%`;
 	};
 	$effect(() => {
-		moveDot(document.querySelector(`a[href='${page.route.id}']`));
+		moveDot(document.querySelector(`a[href='${page.url.pathname}']`));
 	});
 </script>
 

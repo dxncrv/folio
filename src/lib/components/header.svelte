@@ -1,3 +1,55 @@
+<script lang="ts">
+	// Importing and utility functions
+	import { updateTheme } from '$lib/utils';
+	import { Facets } from '$lib/store.svelte';
+	import { page } from '$app/state';
+	import { enhance } from '$app/forms';
+	import { Dot } from '$lib';
+
+	// Initialising the navigation links
+	let nav = [
+		{ name: 'Home', href: '/' },
+		{ name: 'About', href: '/about' },
+		{ name: 'Projects', href: '/projects' }
+	];
+
+	// function to check if the link is active
+	function isActive(routeId: string, href: string) {
+		return routeId === href || (href !== '/' && routeId.startsWith(href));
+	}
+
+</script>
+
+	{#snippet formBtn(action: string, label: string, id: string, icon: string)}
+		<button formaction={action} aria-label={label}>
+			<iconify-icon id={id} icon={icon} width="28" height="28"></iconify-icon>
+		</button>
+	{/snippet}
+
+<nav>
+	<menu class="nav-links">
+		{#each nav as { name, href }}
+			<a
+				class:active={isActive(page.url.pathname ?? '', href)}
+				{href}
+				>{name}
+			</a>
+			{/each}
+			<Dot />
+	</menu>
+	<menu class="nav-filters">
+	{#each Facets.facets as { name, bool }}
+			<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
+				{name}
+			</button>
+		{/each}
+		<form id="theme-toggler" method="post" use:enhance={updateTheme}>
+			{@render formBtn('/?/setTheme&theme=light','Toggle Light Theme','light','line-md:lightbulb-twotone')}
+			{@render formBtn('/?/setTheme&theme=dark','Toggle Dark Theme','dark','line-md:lightbulb-off-twotone')}
+		</form>
+	</menu>
+</nav>
+
 <style>
 	nav {
 		display: flex;
@@ -89,54 +141,3 @@
 		}
 	}
 </style>
-
-<script lang="ts">
-	// Importing and utility functions
-	import { updateTheme } from '$lib/utils';
-	import { Facets } from '$lib/store.svelte';
-	import { page } from '$app/state';
-	import { enhance } from '$app/forms';
-	import { Dot } from '$lib';
-
-	// Initialising the navigation links
-	let nav = [
-		{ name: 'Home', href: '/' },
-		{ name: 'About', href: '/about' },
-		{ name: 'Projects', href: '/projects' }
-	];
-
-	// function to check if the link is active
-	function isActive(routeId: string, href: string) {
-		return routeId === href || (href !== '/' && routeId.startsWith(href));
-	}
-</script>
-	{#snippet formBtn(action: string, label: string, id: string, icon: string)}
-		<button formaction={action} aria-label={label}>
-			<iconify-icon id={id} icon={icon} width="28" height="28"></iconify-icon>
-		</button>
-	{/snippet}
-
-<nav>
-	<menu class="nav-links">
-		{#each nav as { name, href }}
-			<a
-				class:active={isActive(page.route.id ?? '', href)}
-				{href}
-				>{name}
-			</a>
-			{/each}
-			<Dot />
-	</menu>
-	<menu class="nav-filters">
-	{#each Facets.facets as { name, bool }}
-			<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
-				{name}
-			</button>
-		{/each}
-		<form id="theme-toggler" method="post" use:enhance={updateTheme}>
-			{@render formBtn('/?/setTheme&theme=light','Toggle Light Theme','light','line-md:lightbulb-twotone')}
-			{@render formBtn('/?/setTheme&theme=dark','Toggle Dark Theme','dark','line-md:lightbulb-off-twotone')}
-		</form>
-	</menu>
-</nav>
-
