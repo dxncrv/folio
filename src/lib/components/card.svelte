@@ -4,6 +4,10 @@
     import { slugify } from '$lib/utils';
     let { project } = $props();
 
+    // Type-safe access to the images map (index.js exports a plain object)
+    const imgMap: Record<string, any> = images as Record<string, any>;
+    const imageSrc = imgMap[project.image] ?? '';
+
     // hashmap for tech icons
     const techIcons: Record<string, string> = {
         'Svelte': 'material-icon-theme:svelte',
@@ -31,7 +35,7 @@
     <a
         data-sveltekit-preload-data
         href={'projects/' + slugify(project.title)}>
-        <enhanced:img src={images[project.image]} alt={project.title} />
+    <enhanced:img src={imageSrc} alt={project.title} />
         <h2>
             <iconify-icon class="case-study" icon="line-md:folder-multiple-twotone" height=24 width=24></iconify-icon>
             <span class="title">{project.title}</span>

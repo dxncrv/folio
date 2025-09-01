@@ -21,7 +21,11 @@
         'evokar': evokarMd
     };
 
-    let markdownContent = $derived(files[page.params.slug] || '');
+    // Safely derive markdown content only if the slug exists in files
+    let markdownContent = '';
+    if (page.params?.slug && files[page.params.slug]) {
+        markdownContent = files[page.params.slug];
+    }
 </script>
 
 <div class="article">
