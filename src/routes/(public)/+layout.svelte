@@ -12,6 +12,9 @@
 	<a href="https://github.com/users/dxncrv/projects/3" target="_blank" rel="noopener noreferrer"
 		>Under intermittent development 🚧
 	</a>
+	<a href="/start" aria-label="start page">
+		<iconify-icon id="starticon" icon="line-md:cog-filled-loop" width="18" height="18"></iconify-icon>
+	</a>
 	<p>© 2024 - handmade with ♡ by @dxncrv</p>
 </footer>
 <Timemachine/>

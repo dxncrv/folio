@@ -38,8 +38,8 @@
 			<Dot />
 	</menu>
 	<menu class="nav-filters">
-	{#each Facets.facets as { name, bool }}
-			<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
+		{#each Facets.facets as { name, bool }}
+		<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
 				{name}
 			</button>
 		{/each}
@@ -51,6 +51,9 @@
 </nav>
 
 <style>
+	#starticon {
+		color: var(--font-color);
+	}
 	nav {
 		display: flex;
 		flex-wrap: wrap-reverse;
