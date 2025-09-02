@@ -1,7 +1,15 @@
 <script lang="ts">
+    import { onMount } from 'svelte';
     import Card from '$lib/components/card.svelte';
 	import Statusbar from '$lib/components/statusbar.svelte';
     import { Facets, Projects } from '$lib/store.svelte';
+
+    onMount(async () => {
+        // Load projects from API if not already loaded
+        if (Projects.all.length === 0) {
+            await Projects.fetchProjects();
+        }
+    });
 </script>
 
 <svelte:head>

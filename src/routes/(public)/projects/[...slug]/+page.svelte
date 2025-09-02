@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { slugify } from '$lib/utils';
 	import { Projects } from '$lib/store.svelte';
@@ -6,6 +7,13 @@
 	import StudyBody from './studyBody.svelte';
 
 	let project = $derived(Projects.selected.find((project) => slugify(project.title) === page.params.slug));
+
+	onMount(async () => {
+        // Load projects from API if not already loaded
+        if (Projects.all.length === 0) {
+            await Projects.fetchProjects();
+        }
+    });
 </script>
 
 <svelte:head>

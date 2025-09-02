@@ -6,8 +6,8 @@ export interface Project {
 	git: string;
 	yt?: string;
 	awards?: string[];
-    desc: { [key: string]: string };
-    tech: { [key: string]: string[] };
+    desc: { [key: string]: string | undefined };
+    tech: { [key: string]: string[] | undefined };
 	study?: { [key: string]: string };
 }
 
