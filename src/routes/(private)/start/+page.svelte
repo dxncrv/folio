@@ -4,42 +4,15 @@
 	import { Projects } from '$lib/store.svelte';
 	import ProjectForm from '$lib/components/ProjectForm.svelte';
 	import type { Project } from '$lib/types';
+	import Typer from '$lib/_libfx/Typer.svelte';
 
 	let showForm = $state(false);
 	let editingProject = $state<Project | undefined>(undefined);
 	let formMode = $state<'create' | 'edit'>('create');
 	let message = $state<string>('');
-	let messageType = $state<'success' | 'error' | ''>('');
-	let searchTerm = $state<string>('');
-	let selectedTagFilter = $state<string>('');
-
-	// Derived state for filtered projects
-	let filteredProjects = $derived.by(() => {
-		let filtered = Projects.all;
-		
-		if (searchTerm.trim()) {
-			const search = searchTerm.toLowerCase();
-			filtered = filtered.filter(project => 
-				project.title.toLowerCase().includes(search) ||
-				project.desc.code?.toLowerCase().includes(search) ||
-				project.desc.design?.toLowerCase().includes(search)
-			);
-		}
-		
-		if (selectedTagFilter) {
-			filtered = filtered.filter(project => 
-				project.tags.includes(selectedTagFilter)
-			);
-		}
-		
-		return filtered;
-	});
-
-	// Get unique tags for filter dropdown
-	let availableTags = $derived.by(() => {
-		const allTags = Projects.all.flatMap(project => project.tags);
-		return Array.from(new Set(allTags)).sort();
-	});
+	let messageType = $state<'success' | 'error' | 'info' | ''>('');
+	let editingProjectId = $state<string | null>(null);
+	let editingJson = $state('');
 
 	onMount(async () => {
 		await Projects.fetchProjects();
@@ -52,9 +25,24 @@
 	}
 
 	function showEditForm(project: Project) {
-		editingProject = project;
-		formMode = 'edit';
-		showForm = true;
+		editingProjectId = project.title;
+		editingJson = JSON.stringify(project, null, 2);
+		showMessage(`Editing "${project.title}"`, 'info');
+	}
+
+	function cancelEditing() {
+		editingProjectId = null;
+	}
+
+	async function saveEditing(originalTitle: string, json: string) {
+		try {
+			const project = JSON.parse(json);
+			await Projects.updateProject(originalTitle, project);
+			showMessage('Project updated successfully!', 'success');
+			editingProjectId = null;
+		} catch (error) {
+			showMessage('Invalid JSON: ' + (error instanceof Error ? error.message : 'Unknown error'), 'error');
+		}
 	}
 
 	function hideForm() {
@@ -88,74 +76,30 @@
 		}
 	}
 
-	function showMessage(msg: string, type: 'success' | 'error') {
+	function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 		message = msg;
 		messageType = type;
 		setTimeout(() => {
 			message = '';
 			messageType = '';
-		}, 5000);
+		}, 3000);
 	}
 
-	async function handleInitFromJson() {
-		if (!confirm('This will replace all existing projects with data from projects.json. Continue?')) {
-			return;
-		}
-		
-		try {
-			const result = await Projects.initializeFromJson();
-			showMessage(`Initialized ${result.projects.length} projects from JSON`, 'success');
-		} catch (error) {
-			showMessage(error instanceof Error ? error.message : 'Failed to initialize from JSON', 'error');
-		}
-	}
 </script>
 
 <main>
-	<div class="header">
-		<div>
-			<h1>Project Management Dashboard</h1>
-			<p>Manage your portfolio projects with realtime database operations.</p>
-		</div>
-		<div class="header-actions">
-			<button class="init-btn" onclick={handleInitFromJson}>
-				Initialize from JSON
-			</button>
-			<button class="create-btn" onclick={showCreateForm}>
-				+ Create New Project
-			</button>
-		</div>
-	</div>
-
-	{#if message}
-		<div class="message {messageType}">
-			{message}
-		</div>
-	{/if}
-
-	{#if Projects.all.length > 0}
-		<div class="filters">
-			<div class="search-box">
-				<input 
-					type="text" 
-					placeholder="Search projects..." 
-					bind:value={searchTerm}
-					class="search-input"
-				/>
-			</div>
-			<div class="filter-dropdown">
-				<select bind:value={selectedTagFilter} class="tag-filter">
-					<option value="">All Tags</option>
-					{#each availableTags as tag}
-						<option value={tag}>{tag}</option>
-					{/each}
-				</select>
-			</div>
-			<div class="results-count">
-				{filteredProjects.length} of {Projects.all.length} projects
-			</div>
-		</div>
-	{/if}
+	<header>
+		<a href="/" class="logo">
+			<img src="/favicon.png" alt="Logo" />
+		</a>
+		<h1>Hello, Aash.</h1>
+		<p class="header-message {messageType}">
+			<Typer text={message || "Welcome to the start page."}/>
+		</p>
+		<button class="primary" onclick={showCreateForm}>
+			+ Create New Project
+		</button>
+	</header>
 
 	{#if Projects.loading}
 		<div class="loading">Loading projects...</div>
@@ -163,102 +107,40 @@
 		<div class="error">Error: {Projects.error}</div>
 	{:else}
 		<div class="projects-grid">
-			{#each filteredProjects as project}
+			{#each Projects.all as project}
 				<div class="project-card">
 					<div class="project-header">
 						<h3>{project.title}</h3>
-						<div class="project-actions">
-							<button class="edit-btn" onclick={() => showEditForm(project)}>
-								Edit
-							</button>
-							<button class="delete-btn" onclick={() => handleDeleteProject(project.title)}>
-								Delete
-							</button>
+						<div class="project-actions" class:editing={editingProjectId === project.title}>
+							{#if editingProjectId === project.title}
+								<button class="save" onclick={() => saveEditing(project.title, editingJson)} aria-label="Save project">
+									<iconify-icon icon="line-md:uploading-loop" width="16" height="16"></iconify-icon>
+								</button>
+								<button class="cancel" onclick={cancelEditing} aria-label="Cancel edit">
+									<iconify-icon icon="line-md:cancel" width="16" height="16"></iconify-icon>
+								</button>
+							{:else}
+								<button class="edit" onclick={() => showEditForm(project)} aria-label="Edit project">
+									<iconify-icon icon="line-md:edit-twotone" width="16" height="16" ></iconify-icon>
+								</button>
+								<button class="delete" onclick={() => handleDeleteProject(project.title)} aria-label="Delete project">
+									<iconify-icon icon="line-md:remove" width="16" height="16"></iconify-icon>
+								</button>
+							{/if}
 						</div>
 					</div>
-					
-					<div class="project-meta">
-						<div class="tags">
-							{#each project.tags as tag}
-								<span class="tag">{tag}</span>
-							{/each}
-						</div>
-						<div class="image-info">
-							<strong>Image:</strong> {project.image || 'None'}
-						</div>
-					</div>
-
-					<div class="project-links">
-						{#if project.link}
-							<a href={project.link} target="_blank" rel="noopener noreferrer">🔗 Live Demo</a>
-						{/if}
-						{#if project.git}
-							<a href={project.git} target="_blank" rel="noopener noreferrer">📂 Repository</a>
-						{/if}
-						{#if project.yt}
-							<a href={project.yt} target="_blank" rel="noopener noreferrer">🎥 Video</a>
+					<div class="project-json">
+						{#if editingProjectId === project.title}
+							<textarea class="fira-code-normal" style="color: var(--accent);" bind:value={editingJson}></textarea>
+						{:else}
+							<pre class="fira-code-normal" style="color: aliceblue;">{JSON.stringify(project, null, 2)}</pre>
 						{/if}
 					</div>
-
-					<div class="project-desc">
-						{#if project.desc.code}
-							<div class="desc-section">
-								<strong>Code:</strong> {project.desc.code}
-							</div>
-						{/if}
-						{#if project.desc.design}
-							<div class="desc-section">
-								<strong>Design:</strong> {project.desc.design}
-							</div>
-						{/if}
-					</div>
-
-					<div class="project-tech">
-						{#if project.tech.code?.length}
-							<div class="tech-section">
-								<strong>Code Tech:</strong>
-								<div class="tech-list">
-									{#each project.tech.code as tech}
-										<span class="tech-item">{tech}</span>
-									{/each}
-								</div>
-							</div>
-						{/if}
-						{#if project.tech.design?.length}
-							<div class="tech-section">
-								<strong>Design Tech:</strong>
-								<div class="tech-list">
-									{#each project.tech.design as tech}
-										<span class="tech-item">{tech}</span>
-									{/each}
-								</div>
-							</div>
-						{/if}
-					</div>
-
-					{#if project.awards?.length}
-						<div class="project-awards">
-							<strong>Awards:</strong>
-							{#each project.awards as award}
-								<a href={award} target="_blank" rel="noopener noreferrer" class="award-link">
-									🏆 Award
-								</a>
-							{/each}
-						</div>
-					{/if}
 				</div>
 			{/each}
 		</div>
 
-		{#if filteredProjects.length === 0 && Projects.all.length > 0}
-			<div class="no-results">
-				<h3>No projects found</h3>
-				<p>Try adjusting your search or filter criteria.</p>
-				<button class="clear-filters" onclick={() => { searchTerm = ''; selectedTagFilter = ''; }}>
-					Clear Filters
-				</button>
-			</div>
-		{:else if Projects.all.length === 0}
+		{#if Projects.all.length === 0}
 			<div class="empty-state">
 				<h3>No projects yet</h3>
 				<p>Create your first project to get started!</p>
@@ -300,16 +182,21 @@
 		gap: 2rem;
 	}
 
-	.header {
+	.logo {
+		position: fixed;
+		left: 2rem;
+		display: flex;
+		align-items: center;
+		height: 1rem;
+	}
+	.logo img {
+		height: 3rem;
+	}
+	header {
 		display: flex;
 		justify-content: space-between;
-		align-items: flex-start;
+		align-items: center;
 		gap: 2rem;
-	}
-
-	.header-actions {
-		display: flex;
-		gap: 1rem;
 	}
 
 	h1 {
@@ -318,172 +205,23 @@
 		font-family: var(--font-ui);
 	}
 
-	.create-btn, .init-btn {
-		padding: 1rem 2rem;
-		border: 2px solid var(--accent);
-		border-radius: 0;
-		cursor: pointer;
-		font-size: 1rem;
-		font-weight: bold;
+	.header-message {
 		font-family: var(--font-ui);
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		white-space: nowrap;
-		transition: all 0.1s ease;
-		box-shadow: 4px 4px 0 var(--accent-dim);
+		margin: 0.5rem 0;
+		font-size: 0.9rem;
+		opacity: 0.8;
 	}
 
-	.create-btn {
-		background: var(--accent);
-		color: var(--bg);
-	}
-
-	.create-btn:hover {
-		background: var(--bg);
+	.header-message.success {
 		color: var(--accent);
-		transform: translate(2px, 2px);
-		box-shadow: 2px 2px 0 var(--accent-dim);
 	}
 
-	.init-btn {
-		background: var(--bg);
-		color: var(--contrast);
-		border-color: var(--outline);
-		box-shadow: 4px 4px 0 var(--outline);
-	}
-
-	.init-btn:hover {
-		background: var(--outline);
-		color: var(--bg);
-		transform: translate(2px, 2px);
-		box-shadow: 2px 2px 0 var(--outline);
-	}
-
-	.message {
-		padding: 1.5rem;
-		border: 3px solid;
-		margin-bottom: 2rem;
-		font-family: var(--font-ui);
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.3);
-	}
-
-	.message.success {
-		background: var(--bg);
-		color: var(--accent);
-		border-color: var(--accent);
-	}
-
-	.message.error {
-		background: var(--bg);
+	.header-message.error {
 		color: #ff6b6b;
-		border-color: #ff6b6b;
 	}
 
-	.filters {
-		display: flex;
-		gap: 1.5rem;
-		align-items: center;
-		padding: 2rem;
-		background: var(--bg);
-		border: 3px solid var(--outline);
-		margin-bottom: 2rem;
-		flex-wrap: wrap;
-		box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
-	}
-
-	.search-box {
-		flex: 1;
-		min-width: 250px;
-	}
-
-	.search-input {
-		width: 100%;
-		padding: 1rem;
-		border: 2px solid var(--outline);
-		background: var(--bg);
+	.header-message.info {
 		color: var(--contrast);
-		font-size: 1rem;
-		font-family: var(--font-ui);
-		transition: all 0.1s ease;
-		box-shadow: 4px 4px 0 var(--font-dim);
-	}
-
-	.search-input:focus {
-		outline: none;
-		border-color: var(--accent);
-		box-shadow: 4px 4px 0 var(--accent-dim);
-		transform: translate(-2px, -2px);
-	}
-
-	.search-input::placeholder {
-		color: var(--font-color);
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		font-size: 0.875rem;
-	}
-
-	.filter-dropdown {
-		min-width: 200px;
-	}
-
-	.tag-filter {
-		width: 100%;
-		padding: 1rem;
-		border: 2px solid var(--outline);
-		background: var(--bg);
-		color: var(--contrast);
-		font-size: 1rem;
-		font-family: var(--font-ui);
-		font-weight: bold;
-		text-transform: uppercase;
-		box-shadow: 4px 4px 0 var(--font-dim);
-		cursor: pointer;
-		transition: all 0.1s ease;
-	}
-
-	.tag-filter:focus {
-		outline: none;
-		border-color: var(--accent);
-		box-shadow: 4px 4px 0 var(--accent-dim);
-		transform: translate(-2px, -2px);
-	}
-
-	.results-count {
-		font-size: 1rem;
-		color: var(--accent);
-		font-family: var(--font-ui);
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		white-space: nowrap;
-		border: 2px solid var(--accent);
-		padding: 0.75rem 1rem;
-		background: var(--bg);
-	}
-
-	.clear-filters {
-		padding: 1rem 1.5rem;
-		background: var(--bg);
-		color: var(--accent);
-		border: 2px solid var(--accent);
-		cursor: pointer;
-		font-size: 1rem;
-		font-family: var(--font-ui);
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		box-shadow: 4px 4px 0 var(--accent-dim);
-		transition: all 0.1s ease;
-	}
-
-	.clear-filters:hover {
-		background: var(--accent);
-		color: var(--bg);
-		transform: translate(2px, 2px);
-		box-shadow: 2px 2px 0 var(--accent-dim);
 	}
 
 	.loading, .error {
@@ -492,117 +230,127 @@
 		font-size: 1.1rem;
 	}
 
-	.no-results {
-		text-align: center;
-		padding: 4rem 2rem;
-		color: var(--text-secondary, #666);
-	}
-
-	.no-results h3 {
-		margin: 0 0 1rem 0;
-		color: var(--text-primary, #333);
-	}
-
 	.projects-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
-		gap: 2rem;
+		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+		gap: 0.5rem;
+		padding: 0.5rem;
 	}
-
-	.project-card {
-		background: var(--bg);
-		border: 3px solid var(--outline);
-		padding: 2rem;
-		transition: all 0.1s ease;
-		box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
-		position: relative;
-	}
-
-	.project-card:hover {
-		transform: translate(-4px, -4px);
-		box-shadow: 12px 12px 0 rgba(0, 0, 0, 0.3);
-		border-color: var(--accent);
-	}
-
-	.project-card::before {
-		content: '';
-		position: absolute;
-		top: -3px;
-		left: -3px;
-		right: -3px;
-		bottom: -3px;
-		background: linear-gradient(45deg, var(--accent), var(--accent-dim));
-		z-index: -1;
-		opacity: 0;
-		transition: opacity 0.1s ease;
-	}
-
-	.project-card:hover::before {
-		opacity: 0.1;
-	}
-
 	.project-header {
 		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		margin-bottom: 1rem;
-		gap: 1rem;
+		align-items: center;
 	}
-
+	.project-json {
+		height: 8rem;
+		overflow-y: auto;
+		background: black;
+		border-radius: 0.5rem;
+		padding: 0.25rem;
+		margin-top: 0.5rem;
+		font-size: 0.8rem;
+	}
+	.project-json pre {
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+	}
+	.project-json textarea {
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		overflow-wrap: break-word;
+		background: black;
+		border: none;
+		outline: none;
+		resize: none;
+		width: 100%;
+		height: 100%;
+		font-family: 'Fira Code', monospace;
+		font-size: 0.8rem;
+		color: aliceblue;
+	}
+	.project-card {
+		border-radius: 0.5rem;
+		background: var(--bg);
+		padding: 0.5rem;
+	}
 	.project-header h3 {
-		margin: 0;
 		color: var(--contrast);
 		flex: 1;
 		font-family: var(--font-ui);
-		font-size: 1.5rem;
-		text-transform: uppercase;
-		letter-spacing: 2px;
+		margin-left: 1rem;
+		font-size: 1rem;
 	}
 
 	.project-actions {
 		display: flex;
-		gap: 1rem;
 	}
 
-	.edit-btn, .delete-btn {
-		padding: 0.75rem 1.5rem;
-		border: 2px solid;
-		cursor: pointer;
-		font-size: 0.875rem;
-		font-family: var(--font-ui);
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		transition: all 0.1s ease;
-		box-shadow: 3px 3px 0;
+	.project-actions > button {
+		background: var(--font-dim);
+		padding: 0.35rem 0.75rem;
+		border: 2px solid transparent;
+	}
+	.project-actions > button:first-child {
+		border-top-left-radius: 0.5rem;
+		border-bottom-left-radius: 0.5rem;
+	}
+	.project-actions > button:last-child {
+		border-top-right-radius: 0.5rem;
+		border-bottom-right-radius: 0.5rem;
+	}
+	.project-actions > button:only-child {
+		border-radius: 0.5rem;
 	}
 
-	.edit-btn {
-		background: var(--bg);
+	.project-actions.editing {
+		outline: 2px solid hsl(220, 100%, 50%);
+		outline-offset: 2px;
+		border-radius: 0.5rem;
+	}
+
+	.edit {
+		background: none;
 		color: var(--accent);
-		border-color: var(--accent);
-		box-shadow: 3px 3px 0 var(--accent-dim);
+		padding: 0.5rem 1rem;
+		border: 2px solid var(--outline);
 	}
-
-	.edit-btn:hover {
-		background: var(--accent);
-		color: var(--bg);
-		transform: translate(1px, 1px);
-		box-shadow: 2px 2px 0 var(--accent-dim);
-	}
-
-	.delete-btn {
+	.edit:hover {
+		color: var(--accent);
+		border: 2px solid var(--accent);
 		background: var(--bg);
-		color: #ff6b6b;
-		border-color: #ff6b6b;
-		box-shadow: 3px 3px 0 #cc5555;
 	}
-
-	.delete-btn:hover {
-		background: #ff6b6b;
-		color: var(--bg);
-		transform: translate(1px, 1px);
-		box-shadow: 2px 2px 0 #cc5555;
+	.delete {
+		background: none;
+		color: #ff6b6b;
+		padding: 0.5rem 1rem;
+		border: 2px solid var(--outline);
+	}
+	.delete:hover {
+		color: #ff6b6b;
+		border: 2px solid #ff6b6b;
+		background: var(--bg);
+	}
+	.save {
+		background: none;
+		color: var(--accent);
+		padding: 0.5rem 1rem;
+		border: 2px solid var(--outline);
+	}
+	.save:hover {
+		color: var(--accent);
+		border: 2px solid var(--accent);
+		background: var(--bg);
+	}
+	.cancel {
+		background: none;
+		color: #ff6b6b;
+		padding: 0.5rem 1rem;
+		border: 2px solid var(--outline);
+	}
+	.cancel:hover {
+		color: #ff6b6b;
+		border: 2px solid #ff6b6b;
+		background: var(--bg);
 	}
 
 	.project-meta {
@@ -633,48 +381,11 @@
 		box-shadow: 2px 2px 0 var(--accent-dim);
 	}
 
-	.image-info {
-		font-size: 1rem;
-		color: var(--font-color);
-		font-family: var(--font-ui);
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		margin-top: 1rem;
-	}
-
-	.image-info strong {
-		color: var(--contrast);
-	}
-
 	.project-links {
 		display: flex;
 		flex-wrap: wrap;
 		gap: 1rem;
 		margin-bottom: 1rem;
-	}
-
-	.project-links a, .award-link {
-		color: var(--accent);
-		text-decoration: none;
-		font-size: 1rem;
-		font-family: var(--font-ui);
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		padding: 0.5rem 1rem;
-		border: 2px solid var(--accent);
-		background: var(--bg);
-		transition: all 0.1s ease;
-		display: inline-block;
-		box-shadow: 3px 3px 0 var(--accent-dim);
-	}
-
-	.project-links a:hover, .award-link:hover {
-		background: var(--accent);
-		color: var(--bg);
-		transform: translate(1px, 1px);
-		box-shadow: 2px 2px 0 var(--accent-dim);
-		text-decoration: none;
 	}
 
 	.project-desc, .project-tech, .project-awards {
@@ -687,15 +398,6 @@
 		line-height: 1.6;
 		color: var(--font-color);
 		font-family: var(--font-read);
-	}
-
-	.desc-section strong, .tech-section strong {
-		color: var(--contrast);
-		font-family: var(--font-ui);
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		display: block;
-		margin-bottom: 0.5rem;
 	}
 
 	.tech-list {
@@ -718,7 +420,7 @@
 		box-shadow: 2px 2px 0 var(--font-dim);
 	}
 
-	.empty-state, .no-results {
+	.empty-state {
 		text-align: center;
 		padding: 4rem 2rem;
 		color: var(--font-color);
@@ -727,7 +429,7 @@
 		box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
 	}
 
-	.empty-state h3, .no-results h3 {
+	.empty-state h3 {
 		margin: 0 0 1rem 0;
 		color: var(--contrast);
 		font-family: var(--font-ui);
@@ -736,7 +438,7 @@
 		font-size: 2rem;
 	}
 
-	.empty-state p, .no-results p {
+	.empty-state p {
 		font-family: var(--font-read);
 		font-size: 1.1rem;
 		margin-bottom: 2rem;
@@ -765,42 +467,5 @@
 		max-height: 90vh;
 		overflow-y: auto;
 		box-shadow: 12px 12px 0 var(--accent-dim);
-	}
-
-	@media (max-width: 768px) {
-		.header {
-			flex-direction: column;
-			align-items: stretch;
-		}
-
-		.header-actions {
-			justify-content: stretch;
-		}
-
-		.filters {
-			flex-direction: column;
-			align-items: stretch;
-		}
-
-		.search-box, .filter-dropdown {
-			min-width: auto;
-		}
-
-		.projects-grid {
-			grid-template-columns: 1fr;
-		}
-
-		.project-header {
-			flex-direction: column;
-			align-items: stretch;
-		}
-
-		.project-actions {
-			justify-content: flex-end;
-		}
-
-		.modal-overlay {
-			padding: 1rem;
-		}
 	}
 </style>

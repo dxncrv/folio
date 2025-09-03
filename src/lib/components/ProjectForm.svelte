@@ -27,6 +27,7 @@
 	let newAward = $state('');
 	let newTechCode = $state('');
 	let newTechDesign = $state('');
+	let isSubmitting = $state(false);
 
 	function addTag() {
 		if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
@@ -73,6 +74,8 @@
 	}
 
 	function handleSubmit() {
+		if (isSubmitting) return;
+		
 		// Validate required fields
 		if (!formData.title.trim()) {
 			alert('Title is required');
@@ -87,7 +90,12 @@
 			return;
 		}
 		
-		onsubmit(formData);
+		isSubmitting = true;
+		try {
+			onsubmit(formData);
+		} finally {
+			isSubmitting = false;
+		}
 	}
 
 	function handleCancel() {
@@ -98,6 +106,7 @@
 	function handleKeyPress(event: KeyboardEvent, addFunction: () => void) {
 		if (event.key === 'Enter') {
 			event.preventDefault();
+			event.stopPropagation();
 			addFunction();
 		}
 	}
@@ -144,7 +153,7 @@
 		<div class="form-group">
 			<span class="label">Tags:</span>
 			<div class="tags-container">
-				{#each formData.tags as tag, index}
+				{#each formData.tags as tag, index (tag)}
 					<span class="tag">
 						{tag}
 						<button type="button" onclick={() => removeTag(index)}>×</button>
@@ -167,7 +176,7 @@
 		<div class="form-group">
 			<span class="label">Awards:</span>
 			<div class="awards-container">
-				{#each formData.awards || [] as award, index}
+				{#each formData.awards || [] as award, index (award)}
 					<div class="award-item">
 						<span>{award}</span>
 						<button type="button" onclick={() => removeAward(index)}>×</button>
@@ -200,7 +209,7 @@
 		<div class="form-group">
 			<span class="label">Technologies (Code):</span>
 			<div class="tech-container">
-				{#each formData.tech.code || [] as tech, index}
+				{#each formData.tech.code || [] as tech, index (tech)}
 					<span class="tech-item">
 						{tech}
 						<button type="button" onclick={() => removeTechCode(index)}>×</button>
@@ -223,7 +232,7 @@
 		<div class="form-group">
 			<span class="label">Technologies (Design):</span>
 			<div class="tech-container">
-				{#each formData.tech.design || [] as tech, index}
+				{#each formData.tech.design || [] as tech, index (tech)}
 					<span class="tech-item">
 						{tech}
 						<button type="button" onclick={() => removeTechDesign(index)}>×</button>
@@ -244,10 +253,10 @@
 		</div>
 
 		<div class="form-actions">
-			<button type="submit" class="submit-btn">
-				{mode === 'create' ? 'Create Project' : 'Update Project'}
+			<button type="submit" class="submit-btn" disabled={isSubmitting}>
+				{isSubmitting ? 'Creating...' : mode === 'create' ? 'Create Project' : 'Update Project'}
 			</button>
-			<button type="button" class="cancel-btn" onclick={handleCancel}>Cancel</button>
+			<button type="button" class="cancel-btn" onclick={handleCancel} disabled={isSubmitting}>Cancel</button>
 		</div>
 	</form>
 </div>
@@ -260,6 +269,7 @@
 		background: var(--bg);
 		border: 3px solid var(--accent);
 		box-shadow: 8px 8px 0 var(--accent-dim);
+		contain: layout style;
 	}
 
 	.project-form h2 {
@@ -274,6 +284,7 @@
 
 	.form-group {
 		margin-bottom: 1.5rem;
+		contain: layout;
 	}
 
 	label, .label {
@@ -295,15 +306,16 @@
 		color: var(--contrast);
 		font-size: 1rem;
 		font-family: var(--font-read);
-		transition: all 0.1s ease;
+		transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 		box-shadow: 4px 4px 0 var(--font-dim);
+		will-change: transform;
 	}
 
 	input:focus, textarea:focus {
 		outline: none;
 		border-color: var(--accent);
 		box-shadow: 4px 4px 0 var(--accent-dim);
-		transform: translate(-2px, -2px);
+		transform: translate3d(-2px, -2px, 0);
 	}
 
 	textarea {
@@ -317,6 +329,7 @@
 		flex-wrap: wrap;
 		gap: 1rem;
 		margin-bottom: 1rem;
+		contain: layout;
 	}
 
 	.tag, .tech-item {
@@ -333,6 +346,7 @@
 		letter-spacing: 1px;
 		border: 2px solid var(--accent);
 		box-shadow: 3px 3px 0 var(--accent-dim);
+		will-change: transform;
 	}
 
 	.tag button, .tech-item button {
@@ -348,11 +362,12 @@
 		align-items: center;
 		justify-content: center;
 		font-weight: bold;
-		transition: all 0.1s ease;
+		transition: transform 0.2s ease;
+		will-change: transform;
 	}
 
 	.tag button:hover, .tech-item button:hover {
-		transform: scale(1.2);
+		transform: scale3d(1.2, 1.2, 1);
 	}
 
 	.award-item {
@@ -365,6 +380,7 @@
 		width: 100%;
 		margin-bottom: 0.5rem;
 		box-shadow: 3px 3px 0 var(--font-dim);
+		contain: layout style;
 	}
 
 	.award-item span {
@@ -383,11 +399,12 @@
 		font-weight: bold;
 		font-size: 1rem;
 		box-shadow: 2px 2px 0 #cc5555;
-		transition: all 0.1s ease;
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+		will-change: transform;
 	}
 
 	.award-item button:hover {
-		transform: translate(1px, 1px);
+		transform: translate3d(1px, 1px, 0);
 		box-shadow: 1px 1px 0 #cc5555;
 	}
 
@@ -421,13 +438,14 @@
 		text-transform: uppercase;
 		letter-spacing: 1px;
 		box-shadow: 3px 3px 0 var(--accent-dim);
-		transition: all 0.1s ease;
+		transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+		will-change: transform;
 	}
 
 	.add-item button:hover {
 		background: var(--accent);
 		color: var(--bg);
-		transform: translate(1px, 1px);
+		transform: translate3d(1px, 1px, 0);
 		box-shadow: 2px 2px 0 var(--accent-dim);
 	}
 
@@ -438,6 +456,7 @@
 		margin-top: 3rem;
 		padding-top: 2rem;
 		border-top: 2px solid var(--outline);
+		contain: layout;
 	}
 
 	.submit-btn {
@@ -452,12 +471,19 @@
 		text-transform: uppercase;
 		letter-spacing: 2px;
 		box-shadow: 6px 6px 0 var(--accent-dim);
-		transition: all 0.1s ease;
+		transition: transform 0.2s ease, box-shadow 0.2s ease;
+		will-change: transform;
 	}
 
 	.submit-btn:hover {
-		transform: translate(3px, 3px);
+		transform: translate3d(3px, 3px, 0);
 		box-shadow: 3px 3px 0 var(--accent-dim);
+	}
+
+	.submit-btn:disabled, .cancel-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+		transform: none !important;
 	}
 
 	.cancel-btn {
@@ -472,13 +498,14 @@
 		text-transform: uppercase;
 		letter-spacing: 2px;
 		box-shadow: 6px 6px 0 var(--font-dim);
-		transition: all 0.1s ease;
+		transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+		will-change: transform;
 	}
 
 	.cancel-btn:hover {
 		background: var(--outline);
 		color: var(--bg);
-		transform: translate(3px, 3px);
+		transform: translate3d(3px, 3px, 0);
 		box-shadow: 3px 3px 0 var(--font-dim);
 	}
 </style>
