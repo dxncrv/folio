@@ -2,26 +2,44 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Projects } from '$lib/store.svelte';
-	import ProjectForm from '$lib/components/ProjectForm.svelte';
 	import type { Project } from '$lib/types';
 	import Typer from '$lib/_libfx/Typer.svelte';
 
-	let showForm = $state(false);
-	let editingProject = $state<Project | undefined>(undefined);
-	let formMode = $state<'create' | 'edit'>('create');
 	let message = $state<string>('');
 	let messageType = $state<'success' | 'error' | 'info' | ''>('');
 	let editingProjectId = $state<string | null>(null);
 	let editingJson = $state('');
+	let isCreatingNew = $state(false);
+	let newProjectJson = $state('');
 
 	onMount(async () => {
 		await Projects.fetchProjects();
 	});
 
 	function showCreateForm() {
-		editingProject = undefined;
-		formMode = 'create';
-		showForm = true;
+		const template = {
+  "title": "Tebbie Towners",
+  "tags": [
+    "Design"
+  ],
+  "image": "ph",
+  "link": "",
+  "git": "",
+  "yt": "",
+  "awards": [],
+  "desc": {
+    "code": "",
+    "design": "Tebbie Towners is a game that proposes usage of Operant Conditioning to prime empathy in the player. Applied behavioral insights to a concept and the result is a video artefact of onboarding."
+  },
+  "tech": {
+    "code": [],
+    "design": []
+  },
+  "study": {}
+};
+		newProjectJson = JSON.stringify(template, null, 2);
+		isCreatingNew = true;
+		showMessage('Creating new project', 'info');
 	}
 
 	function showEditForm(project: Project) {
@@ -32,6 +50,10 @@
 
 	function cancelEditing() {
 		editingProjectId = null;
+	}
+
+	function cancelCreating() {
+		isCreatingNew = false;
 	}
 
 	async function saveEditing(originalTitle: string, json: string) {
@@ -45,23 +67,14 @@
 		}
 	}
 
-	function hideForm() {
-		showForm = false;
-		editingProject = undefined;
-	}
-
-	async function handleProjectSubmit(project: Project) {
+	async function saveNewProject(json: string) {
 		try {
-			if (formMode === 'create') {
-				await Projects.addProject(project);
-				showMessage('Project created successfully!', 'success');
-			} else if (editingProject) {
-				await Projects.updateProject(editingProject.title, project);
-				showMessage('Project updated successfully!', 'success');
-			}
-			hideForm();
+			const project = JSON.parse(json);
+			await Projects.addProject(project);
+			showMessage('Project created successfully!', 'success');
+			isCreatingNew = false;
 		} catch (error) {
-			showMessage(error instanceof Error ? error.message : 'An error occurred', 'error');
+			showMessage('Invalid JSON: ' + (error instanceof Error ? error.message : 'Unknown error'), 'error');
 		}
 	}
 
@@ -93,12 +106,9 @@
 			<img src="/favicon.png" alt="Logo" />
 		</a>
 		<h1>Hello, Aash.</h1>
-		<p class="header-message {messageType}">
+		<div class="header-message {messageType}">
 			<Typer text={message || "Welcome to the start page."}/>
-		</p>
-		<button class="primary" onclick={showCreateForm}>
-			+ Create New Project
-		</button>
+		</div>
 	</header>
 
 	{#if Projects.loading}
@@ -138,9 +148,35 @@
 					</div>
 				</div>
 			{/each}
+
+			<!-- New Project Card in Edit Mode -->
+			{#if isCreatingNew}
+				<div class="project-card">
+					<div class="project-header">
+						<h3>New Project</h3>
+						<div class="project-actions editing">
+							<button class="save" onclick={() => saveNewProject(newProjectJson)} aria-label="Save new project">
+								<iconify-icon icon="line-md:uploading-loop" width="16" height="16"></iconify-icon>
+							</button>
+							<button class="cancel" onclick={cancelCreating} aria-label="Cancel create">
+								<iconify-icon icon="line-md:cancel" width="16" height="16"></iconify-icon>
+							</button>
+						</div>
+					</div>
+					<div class="project-json">
+						<textarea class="fira-code-normal" style="color: var(--accent);" bind:value={newProjectJson}></textarea>
+					</div>
+				</div>
+			{:else}
+				<!-- Create New Project Button -->
+				<button class="create-project-card" onclick={showCreateForm}>
+					<iconify-icon icon="line-md:plus" width="24" height="24"></iconify-icon>
+					<span>Create New Project</span>
+				</button>
+			{/if}
 		</div>
 
-		{#if Projects.all.length === 0}
+		{#if Projects.all.length === 0 && !isCreatingNew}
 			<div class="empty-state">
 				<h3>No projects yet</h3>
 				<p>Create your first project to get started!</p>
@@ -148,27 +184,27 @@
 					Create Your First Project
 				</button>
 			</div>
-		{/if}
-	{/if}
-
-	{#if showForm}
-		<div 
-			tabindex="0"
-			class="modal-overlay" 
-			role="dialog" 
-			aria-modal="true"
-			onclick={(e) => e.target === e.currentTarget && hideForm()}
-			onkeydown={(e) => e.key === 'Escape' && hideForm()}
-		>
-			<div class="modal-content">
-				<ProjectForm 
-					project={editingProject}
-					mode={formMode}
-					onsubmit={handleProjectSubmit}
-					oncancel={hideForm}
-				/>
+		{:else if Projects.all.length === 0 && isCreatingNew}
+			<div class="projects-grid">
+				<!-- New Project Card in Edit Mode -->
+				<div class="project-card">
+					<div class="project-header">
+						<h3>New Project</h3>
+						<div class="project-actions editing">
+							<button class="save" onclick={() => saveNewProject(newProjectJson)} aria-label="Save new project">
+								<iconify-icon icon="line-md:uploading-loop" width="16" height="16"></iconify-icon>
+							</button>
+							<button class="cancel" onclick={cancelCreating} aria-label="Cancel create">
+								<iconify-icon icon="line-md:cancel" width="16" height="16"></iconify-icon>
+							</button>
+						</div>
+					</div>
+					<div class="project-json">
+						<textarea class="fira-code-normal" style="color: var(--accent);" bind:value={newProjectJson}></textarea>
+					</div>
+				</div>
 			</div>
-		</div>
+		{/if}
 	{/if}
 </main>
 
@@ -213,15 +249,15 @@
 	}
 
 	.header-message.success {
-		color: var(--accent);
+		background: var(--accent);
 	}
 
 	.header-message.error {
-		color: #ff6b6b;
+		background: #ff6b6b;
 	}
 
 	.header-message.info {
-		color: var(--contrast);
+		background: var(--contrast);
 	}
 
 	.loading, .error {
@@ -272,6 +308,40 @@
 		border-radius: 0.5rem;
 		background: var(--bg);
 		padding: 0.5rem;
+	}
+
+	.create-project-card {
+		border-radius: 0.5rem;
+		background: var(--bg);
+		padding: 2rem;
+		border: 2px dashed var(--outline);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		min-height: 10rem;
+		cursor: pointer;
+		transition: all 0.3s ease;
+		color: var(--font-color);
+		font-family: var(--font-ui);
+		font-size: 1rem;
+	}
+
+	.create-project-card:hover {
+		border-color: var(--accent);
+		color: var(--accent);
+		background: var(--bg);
+		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	}
+
+	.create-project-card iconify-icon {
+		opacity: 0.7;
+		transition: opacity 0.3s ease;
+	}
+
+	.create-project-card:hover iconify-icon {
+		opacity: 1;
 	}
 	.project-header h3 {
 		color: var(--contrast);
@@ -442,30 +512,5 @@
 		font-family: var(--font-read);
 		font-size: 1.1rem;
 		margin-bottom: 2rem;
-	}
-
-	.modal-overlay {
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		background: rgba(0, 0, 0, 0.8);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 1000;
-		padding: 2rem;
-		backdrop-filter: blur(4px);
-	}
-
-	.modal-content {
-		background: var(--bg);
-		border: 3px solid var(--accent);
-		max-width: 700px;
-		width: 100%;
-		max-height: 90vh;
-		overflow-y: auto;
-		box-shadow: 12px 12px 0 var(--accent-dim);
 	}
 </style>
