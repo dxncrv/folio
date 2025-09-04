@@ -1,30 +1,28 @@
+
 <script lang="ts">
     import { page } from '$app/state';
     import { parseMarkdown } from '$lib/utils';
-    import capsMd from './studies/caps.md?raw';
-    import aliveMd from './studies/alive-investigator.md?raw';
-    import imitationMd from './studies/the-imitation-game.md?raw';
-    import fireMd from './studies/fire-investigation.md?raw';
-    import g4cMd from './studies/g4c-game.md?raw';
-    import sharinMd from './studies/sharin.md?raw';
-    import evokarMd from './studies/evokar.md?raw';
+    import { CaseStudies } from '$lib/caseStudiesStore';
 
-    // HashMap to store markdown files
-    // TODO make better lol
-    const files: Record<string, string> = {
-        'caps-cpca-webapp': capsMd,
-        'alive-investigator': aliveMd,
-        'the-imitation-game': imitationMd,
-        'fire-investigation': fireMd,
-        'game-impact-jam-g4c': g4cMd,
-        'sharin': sharinMd,
-        'evokar': evokarMd
-    };
+    let content = $state('');
+
+    $effect(() => {
+        const slug = page.params?.slug;
+        if (slug) {
+            CaseStudies.fetchBySlug(slug).then(cs => {
+                if (cs && cs.content) {
+                    content = cs.content;
+                } else {
+                    content = '';
+                }
+            });
+        }
+    });
 </script>
 
 <div class="article">
-    {#if page.params?.slug && files[page.params.slug]}
-        {@html parseMarkdown(files[page.params.slug])}
+    {#if content}
+        {@html parseMarkdown(content)}
     {:else}
         <p>📝 - Writing in progress...</p>
     {/if}

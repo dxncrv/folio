@@ -1,103 +1,107 @@
-
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { Projects } from '$lib/store.svelte';
-	import type { Project } from '$lib/types';
-	import Typer from '$lib/_fx/Typer.svelte';
+import { onMount } from 'svelte';
+import { Projects } from '$lib/store.svelte';
+import type { Project } from '$lib/types';
+import Typer from '$lib/_fx/Typer.svelte';
+import CaseStudyEditor from '$lib/components/CaseStudyEditor.svelte';
+import { slugify } from '$lib/utils';
+import { CaseStudies } from '$lib/caseStudiesStore';
 
-	let message = $state<string>('');
-	let messageType = $state<'success' | 'error' | 'info' | ''>('');
-	let editingProjectId = $state<string | null>(null);
-	let editingJson = $state('');
-	let isCreatingNew = $state(false);
-	let newProjectJson = $state('');
+let message = $state<string>('');
+let messageType = $state<'success' | 'error' | 'info' | ''>('');
+let editingProjectId = $state<string | null>(null);
+let editingJson = $state('');
+let isCreatingNew = $state(false);
+let newProjectJson = $state('');
+let caseStudyContents: Record<string, string> = {};
 
-	onMount(async () => {
-		await Projects.fetchProjects();
-	});
-
-	function showCreateForm() {
-		const template = {
-  "title": "Tebbie Towners",
-  "tags": [
-    "Design"
-  ],
-  "image": "ph",
-  "link": "",
-  "git": "",
-  "yt": "",
-  "awards": [],
-  "desc": {
-    "code": "",
-    "design": "Tebbie Towners is a game that proposes usage of Operant Conditioning to prime empathy in the player. Applied behavioral insights to a concept and the result is a video artefact of onboarding."
-  },
-  "tech": {
-    "code": [],
-    "design": []
-  },
-  "study": {}
-};
-		newProjectJson = JSON.stringify(template, null, 2);
-		isCreatingNew = true;
-		showMessage('Creating new project', 'info');
+onMount(async () => {
+	await Projects.fetchProjects();
+	for (const project of Projects.all) {
+		const slug = slugify(project.title);
+		const cs = await CaseStudies.fetchBySlug(slug);
+		caseStudyContents[slug] = cs?.content || '';
 	}
+});
 
-	function showEditForm(project: Project) {
-		editingProjectId = project.title;
-		editingJson = JSON.stringify(project, null, 2);
-		showMessage(`Editing "${project.title}"`, 'info');
-	}
+function showCreateForm() {
+	const template = {
+		"title": "Tebbie Towners",
+		"tags": ["Design"],
+		"image": "ph",
+		"link": "",
+		"git": "",
+		"yt": "",
+		"awards": [],
+		"desc": {
+			"code": "",
+			"design": "Tebbie Towners is a game that proposes usage of Operant Conditioning to prime empathy in the player. Applied behavioral insights to a concept and the result is a video artefact of onboarding."
+		},
+		"tech": {
+			"code": [],
+			"design": []
+		},
+		"study": {}
+	};
+	newProjectJson = JSON.stringify(template, null, 2);
+	isCreatingNew = true;
+	showMessage('Creating new project', 'info');
+}
 
-	function cancelEditing() {
+function showEditForm(project: Project) {
+	editingProjectId = project.title;
+	editingJson = JSON.stringify(project, null, 2);
+	showMessage(`Editing "${project.title}"`, 'info');
+}
+
+function cancelEditing() {
+	editingProjectId = null;
+}
+
+function cancelCreating() {
+	isCreatingNew = false;
+}
+
+async function saveEditing(originalTitle: string, json: string) {
+	try {
+		const project = JSON.parse(json);
+		await Projects.updateProject(originalTitle, project);
+		showMessage('Project updated successfully!', 'success');
 		editingProjectId = null;
+	} catch (error) {
+		showMessage('Invalid JSON: ' + (error instanceof Error ? error.message : 'Unknown error'), 'error');
 	}
+}
 
-	function cancelCreating() {
+async function saveNewProject(json: string) {
+	try {
+		const project = JSON.parse(json);
+		await Projects.addProject(project);
+		showMessage('Project created successfully!', 'success');
 		isCreatingNew = false;
+	} catch (error) {
+		showMessage('Invalid JSON: ' + (error instanceof Error ? error.message : 'Unknown error'), 'error');
 	}
+}
 
-	async function saveEditing(originalTitle: string, json: string) {
-		try {
-			const project = JSON.parse(json);
-			await Projects.updateProject(originalTitle, project);
-			showMessage('Project updated successfully!', 'success');
-			editingProjectId = null;
-		} catch (error) {
-			showMessage('Invalid JSON: ' + (error instanceof Error ? error.message : 'Unknown error'), 'error');
-		}
+async function handleDeleteProject(title: string) {
+	if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
+	try {
+		await Projects.deleteProject(title);
+		showMessage('Project deleted successfully!', 'success');
+	} catch (error) {
+		showMessage(error instanceof Error ? error.message : 'An error occurred', 'error');
 	}
+}
 
-	async function saveNewProject(json: string) {
-		try {
-			const project = JSON.parse(json);
-			await Projects.addProject(project);
-			showMessage('Project created successfully!', 'success');
-			isCreatingNew = false;
-		} catch (error) {
-			showMessage('Invalid JSON: ' + (error instanceof Error ? error.message : 'Unknown error'), 'error');
-		}
-	}
-
-	async function handleDeleteProject(title: string) {
-		if (!confirm(`Are you sure you want to delete "${title}"?`)) return;
-		
-		try {
-			await Projects.deleteProject(title);
-			showMessage('Project deleted successfully!', 'success');
-		} catch (error) {
-			showMessage(error instanceof Error ? error.message : 'An error occurred', 'error');
-		}
-	}
-
-	function showMessage(msg: string, type: 'success' | 'error' | 'info') {
-		message = msg;
-		messageType = type;
-		setTimeout(() => {
-			message = '';
-			messageType = '';
-		}, 3000);
-	}
-
+function showMessage(msg: string, type: 'success' | 'error' | 'info') {
+	message = msg;
+	messageType = type;
+	setTimeout(() => {
+		message = '';
+		messageType = '';
+	}, 3000);
+}
 </script>
 
 <main>
@@ -146,6 +150,11 @@
 							<pre class="fira-code-normal" style="color: aliceblue;">{JSON.stringify(project, null, 2)}</pre>
 						{/if}
 					</div>
+					<CaseStudyEditor
+						projectTitle={project.title}
+						slug={slugify(project.title)}
+						initialContent={caseStudyContents[slugify(project.title)] || ''}
+					/>
 				</div>
 			{/each}
 
