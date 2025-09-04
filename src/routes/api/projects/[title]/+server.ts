@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { RedisStore } from '$lib/redis';
+import { RedisStore } from '$lib/server/redis.server';
 import type { Project } from '$lib/types';
 import type { RequestHandler } from './$types';
 

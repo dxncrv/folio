@@ -79,9 +79,7 @@ export function parseMarkdown(markdown: string): string {
     return htmlBlocks.filter(Boolean).join('\n');
 }
 
-/**
- * Parses inline markdown elements like images, links, strong/emphasis, and inline code.
- */
+// Parses inline markdown elements like images, links, strong/emphasis, and inline code.
 function parseInline(text: string): string {
     let html = text;
 

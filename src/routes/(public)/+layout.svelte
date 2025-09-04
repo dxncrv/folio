@@ -3,7 +3,7 @@
 	import { Circle } from '$lib';
 	import Header from '$lib/components/header.svelte';
 	import Timemachine from '$lib/components/timemachine.svelte';
-	import Grainy from '$lib/_libfx/Grainy.svelte';
+	import Grainy from '$lib/_fx/Grainy.svelte';
 </script>
 
 <Header />

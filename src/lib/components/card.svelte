@@ -4,7 +4,7 @@
     import { slugify } from '$lib/utils';
     let { project } = $props();
 
-    // Type-safe access to the images map (index.js exports a plain object)
+    // Type-safe access to the images map
     const imgMap: Record<string, any> = images as Record<string, any>;
     const imageSrc = imgMap[project.image] ?? '';
 
@@ -30,8 +30,7 @@
 </script>
 
 <div class="project">
-    <a class="toastylink" href={project.link} target="_blank" rel="noopener noreferrer">{cleanLink(project.link)}
-    </a>
+    <a class="toastylink" href={project.link} target="_blank" rel="noopener noreferrer">{cleanLink(project.link)}</a>
     <a
         data-sveltekit-preload-data
         href={'projects/' + slugify(project.title)}>

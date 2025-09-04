@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { Projects } from '$lib/store.svelte';
 	import type { Project } from '$lib/types';
-	import Typer from '$lib/_libfx/Typer.svelte';
+	import Typer from '$lib/_fx/Typer.svelte';
 
 	let message = $state<string>('');
 	let messageType = $state<'success' | 'error' | 'info' | ''>('');

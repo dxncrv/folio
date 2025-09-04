@@ -1,5 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
-import { isIPWhitelisted } from '$lib/config/whitelist';
+import { isIPWhitelisted } from '$lib/server/whitelist.server';
 import { error } from '@sveltejs/kit';
 
 export const handle = (async ({ event, resolve }) => {
