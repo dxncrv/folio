@@ -8,76 +8,93 @@
   Commercial licensing: hello@dxncrv.com
 -->
 <script lang="ts">
-let cursor = $state({ x: 0, y: 0, visible: false, size: 32 });
+
+const BASE = 32;
+let cursor = $state({ x: 0, y: 0, visible: false, size: BASE });
 let last = $state({ x: 0, y: 0 });
+
 let decayTimeout: ReturnType<typeof setTimeout> | null = null;
+let raf: number | null = null;
+let nextX = 0,
+    nextY = 0;
 
 const isBgColored = (el: Element | null) =>
     el ? !['transparent', 'rgba(0, 0, 0, 0)', 'inherit'].includes(getComputedStyle(el).backgroundColor) : false;
 
-function resetCursorSize() {
-    cursor.size = 32;
+function resetSize() {
+    cursor.size = BASE;
 }
 
-function updateCursor(e: MouseEvent) {
-    cursor.x = e.clientX;
-    cursor.y = e.clientY;
+function scheduleDecay() {
+    if (decayTimeout) clearTimeout(decayTimeout);
+    decayTimeout = setTimeout(resetSize, 700);
+}
 
-    const dist = Math.hypot(cursor.x - last.x, cursor.y - last.y);
-    cursor.size = Math.max(32, Math.min(64, cursor.size + dist * 0.05));
+function processMouse() {
+    raf = null;
+    const x = nextX;
+    const y = nextY;
 
-    last.x = cursor.x;
-    last.y = cursor.y;
+    // update visible position used by the DOM
+    cursor.x = x;
+    cursor.y = y;
 
-    // Find nearest colored ancestor
-    let el = document.elementFromPoint(cursor.x, cursor.y);
+    const dist = Math.hypot(x - last.x, y - last.y);
+    cursor.size = Math.max(BASE, Math.min(64, cursor.size + dist * 0.06));
+    last.x = x;
+    last.y = y;
+
+    // determine if cursor should hide over a non-transparent background
+    let el = document.elementFromPoint(x, y);
     while (el && el !== document.body && !isBgColored(el)) el = el.parentElement;
     cursor.visible = !(el && el !== document.body);
 
-    if (decayTimeout) clearTimeout(decayTimeout);
-    decayTimeout = setTimeout(resetCursorSize, 700);
+    scheduleDecay();
 }
 
-function handleMouseMove(e: MouseEvent) {
-    updateCursor(e);
+function onMove(e: MouseEvent) {
+    nextX = e.clientX;
+    nextY = e.clientY;
+    if (raf == null) raf = requestAnimationFrame(processMouse);
 }
 
-function handleMouseLeave() {
+function onLeave() {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
     cursor.visible = false;
     if (decayTimeout) clearTimeout(decayTimeout);
-    resetCursorSize();
+    resetSize();
 }
 
-// Prevent jump on first move
+// Avoid an initial jump
 $effect(() => {
     last.x = cursor.x;
     last.y = cursor.y;
 });
 </script>
 
-<svelte:body onmousemove={handleMouseMove} onmouseleave={handleMouseLeave} />
+<svelte:body onmousemove={onMove} onmouseleave={onLeave} />
 
 <div
   class="cursor-circle"
-  style="--circle-size: {cursor.size}px; left: {cursor.x}px; top: {cursor.y}px; opacity: {cursor.visible ? 1 : 0};"
+  style="--circle-base: {BASE}px; --circle-scale: {cursor.size / BASE}; left: {cursor.x}px; top: {cursor.y}px; opacity: {cursor.visible ? 1 : 0};"
 ></div>
 
 <style>
 .cursor-circle {
-    width: var(--circle-size, 2rem);
-    height: var(--circle-size, 2rem);
-}
-
-.cursor-circle {
     position: fixed;
+    left: 0;
+    top: 0;
+    width: var(--circle-base, 32px);
+    height: var(--circle-base, 32px);
     pointer-events: none;
     border-radius: 50%;
     border: 2px solid var(--accent);
     background: transparent;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%) scale(var(--circle-scale, 1));
     z-index: 9999;
-    transition: opacity 0.2s, width 0.1s, height 0.1s;
-    will-change: width, height, opacity, transform;
+    transition: opacity 0.18s linear, transform 0.12s ease;
+    will-change: transform, opacity;
 }
 
 </style>

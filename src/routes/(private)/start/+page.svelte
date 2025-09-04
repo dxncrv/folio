@@ -209,308 +209,321 @@
 </main>
 
 <style>
-	main {
-		display: flex;
-		flex-direction: column;
-		padding: 2rem;
-		max-width: 1200px;
-		margin: 0 auto;
-		gap: 2rem;
-	}
+		/* =====================
+			 Layout & Main Wrapper
+			 ===================== */
+		main {
+			display: flex;
+			flex-direction: column;
+			padding: 2rem;
+			max-width: 1200px;
+			margin: 0 auto;
+			gap: 2rem;
+		}
 
-	.logo {
-		position: fixed;
-		left: 2rem;
-		display: flex;
-		align-items: center;
-		height: 1rem;
-	}
-	.logo img {
-		height: 3rem;
-	}
-	header {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 2rem;
-	}
+		/* =====================
+			 Header & Logo
+			 ===================== */
+		.logo {
+			position: fixed;
+			left: 2rem;
+			display: flex;
+			align-items: center;
+			height: 1rem;
+		}
+		.logo img {
+			height: 3rem;
+		}
+		header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			gap: 2rem;
+		}
+		h1 {
+			margin: 0 0 0.5rem 0;
+			color: var(--accent);
+			font-family: var(--font-ui);
+		}
 
-	h1 {
-		margin: 0 0 0.5rem 0;
-		color: var(--accent);
-		font-family: var(--font-ui);
-	}
+		/* =====================
+			 Header Message Styles
+			 ===================== */
+		.header-message {
+			font-family: var(--font-ui);
+			margin: 0.5rem 0;
+			font-size: 0.9rem;
+			opacity: 0.8;
+		}
+		.header-message.success {
+			background: var(--accent);
+		}
+		.header-message.error {
+			background: #ff6b6b;
+		}
+		.header-message.info {
+			background: var(--contrast);
+		}
 
-	.header-message {
-		font-family: var(--font-ui);
-		margin: 0.5rem 0;
-		font-size: 0.9rem;
-		opacity: 0.8;
-	}
+		/* =====================
+			 Loading & Error
+			 ===================== */
+		.loading, .error {
+			text-align: center;
+			padding: 2rem;
+			font-size: 1.1rem;
+		}
 
-	.header-message.success {
-		background: var(--accent);
-	}
+		/* =====================
+			 Projects Grid & Cards
+			 ===================== */
+		.projects-grid {
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+			gap: 0.5rem;
+			padding: 0.5rem;
+		}
+		.project-card {
+			border-radius: 0.5rem;
+			background: var(--bg);
+			padding: 0.5rem;
+		}
+		.project-header {
+			display: flex;
+			align-items: center;
+		}
+		.project-header h3 {
+			color: var(--contrast);
+			flex: 1;
+			font-family: var(--font-ui);
+			margin-left: 1rem;
+			font-size: 1rem;
+		}
 
-	.header-message.error {
-		background: #ff6b6b;
-	}
+		/* =====================
+			 Project Actions (Buttons)
+			 ===================== */
+		.project-actions {
+			display: flex;
+		}
+		.project-actions > button {
+			background: var(--font-dim);
+			padding: 0.35rem 0.75rem;
+			border: 2px solid transparent;
+		}
+		.project-actions > button:first-child {
+			border-top-left-radius: 0.5rem;
+			border-bottom-left-radius: 0.5rem;
+		}
+		.project-actions > button:last-child {
+			border-top-right-radius: 0.5rem;
+			border-bottom-right-radius: 0.5rem;
+		}
+		.project-actions > button:only-child {
+			border-radius: 0.5rem;
+		}
+		.project-actions.editing {
+			outline: 2px solid hsl(220, 100%, 50%);
+			outline-offset: 2px;
+			border-radius: 0.5rem;
+		}
+		.edit {
+			background: none;
+			color: var(--accent);
+			padding: 0.5rem 1rem;
+			border: 2px solid var(--outline);
+		}
+		.edit:hover {
+			color: var(--accent);
+			border: 2px solid var(--accent);
+			background: var(--bg);
+		}
+		.delete {
+			background: none;
+			color: #ff6b6b;
+			padding: 0.5rem 1rem;
+			border: 2px solid var(--outline);
+		}
+		.delete:hover {
+			color: #ff6b6b;
+			border: 2px solid #ff6b6b;
+			background: var(--bg);
+		}
+		.save {
+			background: none;
+			color: var(--accent);
+			padding: 0.5rem 1rem;
+			border: 2px solid var(--outline);
+		}
+		.save:hover {
+			color: var(--accent);
+			border: 2px solid var(--accent);
+			background: var(--bg);
+		}
+		.cancel {
+			background: none;
+			color: #ff6b6b;
+			padding: 0.5rem 1rem;
+			border: 2px solid var(--outline);
+		}
+		.cancel:hover {
+			color: #ff6b6b;
+			border: 2px solid #ff6b6b;
+			background: var(--bg);
+		}
 
-	.header-message.info {
-		background: var(--contrast);
-	}
+		/* =====================
+			 Project JSON Display
+			 ===================== */
+		.project-json {
+			height: 8rem;
+			overflow-y: auto;
+			background: black;
+			border-radius: 0.5rem;
+			padding: 0.25rem;
+			margin-top: 0.5rem;
+			font-size: 0.8rem;
+		}
+		.project-json pre {
+			white-space: pre-wrap;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+		}
+		.project-json textarea {
+			white-space: pre-wrap;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			background: black;
+			border: none;
+			outline: none;
+			resize: none;
+			width: 100%;
+			height: 100%;
+			font-family: 'Fira Code', monospace;
+			font-size: 0.8rem;
+			color: aliceblue;
+		}
 
-	.loading, .error {
-		text-align: center;
-		padding: 2rem;
-		font-size: 1.1rem;
-	}
+		/* =====================
+			 Create Project Card
+			 ===================== */
+		.create-project-card {
+			border-radius: 0.5rem;
+			background: var(--bg);
+			padding: 2rem;
+			border: 2px dashed var(--outline);
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 1rem;
+			min-height: 10rem;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			color: var(--font-color);
+			font-family: var(--font-ui);
+			font-size: 1rem;
+		}
+		.create-project-card:hover {
+			border-color: var(--accent);
+			color: var(--accent);
+			background: var(--bg);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+		}
+		.create-project-card iconify-icon {
+			opacity: 0.7;
+			transition: opacity 0.3s ease;
+		}
+		.create-project-card:hover iconify-icon {
+			opacity: 1;
+		}
 
-	.projects-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-		gap: 0.5rem;
-		padding: 0.5rem;
-	}
-	.project-header {
-		display: flex;
-		align-items: center;
-	}
-	.project-json {
-		height: 8rem;
-		overflow-y: auto;
-		background: black;
-		border-radius: 0.5rem;
-		padding: 0.25rem;
-		margin-top: 0.5rem;
-		font-size: 0.8rem;
-	}
-	.project-json pre {
-		white-space: pre-wrap;
-		word-wrap: break-word;
-		overflow-wrap: break-word;
-	}
-	.project-json textarea {
-		white-space: pre-wrap;
-		word-wrap: break-word;
-		overflow-wrap: break-word;
-		background: black;
-		border: none;
-		outline: none;
-		resize: none;
-		width: 100%;
-		height: 100%;
-		font-family: 'Fira Code', monospace;
-		font-size: 0.8rem;
-		color: aliceblue;
-	}
-	.project-card {
-		border-radius: 0.5rem;
-		background: var(--bg);
-		padding: 0.5rem;
-	}
+		/* =====================
+			 Project Meta, Status, Tags, Links
+			 ===================== */
+		.project-meta {
+			margin-bottom: 1rem;
+		}
+		.project-status-wrapper {
+			margin-bottom: 0.75rem;
+		}
+		.tags {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.5rem;
+			margin-bottom: 0.5rem;
+		}
+		.tag {
+			background: var(--accent);
+			color: var(--bg);
+			padding: 0.5rem 1rem;
+			font-size: 0.75rem;
+			font-family: var(--font-ui);
+			font-weight: bold;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			border: 2px solid var(--accent);
+			box-shadow: 2px 2px 0 var(--accent-dim);
+		}
+		.project-links {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 1rem;
+			margin-bottom: 1rem;
+		}
 
-	.create-project-card {
-		border-radius: 0.5rem;
-		background: var(--bg);
-		padding: 2rem;
-		border: 2px dashed var(--outline);
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-		min-height: 10rem;
-		cursor: pointer;
-		transition: all 0.3s ease;
-		color: var(--font-color);
-		font-family: var(--font-ui);
-		font-size: 1rem;
-	}
+		/* =====================
+			 Project Description, Tech, Awards
+			 ===================== */
+		.project-desc, .project-tech, .project-awards {
+			margin-bottom: 1rem;
+		}
+		.desc-section, .tech-section {
+			margin-bottom: 1rem;
+			font-size: 1rem;
+			line-height: 1.6;
+			color: var(--font-color);
+			font-family: var(--font-read);
+		}
+		.tech-list {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 0.75rem;
+			margin-top: 0.75rem;
+		}
+		.tech-item {
+			background: var(--bg);
+			color: var(--contrast);
+			padding: 0.5rem 1rem;
+			font-size: 0.875rem;
+			font-family: var(--font-ui);
+			font-weight: bold;
+			text-transform: uppercase;
+			letter-spacing: 1px;
+			border: 2px solid var(--outline);
+			box-shadow: 2px 2px 0 var(--font-dim);
+		}
 
-	.create-project-card:hover {
-		border-color: var(--accent);
-		color: var(--accent);
-		background: var(--bg);
-		box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-	}
-
-	.create-project-card iconify-icon {
-		opacity: 0.7;
-		transition: opacity 0.3s ease;
-	}
-
-	.create-project-card:hover iconify-icon {
-		opacity: 1;
-	}
-	.project-header h3 {
-		color: var(--contrast);
-		flex: 1;
-		font-family: var(--font-ui);
-		margin-left: 1rem;
-		font-size: 1rem;
-	}
-
-	.project-actions {
-		display: flex;
-	}
-
-	.project-actions > button {
-		background: var(--font-dim);
-		padding: 0.35rem 0.75rem;
-		border: 2px solid transparent;
-	}
-	.project-actions > button:first-child {
-		border-top-left-radius: 0.5rem;
-		border-bottom-left-radius: 0.5rem;
-	}
-	.project-actions > button:last-child {
-		border-top-right-radius: 0.5rem;
-		border-bottom-right-radius: 0.5rem;
-	}
-	.project-actions > button:only-child {
-		border-radius: 0.5rem;
-	}
-
-	.project-actions.editing {
-		outline: 2px solid hsl(220, 100%, 50%);
-		outline-offset: 2px;
-		border-radius: 0.5rem;
-	}
-
-	.edit {
-		background: none;
-		color: var(--accent);
-		padding: 0.5rem 1rem;
-		border: 2px solid var(--outline);
-	}
-	.edit:hover {
-		color: var(--accent);
-		border: 2px solid var(--accent);
-		background: var(--bg);
-	}
-	.delete {
-		background: none;
-		color: #ff6b6b;
-		padding: 0.5rem 1rem;
-		border: 2px solid var(--outline);
-	}
-	.delete:hover {
-		color: #ff6b6b;
-		border: 2px solid #ff6b6b;
-		background: var(--bg);
-	}
-	.save {
-		background: none;
-		color: var(--accent);
-		padding: 0.5rem 1rem;
-		border: 2px solid var(--outline);
-	}
-	.save:hover {
-		color: var(--accent);
-		border: 2px solid var(--accent);
-		background: var(--bg);
-	}
-	.cancel {
-		background: none;
-		color: #ff6b6b;
-		padding: 0.5rem 1rem;
-		border: 2px solid var(--outline);
-	}
-	.cancel:hover {
-		color: #ff6b6b;
-		border: 2px solid #ff6b6b;
-		background: var(--bg);
-	}
-
-	.project-meta {
-		margin-bottom: 1rem;
-	}
-
-	.project-status-wrapper {
-		margin-bottom: 0.75rem;
-	}
-
-	.tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-		margin-bottom: 0.5rem;
-	}
-
-	.tag {
-		background: var(--accent);
-		color: var(--bg);
-		padding: 0.5rem 1rem;
-		font-size: 0.75rem;
-		font-family: var(--font-ui);
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		border: 2px solid var(--accent);
-		box-shadow: 2px 2px 0 var(--accent-dim);
-	}
-
-	.project-links {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 1rem;
-		margin-bottom: 1rem;
-	}
-
-	.project-desc, .project-tech, .project-awards {
-		margin-bottom: 1rem;
-	}
-
-	.desc-section, .tech-section {
-		margin-bottom: 1rem;
-		font-size: 1rem;
-		line-height: 1.6;
-		color: var(--font-color);
-		font-family: var(--font-read);
-	}
-
-	.tech-list {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.75rem;
-		margin-top: 0.75rem;
-	}
-
-	.tech-item {
-		background: var(--bg);
-		color: var(--contrast);
-		padding: 0.5rem 1rem;
-		font-size: 0.875rem;
-		font-family: var(--font-ui);
-		font-weight: bold;
-		text-transform: uppercase;
-		letter-spacing: 1px;
-		border: 2px solid var(--outline);
-		box-shadow: 2px 2px 0 var(--font-dim);
-	}
-
-	.empty-state {
-		text-align: center;
-		padding: 4rem 2rem;
-		color: var(--font-color);
-		background: var(--bg);
-		border: 3px solid var(--outline);
-		box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
-	}
-
-	.empty-state h3 {
-		margin: 0 0 1rem 0;
-		color: var(--contrast);
-		font-family: var(--font-ui);
-		text-transform: uppercase;
-		letter-spacing: 2px;
-		font-size: 2rem;
-	}
-
-	.empty-state p {
-		font-family: var(--font-read);
-		font-size: 1.1rem;
-		margin-bottom: 2rem;
-	}
+/* Empty State */
+.empty-state {
+	text-align: center;
+	padding: 4rem 2rem;
+	color: var(--font-color);
+	background: var(--bg);
+	border: 3px solid var(--outline);
+	box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+}
+.empty-state h3 {
+	margin: 0 0 1rem 0;
+	color: var(--contrast);
+	font-family: var(--font-ui);
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	font-size: 2rem;
+}
+.empty-state p {
+	font-family: var(--font-read);
+	font-size: 1.1rem;
+	margin-bottom: 2rem;
+}
 </style>
