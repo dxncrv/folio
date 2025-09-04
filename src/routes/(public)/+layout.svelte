@@ -5,7 +5,9 @@
 	import Timemachine from '$lib/components/timemachine.svelte';
 	import Grainy from '$lib/_fx/Grainy.svelte';
 </script>
-
+<svelte:head>
+		<link rel="icon" type="image/png" href="/favicon.png" />
+</svelte:head>
 <Header />
 <slot />
 <footer>

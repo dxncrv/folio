@@ -21,18 +21,4 @@
 	{/if}
 </div>
 
-<style>
-	.accent {
-		font-family: var(--font-ui);
-		color: var(--accent);
-	}
-	.statusbar {
-		display: flex;
-		justify-content: center;
-		top: 0;
-		left: 0;
-		width: 100%;
-		padding: 1rem;
-		border-bottom: 1px solid var(--font-dim);
-	}
-</style>
+<style>.accent{font-family:var(--font-ui);color:var(--accent)}.statusbar{display:flex;justify-content:center;top:0;left:0;width:100%;padding:1rem;border-bottom:1px solid var(--font-dim)}</style>

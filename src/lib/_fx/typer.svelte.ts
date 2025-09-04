@@ -11,7 +11,7 @@
 class typerFx {
 	// PRIVATE FIELDS
 	#config: { maxLength: number; speed: number };
-	#currentInterval: number | null = null;
+	#currentInterval: ReturnType<typeof setInterval> | null = null;
 	#memoryState = $state('');
 	#lastProcessedDesc = $state('');
 	// PUBLIC FIELDS

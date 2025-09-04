@@ -1,7 +1,30 @@
+<script lang="ts">
+// Tech stack and tools
+const stack = {
+	'Excalidraw': 'material-icon-theme:excalidraw',
+	'VSCode': 'material-icon-theme:vscode',
+	'pnpm': 'material-icon-theme:pnpm',
+	'Git': 'material-icon-theme:git',
+	'Svelte': 'material-icon-theme:svelte',
+	'TypeScript': 'vscode-icons:file-type-typescript',
+	'React': 'material-icon-theme:react',
+	'Tailwind CSS': 'logos:tailwindcss-icon',
+	'Python': 'material-icon-theme:python',
+	'C Sharp': 'material-icon-theme:csharp'
+};
+</script>
+
+<main class="stack-icons">
+	{#each Object.entries(stack) as [label, icon]}
+		<iconify-icon class="icon" {icon} height="18px" width="18px" data-label={label} aria-label={label}></iconify-icon>
+	{/each} 
+	<p>..and more</p> 
+</main>
+
 <style>
 	.stack-icons {
 		display: flex;
-		flex-wrap: wrap; /* Allow wrapping */
+		flex-wrap: wrap; 
 		gap: 1rem;
 		background: var(--bg);
 		padding: 1rem;
@@ -9,7 +32,7 @@
 		align-items: center;
 		justify-content: center;
 		width: fit-content;
-		max-width: calc(3 * 2.5rem + 3 * 1rem + 2rem); /* 4 icons + 3 gaps + padding */
+		max-width: calc(3 * 2.5rem + 3 * 1rem + 2rem);
 	}
 	.stack-icons p {
 		font-size: 0.9em;
@@ -43,28 +66,3 @@
 		visibility: visible;
 	}
 </style>
-
-<script lang="ts">
-// Array of stack items with icon name and label
-const stack = [
-	{ label: 'Excalidraw', icon: 'material-icon-theme:excalidraw' },
-	{ label: 'VSCode', icon: 'material-icon-theme:vscode' },
-	{ label: 'pnpm', icon: 'material-icon-theme:pnpm'},
-	{ label: 'Git', icon: 'material-icon-theme:git' },
-
-	{ label: 'Svelte', icon: 'material-icon-theme:svelte' },
-	{ label: 'TypeScript', icon: 'vscode-icons:file-type-typescript' },
-	{ label: 'React', icon: 'material-icon-theme:react'},
-	{ label: 'Tailwind CSS', icon: 'logos:tailwindcss-icon' },
-
-	{ label: 'Python', icon: 'material-icon-theme:python' },
-	{ label: 'C Sharp', icon: 'material-icon-theme:csharp' },
-];
-</script>
-
-<main class="stack-icons">
-	{#each stack as { icon, label } }
-		<iconify-icon class="icon" {icon} height="18px" width="18px" data-label={label} aria-label={label}></iconify-icon>
-	{/each} 
-	<p>..and more</p> 
-</main>
