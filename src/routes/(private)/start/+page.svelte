@@ -1,27 +1,30 @@
 <script lang="ts">
-import { onMount } from 'svelte';
 import { Projects } from '$lib/store.svelte';
 import type { Project } from '$lib/types';
 import Typer from '$lib/_fx/Typer.svelte';
-import CaseStudyEditor from '$lib/components/CaseStudyEditor.svelte';
 import { slugify } from '$lib/utils';
 import { CaseStudies } from '$lib/caseStudiesStore';
+import Editor from '$lib/components/editor.svelte';
 
 let message = $state<string>('');
 let messageType = $state<'success' | 'error' | 'info' | ''>('');
+let showLogoutConfirm = $state(false);
 let editingProjectId = $state<string | null>(null);
 let editingJson = $state('');
 let isCreatingNew = $state(false);
 let newProjectJson = $state('');
-let caseStudyContents: Record<string, string> = {};
+let caseStudyContents = $state<Record<string, string>>({});
 
-onMount(async () => {
-	await Projects.fetchProjects();
-	for (const project of Projects.all) {
-		const slug = slugify(project.title);
-		const cs = await CaseStudies.fetchBySlug(slug);
-		caseStudyContents[slug] = cs?.content || '';
-	}
+$effect(() => {
+	(async () => {
+		await Projects.fetchProjects();
+		for (const project of Projects.all) {
+			const slug = slugify(project.title);
+			const cs = await CaseStudies.fetchBySlug(slug);
+			caseStudyContents[slug] = cs?.content || '';
+			caseStudyContents = { ...caseStudyContents };
+		}
+	})();
 });
 
 function showCreateForm() {
@@ -102,6 +105,28 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 		messageType = '';
 	}, 3000);
 }
+
+async function logout() {
+	try {
+		await fetch('/start/logout', { method: 'POST' });
+		// Redirect to login page
+		location.href = '/start/login';
+	} catch (err) {
+		showMessage('Logout failed', 'error');
+	}
+}
+
+function openLogoutConfirm() {
+	showLogoutConfirm = true;
+}
+
+function closeLogoutConfirm() {
+	showLogoutConfirm = false;
+}
+
+async function confirmLogout() {
+	await logout();
+}
 </script>
 
 <main>
@@ -113,6 +138,9 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 		<div class="header-message {messageType}">
 			<Typer text={message || "Welcome to the start page."}/>
 		</div>
+		<button class="primary" onclick={openLogoutConfirm} aria-label="Logout">
+			Logout
+		</button>
 	</header>
 
 	{#if Projects.loading}
@@ -124,6 +152,9 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 			{#each Projects.all as project}
 				<div class="project-card">
 					<div class="project-header">
+						<div class="project-status">
+							<span class="status-circle" class:live={caseStudyContents[slugify(project.title)]} class:local={!caseStudyContents[slugify(project.title)]}></span>
+						</div>
 						<h3>{project.title}</h3>
 						<div class="project-actions" class:editing={editingProjectId === project.title}>
 							{#if editingProjectId === project.title}
@@ -150,14 +181,12 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 							<pre class="fira-code-normal" style="color: aliceblue;">{JSON.stringify(project, null, 2)}</pre>
 						{/if}
 					</div>
-					<CaseStudyEditor
-						projectTitle={project.title}
-						slug={slugify(project.title)}
+					<Editor
 						initialContent={caseStudyContents[slugify(project.title)] || ''}
+						slug={slugify(project.title)}
 					/>
 				</div>
 			{/each}
-
 			<!-- New Project Card in Edit Mode -->
 			{#if isCreatingNew}
 				<div class="project-card">
@@ -217,6 +246,28 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 	{/if}
 </main>
 
+	{#if showLogoutConfirm}
+		<div class="modal-backdrop">
+			<div class="logout-modal">
+				<div class="modal-header">
+					<iconify-icon icon="line-md:logout" width="48" height="48"></iconify-icon>
+					<h3>Confirm Logout</h3>
+					<p>Are you sure you want to sign out? You will need to log in again to access admin features.</p>
+				</div>
+				<div class="modal-actions">
+					<button class="btn-cancel" onclick={closeLogoutConfirm}>
+						<iconify-icon icon="line-md:cancel" width="20" height="20"></iconify-icon>
+						Cancel
+					</button>
+					<button class="btn-logout" onclick={confirmLogout}>
+						<iconify-icon icon="line-md:logout" width="20" height="20"></iconify-icon>
+						Sign Out
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
+
 <style>
 		/* =====================
 			 Layout & Main Wrapper
@@ -245,9 +296,153 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 		}
 		header {
 			display: flex;
-			justify-content: space-between;
+				justify-content: space-between;
 			align-items: center;
 			gap: 2rem;
+		}
+
+			.admin-actions { display:flex; gap:0.5rem }
+			.logout-btn {
+				background: var(--bg);
+				color: var(--contrast);
+				border: 2px solid var(--outline);
+				padding: 0.5rem 0.75rem;
+				border-radius: 0.5rem;
+				cursor: pointer;
+			}
+			.logout-btn:hover { border-color: var(--accent); color: var(--accent) }
+
+		/* Logout modal */
+		.modal-backdrop {
+			position: fixed;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.6);
+			backdrop-filter: blur(4px);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 60;
+			animation: fadeIn 0.3s ease;
+		}
+		.logout-modal {
+			background: var(--bg);
+			border: 1px solid var(--outline);
+			border-radius: 1rem;
+			padding: 2.5rem;
+			max-width: 420px;
+			width: 90%;
+			box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+			animation: slideIn 0.3s ease;
+			text-align: center;
+		}
+		.logout-modal:hover {
+			border-color: var(--accent);
+		}
+		.modal-header {
+			margin-bottom: 2rem;
+		}
+		.modal-header iconify-icon {
+			color: #ff6b6b;
+			margin-bottom: 1rem;
+			display: block;
+		}
+		.modal-header h3 {
+			color: var(--contrast);
+			font-size: 1.75rem;
+			font-weight: 600;
+			margin: 0 0 0.75rem 0;
+			font-family: var(--font-ui);
+		}
+		.modal-header p {
+			color: var(--font-color);
+			font-size: 0.95rem;
+			margin: 0;
+			font-family: var(--font-read);
+			line-height: 1.5;
+		}
+		.modal-actions {
+			display: flex;
+			gap: 1rem;
+			justify-content: center;
+		}
+		.btn-cancel {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			background: none;
+			border: 2px solid var(--outline);
+			padding: 0.875rem 1.5rem;
+			border-radius: 0.75rem;
+			cursor: pointer;
+			font-family: var(--font-ui);
+			font-size: 1rem;
+			font-weight: 500;
+			color: var(--contrast);
+			transition: all 0.3s ease;
+		}
+		.btn-cancel:hover {
+			border-color: var(--accent);
+			color: var(--accent);
+			transform: translateY(-1px);
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+		}
+		.btn-logout {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+			background: none;
+			border: 2px solid #ff6b6b;
+			padding: 0.875rem 1.5rem;
+			border-radius: 0.75rem;
+			cursor: pointer;
+			font-family: var(--font-ui);
+			font-size: 1rem;
+			font-weight: 500;
+			color: #ff6b6b;
+			transition: all 0.3s ease;
+		}
+		.btn-logout:hover {
+			background: #ff6b6b;
+			color: white;
+			transform: translateY(-1px);
+			box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3);
+		}
+		.btn-logout:active,
+		.btn-cancel:active {
+			transform: translateY(0);
+		}
+
+		@keyframes fadeIn {
+			from { opacity: 0; }
+			to { opacity: 1; }
+		}
+		@keyframes slideIn {
+			from {
+				opacity: 0;
+				transform: translateY(-20px) scale(0.95);
+			}
+			to {
+				opacity: 1;
+				transform: translateY(0) scale(1);
+			}
+		}
+
+		@media (max-width: 480px) {
+			.logout-modal {
+				padding: 2rem 1.5rem;
+				margin: 1rem;
+			}
+			.modal-header h3 {
+				font-size: 1.5rem;
+			}
+			.modal-actions {
+				flex-direction: column;
+			}
+			.btn-cancel,
+			.btn-logout {
+				width: 100%;
+				justify-content: center;
+			}
 		}
 		h1 {
 			margin: 0 0 0.5rem 0;
@@ -263,15 +458,6 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 			margin: 0.5rem 0;
 			font-size: 0.9rem;
 			opacity: 0.8;
-		}
-		.header-message.success {
-			background: var(--accent);
-		}
-		.header-message.error {
-			background: #ff6b6b;
-		}
-		.header-message.info {
-			background: var(--contrast);
 		}
 
 		/* =====================
@@ -371,13 +557,13 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 		}
 		.cancel {
 			background: none;
-			color: #ff6b6b;
+			color: #ff9800;
 			padding: 0.5rem 1rem;
 			border: 2px solid var(--outline);
 		}
 		.cancel:hover {
-			color: #ff6b6b;
-			border: 2px solid #ff6b6b;
+			color: #ff9800;
+			border: 2px solid #ff9800;
 			background: var(--bg);
 		}
 
@@ -453,8 +639,26 @@ function showMessage(msg: string, type: 'success' | 'error' | 'info') {
 		.project-meta {
 			margin-bottom: 1rem;
 		}
-		.project-status-wrapper {
-			margin-bottom: 0.75rem;
+		.project-status {
+			margin-left: 1rem;
+		}
+		.project-status .live {
+			background-color: #4caf50;
+		}
+		.project-status .local {
+			background-color: #ff9800;
+		}
+		.status-circle {
+			display: inline-block;
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+			animation: pulse 2s infinite;
+		}
+		@keyframes pulse {
+			0% { opacity: 1; }
+			50% { opacity: 0.5; }
+			100% { opacity: 1; }
 		}
 		.tags {
 			display: flex;

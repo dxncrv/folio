@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 
 export const CaseStudies = (() => {
-  const { subscribe, set, update } = writable([]);
+  const { subscribe, set } = writable([]);
 
   async function fetchAll() {
     const res = await fetch('/api/case-studies');

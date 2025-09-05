@@ -1,5 +1,5 @@
 import type { Handle } from '@sveltejs/kit';
-import { isIPWhitelisted } from '$lib/server/whitelist.server';
+import { isIPWhitelisted } from '$lib/server/security.server';
 import { error } from '@sveltejs/kit';
 
 export const handle = (async ({ event, resolve }) => {
@@ -22,10 +22,6 @@ export const handle = (async ({ event, resolve }) => {
 
 		// Log allowed access
 		console.debug(`ALLOWED /start from ${clientIP}`);
-
-		// Set a short-lived, HTTP-only admin cookie so the browser can make authenticated writes.
-		// Cookie is intentionally tiny and opaque; server only checks presence.
-		event.cookies.set('admin_session', '1', { httpOnly: true, path: '/', maxAge: 300, sameSite: 'lax' });
 	}
 
 	// Theme handling

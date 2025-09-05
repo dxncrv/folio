@@ -11,6 +11,11 @@ export interface Project {
 	study?: { [key: string]: string };
 }
 
+export interface CaseStudy {
+    slug: string;
+    content: string;
+}
+
 export interface Facet {
     name: string;
     bool: boolean;

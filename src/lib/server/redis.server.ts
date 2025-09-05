@@ -102,5 +102,32 @@ export class RedisStore {
         await setCaseStudies(filtered);
         return filtered;
     }
+
+    // --- Session management ---
+    /**
+     * Store an admin session token mapping to the ADMIN_TOKEN value.
+     * Uses a Redis key `session:<token>` with EX TTL in seconds.
+     */
+    static async setAdminSession(sessionToken: string, adminToken: string, ttlSeconds = 3600): Promise<void> {
+        const client = getRedisClient();
+        await client.set(`session:${sessionToken}`, adminToken, 'EX', ttlSeconds);
+    }
+
+    /**
+     * Get admin token stored for a session token. Returns string or null.
+     */
+    static async getAdminSession(sessionToken: string): Promise<string | null> {
+        const client = getRedisClient();
+        const v = await client.get(`session:${sessionToken}`);
+        return v;
+    }
+
+    /**
+     * Delete an admin session token.
+     */
+    static async deleteAdminSession(sessionToken: string): Promise<void> {
+        const client = getRedisClient();
+        await client.del(`session:${sessionToken}`);
+    }
 }
 

@@ -1,8 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { RedisStore } from '$lib/server/redis.server';
+import { isAuthorizedWrite } from '$lib/server/security.server';
 import type { CaseStudy } from '$lib/server/redis.server';
-import { isAdminRequest } from '$lib/server/admin.server';
-import { sanitizeMarkdownForStorage, isRateLimited, getClientIPFromRequest } from '$lib/server/security.server';
 import type { RequestEvent } from '@sveltejs/kit';
 
 // GET: Fetch a specific case study by slug
@@ -23,20 +22,12 @@ export const GET = async (event: RequestEvent) => {
 // PUT: Update a specific case study
 export const PUT = async (event: RequestEvent) => {
     try {
-        const ip = getClientIPFromRequest(event.request);
-        if (isRateLimited(ip)) return json({ error: 'Too many requests' }, { status: 429 });
-
-        if (!isAdminRequest(event.request)) {
-            return json({ error: 'Forbidden' }, { status: 403 });
-        }
-
-        const slug = event.params.slug ?? '';
+    if (!(await isAuthorizedWrite(event.request))) return json({ error: 'Forbidden' }, { status: 403 });
+    const slug = event.params.slug ?? '';
         const updated: CaseStudy = await event.request.json();
         if (!updated.slug || !updated.content) {
             return json({ error: 'Invalid case study data' }, { status: 400 });
         }
-
-        updated.content = sanitizeMarkdownForStorage(updated.content);
 
         const caseStudies = await RedisStore.updateCaseStudy(slug, updated);
         return json(caseStudies);
@@ -51,14 +42,8 @@ export const PUT = async (event: RequestEvent) => {
 // DELETE: Delete a specific case study
 export const DELETE = async (event: RequestEvent) => {
     try {
-        const ip = getClientIPFromRequest(event.request);
-        if (isRateLimited(ip)) return json({ error: 'Too many requests' }, { status: 429 });
-
-        if (!isAdminRequest(event.request)) {
-            return json({ error: 'Forbidden' }, { status: 403 });
-        }
-
-        const slug = event.params.slug ?? '';
+    if (!(await isAuthorizedWrite(event.request))) return json({ error: 'Forbidden' }, { status: 403 });
+    const slug = event.params.slug ?? '';
         const caseStudies = await RedisStore.deleteCaseStudy(slug);
         return json(caseStudies);
     } catch (error) {
