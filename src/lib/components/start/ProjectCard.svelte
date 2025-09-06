@@ -32,11 +32,11 @@ let { project, editingProjectId, editingJson, caseStudyContent, onEdit, onSave, 
 					<iconify-icon icon="line-md:cancel" width="16" height="16"></iconify-icon>
 				</button>
 			{:else}
-				<button class="edit" onclick={() => onEdit(project)} aria-label="Edit project">
-					<iconify-icon icon="line-md:edit-twotone" width="16" height="16" ></iconify-icon>
-				</button>
 				<button class="delete" onclick={() => onDelete(project.title)} aria-label="Delete project">
 					<iconify-icon icon="line-md:remove" width="16" height="16"></iconify-icon>
+				</button>
+				<button class="edit" onclick={() => onEdit(project)} aria-label="Edit project">
+					<iconify-icon icon="line-md:edit-twotone" width="16" height="16" ></iconify-icon>
 				</button>
 			{/if}
 		</div>

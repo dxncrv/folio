@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { EditorTool } from '$lib/editorTools';
+
 	let { initialContent = $bindable(''), slug = '' } = $props();
 
 	let editing = $state(false);
@@ -6,6 +8,9 @@
 	let loading = $state(false);
 	let error = $state('');
 	let exists = $derived(initialContent.trim().length > 0);
+
+	// textarea DOM reference so EditorTool can inspect selectionStart/End
+	let textareaRef = $state<HTMLTextAreaElement | null>(null);
 
 	$effect(() => {
 		if (!editing) {
@@ -60,30 +65,52 @@
   {/if}
   {#if editing}
   <div class="actions">
-	  <div class="right-group">
+	  <div class="right-group" class:editing={editing}>
+		  <button class="delete" onclick={remove} disabled={loading} aria-label="Delete case study">
+			  <iconify-icon icon="line-md:remove" width="16" height="16"></iconify-icon>
+		  </button>
 		  <button class="save" onclick={save} disabled={loading} aria-label="Save case study">
 			  <iconify-icon icon="line-md:uploading-loop" width="16" height="16"></iconify-icon>
 			</button>
-			<button class="delete" onclick={remove} disabled={loading} aria-label="Delete case study">
-				<iconify-icon icon="line-md:remove" width="16" height="16"></iconify-icon>
-			</button>
 			<button class="cancel" onclick={() => { editing = false; content = initialContent; error = ''; }} disabled={loading} aria-label="Cancel editing">
-				<iconify-icon icon="line-md:watch-off-loop" width="16" height="16"></iconify-icon>
+				<iconify-icon icon="line-md:cancel" width="16" height="16"></iconify-icon>
 			</button>
 		</div>
 		<div class="left-group">
-		<button class="tool" aria-label="Image tool">
-		<iconify-icon icon="line-md:image-twotone" width="16" height="16"></iconify-icon>
-		</button>
-		<button class="tool" aria-label="Video tool">
-		<iconify-icon icon="line-md:play" width="16" height="16"></iconify-icon>
-		</button>
-		<button class="tool" aria-label="Link tool">
-		<iconify-icon icon="line-md:external-link" width="16" height="16"></iconify-icon>
-		</button>
-		</div>
+			<button class="tool" aria-label="Image tool" onclick={() => {
+				const res = EditorTool.insertImage(textareaRef, content);
+				content = res.content;
+				// focus and set cursor on next tick
+				textareaRef?.focus();
+				if (textareaRef) {
+					textareaRef.selectionStart = textareaRef.selectionEnd = res.cursor;
+				}
+			}}>
+			<iconify-icon icon="line-md:image-twotone" width="16" height="16"></iconify-icon>
+			</button>
+			<button class="tool" aria-label="Video tool" onclick={() => {
+				const res = EditorTool.insertVideo(textareaRef, content);
+				content = res.content;
+				textareaRef?.focus();
+				if (textareaRef) {
+					textareaRef.selectionStart = textareaRef.selectionEnd = res.cursor;
+				}
+			}}>
+			<iconify-icon icon="line-md:play" width="16" height="16"></iconify-icon>
+			</button>
+			<button class="tool" aria-label="Link tool" onclick={() => {
+				const res = EditorTool.insertLink(textareaRef, content);
+				content = res.content;
+				textareaRef?.focus();
+				if (textareaRef) {
+					textareaRef.selectionStart = textareaRef.selectionEnd = res.cursor;
+				}
+			}}>
+			<iconify-icon icon="line-md:external-link" width="16" height="16"></iconify-icon>
+			</button>
+			</div>
     </div>
-	<textarea bind:value={content} rows="10" class="fira-code-normal"></textarea>
+	<textarea bind:value={content} rows="10" class="fira-code-normal" bind:this={textareaRef}></textarea>
   {:else}
   <p>Study editor</p>
     <div class="actions">
@@ -211,5 +238,11 @@
 	.case-study-editor .error {
 		color: var(--error);
 		margin-bottom: 0.5rem;
+	}
+
+	.right-group.editing {
+		outline: 2px solid hsl(220, 100%, 50%);
+		outline-offset: 2px;
+		border-radius: 0.5rem;
 	}
 </style>
