@@ -13,13 +13,10 @@
 		}
 	});
 
+	import { fetchJson } from '$lib/apiClient';
+
 	async function apiCall(endpoint: string, options: RequestInit) {
-		const res = await fetch(endpoint, options);
-		if (!res.ok) {
-			const data = await res.json().catch(() => ({}));
-			throw new Error(data.error || 'Request failed');
-		}
-		return res;
+		return fetchJson(endpoint, options);
 	}
 
 	async function save() {

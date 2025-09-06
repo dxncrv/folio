@@ -1,4 +1,5 @@
 import type { Project, CaseStudy } from './types';
+import { fetchJson } from '$lib/apiClient';
 
 // FacetsClass: facets array is derived from unique tags in data
 class FacetsClass {
@@ -81,11 +82,7 @@ class projectsClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const response = await fetch('/api/projects');
-			if (!response.ok) {
-				throw new Error('Failed to fetch projects');
-			}
-			this.all = await response.json();
+			this.all = await fetchJson('/api/projects');
 		} catch (error) {
 			this.error = error instanceof Error ? error.message : 'Unknown error';
 		} finally {
@@ -97,15 +94,11 @@ class projectsClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const response = await fetch('/api/projects', {
+			this.all = await fetchJson('/api/projects', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(project)
 			});
-			if (!response.ok) {
-				throw new Error('Failed to add project');
-			}
-			this.all = await response.json();
 		} catch (error) {
 			this.error = error instanceof Error ? error.message : 'Unknown error';
 			throw error;
@@ -118,15 +111,11 @@ class projectsClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const response = await fetch(`/api/projects/${encodeURIComponent(originalTitle)}`, {
+			this.all = await fetchJson(`/api/projects/${encodeURIComponent(originalTitle)}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(updatedProject)
 			});
-			if (!response.ok) {
-				throw new Error('Failed to update project');
-			}
-			this.all = await response.json();
 		} catch (error) {
 			this.error = error instanceof Error ? error.message : 'Unknown error';
 			throw error;
@@ -139,13 +128,9 @@ class projectsClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const response = await fetch(`/api/projects/${encodeURIComponent(title)}`, {
+			this.all = await fetchJson(`/api/projects/${encodeURIComponent(title)}`, {
 				method: 'DELETE'
 			});
-			if (!response.ok) {
-				throw new Error('Failed to delete project');
-			}
-			this.all = await response.json();
 		} catch (error) {
 			this.error = error instanceof Error ? error.message : 'Unknown error';
 			throw error;
@@ -158,13 +143,7 @@ class projectsClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const response = await fetch('/api/projects/init', {
-				method: 'POST'
-			});
-			if (!response.ok) {
-				throw new Error('Failed to initialize from JSON');
-			}
-			const result = await response.json();
+			const result = await fetchJson('/api/projects/init', { method: 'POST' });
 			this.all = result.projects;
 			return result;
 		} catch (error) {
@@ -197,9 +176,7 @@ class caseStudiesClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const res = await fetch('/api/case-studies');
-			if (!res.ok) throw new Error('Failed to fetch case studies');
-			const list: CaseStudy[] = await res.json();
+			const list: CaseStudy[] = await fetchJson('/api/case-studies');
 			this.all = list;
 			// populate cache
 			for (const cs of list) this.#cache.set(cs.slug, cs);
@@ -222,9 +199,8 @@ class caseStudiesClass {
 
 		const p = (async () => {
 			try {
-				const res = await fetch(`/api/case-studies/${encodeURIComponent(slug)}`);
-				if (!res.ok) return null;
-				const cs: CaseStudy = await res.json();
+				const cs: CaseStudy | null = await fetchJson(`/api/case-studies/${encodeURIComponent(slug)}`);
+				if (!cs) return null;
 				this.#cache.set(slug, cs);
 				// merge into `all` if missing
 				if (!this.all.find(x => x.slug === cs.slug)) this.all = [...this.all, cs];
@@ -246,13 +222,11 @@ class caseStudiesClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const res = await fetch('/api/case-studies', {
+			this.all = await fetchJson('/api/case-studies', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(caseStudy)
 			});
-			if (!res.ok) throw new Error('Failed to add case study');
-			this.all = await res.json();
 			// refresh cache entries
 			for (const cs of this.all) this.#cache.set(cs.slug, cs);
 		} catch (err) {
@@ -267,13 +241,11 @@ class caseStudiesClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const res = await fetch(`/api/case-studies/${encodeURIComponent(slug)}`, {
+			this.all = await fetchJson(`/api/case-studies/${encodeURIComponent(slug)}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(updated)
 			});
-			if (!res.ok) throw new Error('Failed to update case study');
-			this.all = await res.json();
 			// refresh cache entries and remove old slug if changed
 			for (const cs of this.all) this.#cache.set(cs.slug, cs);
 			if (slug !== updated.slug) this.#cache.delete(slug);
@@ -290,11 +262,7 @@ class caseStudiesClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const res = await fetch(`/api/case-studies/${encodeURIComponent(slug)}`, {
-				method: 'DELETE'
-			});
-			if (!res.ok) throw new Error('Failed to delete case study');
-			this.all = await res.json();
+			this.all = await fetchJson(`/api/case-studies/${encodeURIComponent(slug)}`, { method: 'DELETE' });
 			// update cache
 			this.#cache.delete(slug);
 			for (const cs of this.all) this.#cache.set(cs.slug, cs);

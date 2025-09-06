@@ -1,4 +1,5 @@
 <script lang="ts">
+import { fetchJson, ApiError } from '$lib/apiClient';
 export let initialStatus: string = 'Ready';
 let status: string = initialStatus;
 let showForm = false;
@@ -11,7 +12,7 @@ let showForm = false;
 		const json = JSON.stringify(Object.fromEntries(data.entries()));
 
 		try {
-			const response = await fetch('https://api.web3forms.com/submit', {
+			const result = await fetchJson('https://api.web3forms.com/submit', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -20,9 +21,7 @@ let showForm = false;
 				body: json
 			});
 
-			const result = await response.json();
-
-			if (response.ok && result.success) {
+			if (result && result.success) {
 				status = 'Message sent! 🎉';
 				form.reset();
 			} else {
@@ -31,7 +30,8 @@ let showForm = false;
 			}
 		} catch (error) {
 			console.error('Error submitting form:', error);
-			status = 'Failed: An error occurred.';
+			if (error instanceof ApiError) status = `Failed: ${error.body?.message || error.message}`;
+			else status = 'Failed: An error occurred.';
 		}
 	};
 </script>

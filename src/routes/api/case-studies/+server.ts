@@ -1,31 +1,15 @@
-import { json } from '@sveltejs/kit';
 import { RedisStore } from '$lib/server/redis.server';
-import { isAuthorizedWrite } from '$lib/server/security.server';
-import type { CaseStudy } from '$lib/server/redis.server';
+import { withHandler, withAdmin } from '$lib/server/api-utils.server';
+import type { CaseStudy } from '$lib/types';
 import type { RequestHandler } from './$types';
 
-// GET: Fetch all case studies
-export const GET: RequestHandler = async () => {
-    try {
-        const caseStudies = await RedisStore.getCaseStudies();
-        return json(caseStudies);
-    } catch (error) {
-        return json({ error: 'Failed to fetch case studies' }, { status: 500 });
-    }
-};
+export const GET: RequestHandler = withHandler(async () => {
+    return await RedisStore.getCaseStudies();
+});
 
-// POST: Create a new case study
-export const POST: RequestHandler = async ({ request }) => {
-    try {
-    if (!(await isAuthorizedWrite(request as Request))) return json({ error: 'Forbidden' }, { status: 403 });
-        const caseStudy: CaseStudy = await request.json();
-        if (!caseStudy.slug || !caseStudy.content) {
-            return json({ error: 'Invalid case study data' }, { status: 400 });
-        }
-
-        const caseStudies = await RedisStore.addCaseStudy(caseStudy);
-        return json(caseStudies, { status: 201 });
-    } catch (error) {
-        return json({ error: 'Failed to create case study' }, { status: 500 });
-    }
-};
+export const POST: RequestHandler = withAdmin(async ({ request }) => {
+    const caseStudy: CaseStudy = await request.json();
+    if (!caseStudy.slug || !caseStudy.content) return { error: 'Invalid case study data' } as any;
+    const caseStudies = await RedisStore.addCaseStudy(caseStudy);
+    return caseStudies;
+});

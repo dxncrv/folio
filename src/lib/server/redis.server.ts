@@ -16,91 +16,93 @@ const getRedisClient = () => {
     return redisClient;
 };
 
-const getProjects = async (): Promise<Project[]> => {
-    const data = await getRedisClient().get('projects');
-    return data ? JSON.parse(data) : [];
-};
+import type { CaseStudy } from '$lib/types';
 
-const setProjects = async (projects: Project[]): Promise<void> => {
-    await getRedisClient().set('projects', JSON.stringify(projects));
-};
-export interface CaseStudy {
-    slug: string;
-    content: string;
-}
+// Small generic list store helper to avoid repeating CRUD logic for array-backed keys.
+function createListStore<T>(key: string, idSelector: (item: T) => string) {
+    const client = getRedisClient;
 
-const getCaseStudies = async (): Promise<CaseStudy[]> => {
-    const data = await getRedisClient().get('caseStudies');
-    return data ? JSON.parse(data) : [];
-};
-
-const setCaseStudies = async (caseStudies: CaseStudy[]): Promise<void> => {
-    await getRedisClient().set('caseStudies', JSON.stringify(caseStudies));
-};
-
-export class RedisStore {
-    static async getProjects(): Promise<Project[]> {
-        return getProjects();
+    async function get(): Promise<T[]> {
+        const data = await client().get(key);
+        return data ? JSON.parse(data) as T[] : [];
     }
 
-    static async getCaseStudies(): Promise<CaseStudy[]> {
-        return getCaseStudies();
+    async function set(items: T[]): Promise<void> {
+        await client().set(key, JSON.stringify(items));
+    }
+
+    async function add(item: T): Promise<T[]> {
+        const items = await get();
+        items.push(item);
+        await set(items);
+        return items;
+    }
+
+    async function update(id: string, updated: T): Promise<T[]> {
+        const items = await get();
+        const index = items.findIndex(i => idSelector(i) === id);
+        if (index === -1) throw new Error(`${key} item with id "${id}" not found`);
+        items[index] = updated;
+        await set(items);
+        return items;
+    }
+
+    async function remove(id: string): Promise<T[]> {
+        const items = await get();
+        const filtered = items.filter(i => idSelector(i) !== id);
+        if (filtered.length === items.length) throw new Error(`${key} item with id "${id}" not found`);
+        await set(filtered);
+        return filtered;
+    }
+
+    return { get, set, add, update, remove };
+}
+
+// Create stores for projects and caseStudies
+const projectsStore = createListStore<Project>('projects', p => p.title);
+const caseStudiesStore = createListStore<CaseStudy>('caseStudies', cs => cs.slug);
+
+export class RedisStore {
+    // Projects
+    static async getProjects(): Promise<Project[]> {
+        return projectsStore.get();
     }
 
     static async setProjects(projects: Project[]): Promise<void> {
-        return setProjects(projects);
-    }
-
-    static async setCaseStudies(caseStudies: CaseStudy[]): Promise<void> {
-        return setCaseStudies(caseStudies);
+        return projectsStore.set(projects);
     }
 
     static async addProject(project: Project): Promise<Project[]> {
-        const projects = await getProjects();
-        projects.push(project);
-        await setProjects(projects);
-        return projects;
-    }
-
-    static async addCaseStudy(caseStudy: CaseStudy): Promise<CaseStudy[]> {
-        const caseStudies = await getCaseStudies();
-        caseStudies.push(caseStudy);
-        await setCaseStudies(caseStudies);
-        return caseStudies;
+        return projectsStore.add(project);
     }
 
     static async updateProject(title: string, updatedProject: Project): Promise<Project[]> {
-        const projects = await getProjects();
-        const index = projects.findIndex(p => p.title === title);
-        if (index === -1) throw new Error(`Project with title "${title}" not found`);
-        projects[index] = updatedProject;
-        await setProjects(projects);
-        return projects;
-    }
-
-    static async updateCaseStudy(slug: string, updated: CaseStudy): Promise<CaseStudy[]> {
-        const caseStudies = await getCaseStudies();
-        const index = caseStudies.findIndex(cs => cs.slug === slug);
-        if (index === -1) throw new Error(`Case study with slug "${slug}" not found`);
-        caseStudies[index] = updated;
-        await setCaseStudies(caseStudies);
-        return caseStudies;
+        return projectsStore.update(title, updatedProject);
     }
 
     static async deleteProject(title: string): Promise<Project[]> {
-        const projects = await getProjects();
-        const filtered = projects.filter(p => p.title !== title);
-        if (filtered.length === projects.length) throw new Error(`Project with title "${title}" not found`);
-        await setProjects(filtered);
-        return filtered;
+        return projectsStore.remove(title);
+    }
+
+    // Case studies
+    static async getCaseStudies(): Promise<CaseStudy[]> {
+        return caseStudiesStore.get();
+    }
+
+    static async setCaseStudies(caseStudies: CaseStudy[]): Promise<void> {
+        return caseStudiesStore.set(caseStudies);
+    }
+
+    static async addCaseStudy(caseStudy: CaseStudy): Promise<CaseStudy[]> {
+        return caseStudiesStore.add(caseStudy);
+    }
+
+    static async updateCaseStudy(slug: string, updated: CaseStudy): Promise<CaseStudy[]> {
+        return caseStudiesStore.update(slug, updated);
     }
 
     static async deleteCaseStudy(slug: string): Promise<CaseStudy[]> {
-        const caseStudies = await getCaseStudies();
-        const filtered = caseStudies.filter(cs => cs.slug !== slug);
-        if (filtered.length === caseStudies.length) throw new Error(`Case study with slug "${slug}" not found`);
-        await setCaseStudies(filtered);
-        return filtered;
+        return caseStudiesStore.remove(slug);
     }
 
     // --- Session management ---
