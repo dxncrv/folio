@@ -22,7 +22,8 @@ export const POST = async ({ request, cookies }) => {
       const sessionToken = (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function')
         ? globalThis.crypto.randomUUID()
         : String(Date.now()) + Math.random().toString(36).slice(2);
-      const ttl = 60 * 60; // 1 hour
+      // session TTL in seconds — set to 1 hour
+      const ttl = 60 * 60; // 3600 seconds = 1 hour
       await RedisStore.setAdminSession(sessionToken, env.ADMIN_TOKEN, ttl);
 
       cookies.set('admin_token', sessionToken, {
@@ -32,7 +33,9 @@ export const POST = async ({ request, cookies }) => {
         path: '/',
         maxAge: ttl
       });
-      return json({ ok: true });
+
+      const expiresAt = Date.now() + ttl * 1000;
+      return json({ ok: true, expiresAt });
     }
 
     return json({ error: 'Forbidden' }, { status: 403 });

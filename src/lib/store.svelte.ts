@@ -1,4 +1,4 @@
-import type { Project } from './types';
+import type { Project, CaseStudy } from './types';
 
 // FacetsClass: facets array is derived from unique tags in data
 class FacetsClass {
@@ -175,5 +175,137 @@ class projectsClass {
 		}
 	}
 }
+
 // Export the Projects class as a singleton instance.
 export let Projects = new projectsClass();
+
+// CaseStudies class to manage the case studies state and API interactions.
+class caseStudiesClass {
+	all = $state<CaseStudy[]>([]);
+	loading = $state<boolean>(false);
+	error = $state<string | null>(null);
+
+	// Per-slug cache and inflight dedupe
+	#cache = new Map<string, CaseStudy>();
+	#inflight = new Map<string, Promise<CaseStudy | null>>();
+
+	// Per-slug loading/error metadata
+	loadingBySlug = $state<Record<string, boolean>>({});
+	errorBySlug = $state<Record<string, string | null>>({});
+
+	async fetchAll() {
+		this.loading = true;
+		this.error = null;
+		try {
+			const res = await fetch('/api/case-studies');
+			if (!res.ok) throw new Error('Failed to fetch case studies');
+			const list: CaseStudy[] = await res.json();
+			this.all = list;
+			// populate cache
+			for (const cs of list) this.#cache.set(cs.slug, cs);
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Unknown error';
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async fetchBySlug(slug: string) {
+		if (!slug) return null;
+		// return cached value when available
+		if (this.#cache.has(slug)) return this.#cache.get(slug)!;
+		// return inflight promise when available (dedupe)
+		if (this.#inflight.has(slug)) return this.#inflight.get(slug)!;
+
+		this.loadingBySlug = { ...this.loadingBySlug, [slug]: true };
+		this.errorBySlug = { ...this.errorBySlug, [slug]: null };
+
+		const p = (async () => {
+			try {
+				const res = await fetch(`/api/case-studies/${encodeURIComponent(slug)}`);
+				if (!res.ok) return null;
+				const cs: CaseStudy = await res.json();
+				this.#cache.set(slug, cs);
+				// merge into `all` if missing
+				if (!this.all.find(x => x.slug === cs.slug)) this.all = [...this.all, cs];
+				return cs;
+			} catch (err) {
+				this.errorBySlug = { ...this.errorBySlug, [slug]: err instanceof Error ? err.message : 'Unknown error' };
+				return null;
+			} finally {
+				this.loadingBySlug = { ...this.loadingBySlug, [slug]: false };
+				this.#inflight.delete(slug);
+			}
+		})();
+
+		this.#inflight.set(slug, p);
+		return p;
+	}
+
+	async addCaseStudy(caseStudy: CaseStudy) {
+		this.loading = true;
+		this.error = null;
+		try {
+			const res = await fetch('/api/case-studies', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(caseStudy)
+			});
+			if (!res.ok) throw new Error('Failed to add case study');
+			this.all = await res.json();
+			// refresh cache entries
+			for (const cs of this.all) this.#cache.set(cs.slug, cs);
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Unknown error';
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async updateCaseStudy(slug: string, updated: CaseStudy) {
+		this.loading = true;
+		this.error = null;
+		try {
+			const res = await fetch(`/api/case-studies/${encodeURIComponent(slug)}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(updated)
+			});
+			if (!res.ok) throw new Error('Failed to update case study');
+			this.all = await res.json();
+			// refresh cache entries and remove old slug if changed
+			for (const cs of this.all) this.#cache.set(cs.slug, cs);
+			if (slug !== updated.slug) this.#cache.delete(slug);
+			return this.all;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Unknown error';
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async deleteCaseStudy(slug: string) {
+		this.loading = true;
+		this.error = null;
+		try {
+			const res = await fetch(`/api/case-studies/${encodeURIComponent(slug)}`, {
+				method: 'DELETE'
+			});
+			if (!res.ok) throw new Error('Failed to delete case study');
+			this.all = await res.json();
+			// update cache
+			this.#cache.delete(slug);
+			for (const cs of this.all) this.#cache.set(cs.slug, cs);
+			return this.all;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Unknown error';
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+}
+
+export const CaseStudies = new caseStudiesClass();

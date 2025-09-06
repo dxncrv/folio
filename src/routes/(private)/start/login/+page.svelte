@@ -16,6 +16,26 @@
       const body = await res.json();
       if (res.ok) {
         msg = 'Login successful. You can now use admin actions.';
+        // Use expiresAt returned by server when available (authoritative)
+        const serverExpires = body?.expiresAt ? Number(body.expiresAt) : null;
+        let expiresAt = serverExpires;
+        let ttl = null;
+        if (!serverExpires) {
+          // fallback: mirror old small TTL if server didn't return expiresAt
+          ttl = 5;
+          expiresAt = Date.now() + ttl * 1000;
+        } else {
+          ttl = Math.max(1, Math.floor((serverExpires - Date.now()) / 1000));
+        }
+
+        try {
+          if (expiresAt) localStorage.setItem('admin_token_expires', String(expiresAt));
+          // Also write a non-HttpOnly cookie for cross-tab visibility
+          if (expiresAt && ttl) document.cookie = `admin_token_expires=${expiresAt}; path=/; max-age=${ttl}`;
+        } catch (e) {
+          // ignore storage errors
+        }
+
         // Reload to allow hooks and page to pick up cookie-protected state
         setTimeout(() => location.reload(), 300);
       } else {

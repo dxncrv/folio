@@ -2,12 +2,75 @@
 import { Projects } from '$lib/store.svelte';
 import type { Project } from '$lib/types';
 import Typer from '$lib/_fx/Typer.svelte';
+import { onMount, onDestroy } from 'svelte';
 import { slugify } from '$lib/utils';
-import { CaseStudies } from '$lib/caseStudiesStore';
+import { CaseStudies } from '$lib/store.svelte';
 import Editor from '$lib/components/editor.svelte';
 
 let message = $state<string>('');
 let messageType = $state<'success' | 'error' | 'info' | ''>('');
+let sessionExpiresAt: number | null = null;
+let remaining = $state('00:00');
+let isExpired = $state(false);
+
+function readExpiryFromStorage() {
+	try {
+		// Prefer localStorage value written at login
+		const v = localStorage.getItem('admin_token_expires');
+		if (v) return Number(v);
+	} catch (e) {
+		// ignore
+	}
+	// fallback: try cookie
+	const match = document.cookie.match(/(?:^|; )admin_token_expires=(\d+)/);
+	if (match) return Number(match[1]);
+	return null;
+}
+
+function formatRemaining(ms: number) {
+	if (ms <= 0) return '00:00';
+	const totalSec = Math.ceil(ms / 1000);
+	const mins = Math.floor(totalSec / 60);
+	const secs = totalSec % 60;
+	return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+
+// update remaining every 500ms for responsiveness
+let timerHandle: number | null = null;
+function startTimer() {
+	stopTimer();
+	sessionExpiresAt = readExpiryFromStorage();
+	timerHandle = setInterval(() => {
+			if (!sessionExpiresAt) {
+				isExpired = false;
+				remaining = '00:00';
+				return;
+			}
+			const r = sessionExpiresAt - Date.now();
+			if (r <= 0) {
+				// expired: clear storage and stop
+				isExpired = true;
+				remaining = 'Expired';
+				try { localStorage.removeItem('admin_token_expires'); } catch (e) {}
+				document.cookie = 'admin_token_expires=; path=/; max-age=0';
+				stopTimer();
+			} else {
+				isExpired = false;
+				remaining = formatRemaining(r);
+			}
+	}, 500) as unknown as number;
+}
+
+function stopTimer() {
+	if (timerHandle) {
+		clearInterval(timerHandle as unknown as number);
+		timerHandle = null;
+	}
+}
+
+// Start when component mounts
+onMount(() => startTimer());
+onDestroy(() => stopTimer());
 let showLogoutConfirm = $state(false);
 let editingProjectId = $state<string | null>(null);
 let editingJson = $state('');
@@ -18,12 +81,12 @@ let caseStudyContents = $state<Record<string, string>>({});
 $effect(() => {
 	(async () => {
 		await Projects.fetchProjects();
-		for (const project of Projects.all) {
-			const slug = slugify(project.title);
+		const slugs = Projects.all.map(p => slugify(p.title));
+		await Promise.all(slugs.map(async (slug) => {
 			const cs = await CaseStudies.fetchBySlug(slug);
 			caseStudyContents[slug] = cs?.content || '';
 			caseStudyContents = { ...caseStudyContents };
-		}
+		}));
 	})();
 });
 
@@ -134,10 +197,13 @@ async function confirmLogout() {
 		<a href="/" class="logo">
 			<img src="/favicon.png" alt="Logo" />
 		</a>
-		<h1>Hello, Aash.</h1>
+		<h1>
+			Hello, Aash.
+		</h1>
 		<div class="header-message {messageType}">
 			<Typer text={message || "Welcome to the start page."}/>
 		</div>
+		<span class="session-timer" aria-live="polite" class:expired={isExpired}>{remaining}</span>
 		<button class="primary" onclick={openLogoutConfirm} aria-label="Logout">
 			Logout
 		</button>
@@ -454,6 +520,7 @@ async function confirmLogout() {
 			 Header Message Styles
 			 ===================== */
 		.header-message {
+			flex: 1;
 			font-family: var(--font-ui);
 			margin: 0.5rem 0;
 			font-size: 0.9rem;
@@ -739,4 +806,23 @@ async function confirmLogout() {
 	font-size: 1.1rem;
 	margin-bottom: 2rem;
 }
+
+		/* Session timer next to header */
+		.session-timer {
+			font-family: var(--font-ui);
+			margin-left: 0.75rem;
+			font-size: 0.9rem;
+			color: var(--font-color);
+			background: rgba(255,255,255,0.03);
+			padding: 0.15rem 0.5rem;
+			border-radius: 0.35rem;
+			border: 1px solid rgba(255,255,255,0.03);
+		}
+
+		.session-timer.expired {
+			color: #ff6b6b;
+			border-color: rgba(255,107,107,0.12);
+			background: rgba(255,107,107,0.03);
+			font-weight: 600;
+		}
 </style>
