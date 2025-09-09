@@ -47,6 +47,10 @@ class EditorTools {
   insertLink(textarea: HTMLTextAreaElement | null, content: string): InsertResult {
     return this.insertTemplate(this.linkPlaceholder(), textarea, content);
   }
+
+  insertText(textarea: HTMLTextAreaElement | null, content: string, text: string): InsertResult {
+    return this.insertTemplate(text, textarea, content);
+  }
 }
 
 export const EditorTool = EditorTools.getInstance();

@@ -18,6 +18,24 @@
 		}
 	});
 
+	// Listen for media insertion
+	$effect(() => {
+		const handleInsertMedia = (event: Event) => {
+			const media = (event as CustomEvent).detail as { id: string; type: string; path: string; alt?: string; caption?: string };
+			const insertText = media.type === 'image' 
+				? `![${media.alt || media.caption || 'Image'}](/${media.path})`
+				: `<video controls><source src="/${media.path}" type="video/${media.path.split('.').pop()}"></video>`;
+			const res = EditorTool.insertText(textareaRef, content, insertText);
+			content = res.content;
+			textareaRef?.focus();
+			if (textareaRef) {
+				textareaRef.selectionStart = textareaRef.selectionEnd = res.cursor;
+			}
+		};
+		window.addEventListener('insert-media', handleInsertMedia as EventListener);
+		return () => window.removeEventListener('insert-media', handleInsertMedia as EventListener);
+	});
+
 	import { fetchJson } from '$lib/apiClient';
 
 	async function apiCall(endpoint: string, options: RequestInit) {

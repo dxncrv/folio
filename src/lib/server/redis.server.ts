@@ -1,5 +1,5 @@
 import Redis from 'ioredis';
-import type { Project } from '$lib/types';
+import type { Project, Media } from '$lib/types';
 import { env } from '$env/dynamic/private';
 
 let redisClient: Redis | null = null;
@@ -61,6 +61,7 @@ function createListStore<T>(key: string, idSelector: (item: T) => string) {
 // Create stores for projects and caseStudies
 const projectsStore = createListStore<Project>('projects', p => p.title);
 const caseStudiesStore = createListStore<CaseStudy>('caseStudies', cs => cs.slug);
+const mediaStore = createListStore<Media>('media', m => m.id);
 
 export class RedisStore {
     // Projects
@@ -103,6 +104,27 @@ export class RedisStore {
 
     static async deleteCaseStudy(slug: string): Promise<CaseStudy[]> {
         return caseStudiesStore.remove(slug);
+    }
+
+    // Media
+    static async getMedia(): Promise<Media[]> {
+        return mediaStore.get();
+    }
+
+    static async setMedia(media: Media[]): Promise<void> {
+        return mediaStore.set(media);
+    }
+
+    static async addMedia(item: Media): Promise<Media[]> {
+        return mediaStore.add(item);
+    }
+
+    static async updateMedia(id: string, updated: Media): Promise<Media[]> {
+        return mediaStore.update(id, updated);
+    }
+
+    static async deleteMedia(id: string): Promise<Media[]> {
+        return mediaStore.remove(id);
     }
 
     // --- Session management ---

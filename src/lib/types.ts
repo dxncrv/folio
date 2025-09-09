@@ -20,3 +20,12 @@ export interface Facet {
     name: string;
     bool: boolean;
 }
+
+export interface Media {
+    id: string; // filename or relative path
+    type: 'image' | 'video';
+    path: string; // relative to static
+    alt?: string;
+    caption?: string;
+    tags?: string[];
+}

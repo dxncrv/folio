@@ -7,6 +7,7 @@ import { CaseStudies } from '$lib/store.svelte';
 import SessionTimer from '$lib/components/start/SessionTimer.svelte';
 import LogoutModal from '$lib/components/start/LogoutModal.svelte';
 import ProjectGrid from '$lib/components/start/ProjectGrid.svelte';
+import MediaManager from '$lib/components/start/MediaManager.svelte';
 
 let message = $state<string>('');
 let messageType = $state<'success' | 'error' | 'info' | ''>('');
@@ -203,6 +204,8 @@ async function confirmLogout() {
 			</div>
 		{/if}
 	{/if}
+
+	<MediaManager />
 </main>
 
 	<LogoutModal

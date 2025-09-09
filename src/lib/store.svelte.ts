@@ -1,4 +1,4 @@
-import type { Project, CaseStudy } from './types';
+import type { Project, CaseStudy, Media } from './types';
 import { fetchJson } from '$lib/apiClient';
 
 // FacetsClass: facets array is derived from unique tags in data
@@ -277,3 +277,81 @@ class caseStudiesClass {
 }
 
 export const CaseStudies = new caseStudiesClass();
+
+// Media class to manage media files
+class mediaClass {
+	all = $state<Media[]>([]);
+	loading = $state<boolean>(false);
+	error = $state<string | null>(null);
+
+	async fetchMedia() {
+		this.loading = true;
+		this.error = null;
+		try {
+			this.all = await fetchJson('/api/media');
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Unknown error';
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async updateMedia(media: Media[]) {
+		this.loading = true;
+		this.error = null;
+		try {
+			this.all = await fetchJson('/api/media', { method: 'POST', body: JSON.stringify(media) });
+			return this.all;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Unknown error';
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async updateMediaItem(item: Media) {
+		this.loading = true;
+		this.error = null;
+		try {
+			this.all = await fetchJson('/api/media', { method: 'PUT', body: JSON.stringify(item) });
+			return this.all;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Unknown error';
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async deleteMediaItem(id: string) {
+		this.loading = true;
+		this.error = null;
+		try {
+			this.all = await fetchJson('/api/media', { method: 'DELETE', body: JSON.stringify({ id }) });
+			return this.all;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Unknown error';
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+
+	async scanMedia() {
+		this.loading = true;
+		this.error = null;
+		try {
+			const result = await fetchJson('/api/media/scan', { method: 'POST' });
+			await this.fetchMedia(); // Refresh after scan
+			return result;
+		} catch (err) {
+			this.error = err instanceof Error ? err.message : 'Unknown error';
+			throw err;
+		} finally {
+			this.loading = false;
+		}
+	}
+}
+
+export const MediaStore = new mediaClass();
