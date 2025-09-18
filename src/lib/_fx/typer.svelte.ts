@@ -7,88 +7,67 @@
   View/reference for learning only. No commercial use, modifications, or redistribution.
   Commercial licensing: hello@dxncrv.com
 */
-// typerFx class to manage typewriter animation state and behavior.
-class typerFx {
-	// PRIVATE FIELDS
-	#config: { maxLength: number; speed: number };
-	#currentInterval: ReturnType<typeof setInterval> | null = null;
-	#memoryState = $state('');
-	#lastProcessedDesc = $state('');
-	// PUBLIC FIELDS
-	text = $state('');
-	isTyping = $state(false);
-	isTruncated = $state(true);
 
-	// CONSTRUCTOR
-	constructor(config: { maxLength?: number; speed?: number } = {}) {
-		this.#config = {
-			maxLength: config.maxLength ?? 30,
-			speed: config.speed ?? 20
-		};
+export class TyperFx {
+	state = $state({ text: '', typing: false, truncated: true });
+	get buttonText() { return this.state.truncated ? 'More' : 'Less'; }
+
+	#cfg: { maxLength: number; speed: number };
+	#int: ReturnType<typeof setInterval> | null = null;
+	#last = $state('');
+	#dots = ' ...';
+
+	constructor(cfg: { maxLength?: number; speed?: number } = {}) {
+		this.#cfg = { maxLength: cfg.maxLength ?? 30, speed: cfg.speed ?? 20 };
 	}
 
-	// PRIVATE METHODS
-	#getTruncated = (text: string) => {
-		if (text.length <= this.#config.maxLength) return text;
-		const cutPoint = text.lastIndexOf(' ', this.#config.maxLength);
-		return text.slice(0, cutPoint > 0 ? cutPoint : this.#config.maxLength) + ' ...';
-	};
-	#finish = (finalText: string) => {
-		if (this.#currentInterval) clearInterval(this.#currentInterval);
-		this.#currentInterval = null;
-		this.isTyping = false;
-		this.#memoryState = this.#lastProcessedDesc = finalText;
-	};
-	#animate = (targetText: string, startIndex = 0, reverse = false) => {
-		if (this.#currentInterval) clearInterval(this.#currentInterval);
-		this.#currentInterval = null;
-		this.isTyping = true;
-		if (!reverse && startIndex === 0) this.text = '';
-		let currentIndex = reverse ? this.text.length : startIndex;
-		const speed = reverse ? this.#config.speed / 2 : this.#config.speed;
-		this.#currentInterval = setInterval(() => {
-			if (reverse) {
-				if (this.text.length > targetText.length) {
-					this.text = this.text.slice(0, -1);
-				} else {
-					this.text = targetText;
-					this.#finish(targetText);
-				}
+	#finish(val: string) {
+		this.state.text = val;
+		if (this.#int) { clearInterval(this.#int); }
+		this.state.typing = false;
+		this.#last = val;
+	}
+
+	#params(target: string) {
+		const base = this.#last.replace(this.#dots, '');
+		if (!this.state.truncated && this.#last && target.startsWith(base)) return { from: base.length, rev: false };
+		if (this.state.truncated && this.#last && !this.#last.includes(this.#dots) && target.includes(this.#dots)) return { from: 0, rev: true };
+		return { from: 0, rev: false };
+	}
+	
+	#run(target: string, from = 0, rev = false) {
+		if (this.#int) { clearInterval(this.#int); }
+		this.state.typing = true;
+		if (!rev && from === 0) this.state.text = '';
+		let i = rev ? this.state.text.length : from;
+		const speed = this.#cfg.speed / (rev ? 2 : 1);
+		this.#int = setInterval(() => {
+			if (rev) {
+				if (this.state.text.length > target.length) this.state.text = this.state.text.slice(0, -1);
+				else this.#finish(target);
 			} else {
-				if (currentIndex < targetText.length) {
-					this.text = targetText.slice(0, ++currentIndex);
-				} else {
-					this.#finish(targetText);
-				}
+				if (i < target.length) this.state.text = target.slice(0, ++i);
+				else this.#finish(target);
 			}
 		}, speed);
-	};
+	}
 
-	// PUBLIC METHODS
-	toggle = () => { this.isTruncated = !this.isTruncated; }
-	showButton = (fullTextLength: number) => fullTextLength > this.#config.maxLength && !this.isTyping;
-	getButtonText = () => this.isTruncated ? 'More' : 'Less';
-	processText(fullText: string) {
-		const targetText = this.isTruncated && fullText.length > this.#config.maxLength 
-			? this.#getTruncated(fullText) : fullText;
-		if (targetText === this.#lastProcessedDesc) return;
-		const isExpanding = !this.isTruncated && this.#memoryState && 
-			targetText.startsWith(this.#memoryState.replace(' ...', ''));
-		const isTruncating = this.isTruncated && this.#memoryState && 
-			!this.#memoryState.includes(' ...') && targetText.includes(' ...');
-		if (isExpanding) {
-			this.#animate(targetText, this.#memoryState.replace(' ...', '').length, false);
-		} else if (isTruncating) {
-			this.#animate(targetText, 0, true);
-		} else {
-			this.#animate(targetText, 0, false);
-		}
+	showButton = (len: number) => len > this.#cfg.maxLength && !this.state.typing;
+	toggle = () => { this.state.truncated = !this.state.truncated; };
+
+	processText(full: string) {
+		const target = (!this.state.truncated || full.length <= this.#cfg.maxLength)
+			? full
+			: ((): string => {
+				const cut = full.lastIndexOf(' ', this.#cfg.maxLength);
+				const at = cut > 0 ? cut : this.#cfg.maxLength;
+				return full.slice(0, at) + this.#dots;
+			})();
+		if (target === this.#last) return;
+		const { from, rev } = this.#params(target) as { from: number; rev: boolean };
+		this.#run(target, from, rev);
 	}
 }
-
-// Export factory function to create typewriter instances
-export let createTyper = (config?: { maxLength?: number; speed?: number }) => 
-	new typerFx(config);
 
 /* Portfolio component by @dxncrv - https://dxncrv.com */
 /* Created: 2025-08-08 - Do not use without permission */

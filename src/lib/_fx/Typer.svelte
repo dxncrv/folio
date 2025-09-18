@@ -7,23 +7,31 @@
   View/reference for learning only. No commercial use, modifications, or redistribution.
   Commercial licensing: hello@dxncrv.com
 -->
+
 <script lang="ts">
-  import { createTyper } from './typer.svelte.ts';
+  import { TyperFx } from './typer.svelte.ts';
   let { text } = $props();
-  const typer = createTyper();
+
+  const typer = new TyperFx(
+    {
+      maxLength: 30,
+      speed: 20 
+    }
+  );
+
   $effect(() => {
   typer.processText(text);
   });
 </script>
 
 <p>
-  <span class="typer-text">{typer.text}</span>
-  {#if typer.isTyping}
+  <span class="typer-text">{typer.state.text}</span>
+  {#if typer.state.typing}
     <span class="cursor">|</span>
   {/if}
   {#if typer.showButton(text.length)}
     <button class="description" type="button" onclick={typer.toggle}>
-      {typer.getButtonText()}
+      {typer.buttonText}
     </button>
   {/if}
 </p>
