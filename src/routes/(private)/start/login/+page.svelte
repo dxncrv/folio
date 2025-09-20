@@ -4,11 +4,13 @@
   let token = $state('');
   let msg = $state('');
   let isLoading = $state(false);
+  let timer: ReturnType<typeof setTimeout>;
+  let input: HTMLInputElement;
 
-  async function submit(e: Event) {
-    e.preventDefault();
+  async function login() {
+    if (!token.trim() || isLoading) return;
+    
     isLoading = true;
-    msg = 'Logging in...';
 
     try {
       const body = await fetchJson('/start/login', {
@@ -17,58 +19,70 @@
         body: JSON.stringify({ token })
       });
 
-      msg = 'Login successful. You can now use admin actions.';
-      handleLoginSuccess(body);
+      // Set session and reload
+      const expires = body?.expiresAt ? Number(body.expiresAt) : Date.now() + 5000;
+      const ttl = Math.max(1, Math.floor((expires - Date.now()) / 1000));
+      
+      try {
+        localStorage.setItem('admin_token_expires', String(expires));
+        document.cookie = `admin_token_expires=${expires}; path=/; max-age=${ttl}`;
+      } catch {}
+
+      location.reload();
     } catch (err) {
-      msg = err instanceof ApiError
-        ? err.body?.error || err.message || 'Login failed'
-        : 'Network error';
+      msg = err instanceof ApiError ? err.body?.error || 'Invalid password' : 'Network error';
+      if (msg.toLowerCase().includes('forbidden')) {
+        token = '';
+        setTimeout(() => input?.focus(), 50);
+      }
     } finally {
       isLoading = false;
     }
   }
 
-  function handleLoginSuccess(body: any) {
-    const serverExpires = body?.expiresAt ? Number(body.expiresAt) : null;
-    const expiresAt = serverExpires || Date.now() + 5000; // 5s fallback
-    const ttl = serverExpires
-      ? Math.max(1, Math.floor((serverExpires - Date.now()) / 1000))
-      : 5;
-
-    try {
-      localStorage.setItem('admin_token_expires', String(expiresAt));
-      document.cookie = `admin_token_expires=${expiresAt}; path=/; max-age=${ttl}`;
-    } catch {
-      // ignore storage errors
+  function onInput() {
+    msg = ''; // Clear errors when typing
+    clearTimeout(timer);
+    if (token.trim()) {
+      timer = setTimeout(login, 800);
     }
+  }
 
-    setTimeout(() => location.reload(), 300);
+  function onKeyDown(e: KeyboardEvent) {
+    if (e.key === 'Enter') {
+      clearTimeout(timer);
+      login();
+    }
   }
 </script>
 
-<main class="login">
-  <form onsubmit={submit} class="form">
-    <h1>Admin Login</h1>
+<main>
+  <div class="form">
+    <h1>Login</h1>
     <input
+      bind:this={input}
       bind:value={token}
+      oninput={onInput}
+      onkeydown={onKeyDown}
       type="password"
-      placeholder="Enter password"
       disabled={isLoading}
-      required
     />
-    <button type="submit" disabled={isLoading || !token.trim()}>
-      {#if isLoading}
-        Loading...
-      {:else}
-        Login
-      {/if}
-    </button>
-    {#if msg}
-      <p class="msg" class:success={msg.includes('successful')} class:error={!msg.includes('successful')}>
-        {msg}
-      </p>
+    {#if isLoading}
+      <p class="loading">Logging in...</p>
+    {:else if msg}
+      <p class="error">{msg}</p>
     {/if}
-  </form>
+  </div>
 </main>
 
-<style>.login{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}.form{display:flex;flex-direction:column;gap:1rem;max-width:300px;width:100%;padding:2rem;border:1px solid #ccc;border-radius:0.5rem;background:white}h1{text-align:center;margin:0}input{padding:0.5rem;border:1px solid #ccc;border-radius:0.25rem}button{padding:0.5rem;border:1px solid #ccc;border-radius:0.25rem;background:#f0f0f0;cursor:pointer}button:disabled{opacity:0.5;cursor:not-allowed}.msg{text-align:center;padding:0.5rem;border-radius:0.25rem}.msg.success{background:#d4edda;color:#155724}.msg.error{background:#f8d7da;color:#721c24}</style>
+<style>
+main { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
+.form { display: flex; flex-direction: column; gap: 1rem; max-width: 300px; width: 100%; padding: 2rem; border: 1px solid var(--outline); border-radius: 0.5rem; background: var(--bg); }
+h1 { text-align: center; margin: 0; font-size: 1.5rem; font-family: var(--font-ui); color: var(--accent); }
+input { padding: 0.75rem; background: var(--body-bg); border-radius: 1rem; font-size: 1rem; color: var(--accent)}
+input:focus { border: 2px solid var(--accent); outline: none; }
+input:disabled { opacity: 0.5; }
+p { text-align: center; padding: 0.5rem; border-radius: 0.25rem; margin: 0; font-size: 0.9rem; }
+.loading { background: #d1ecf1; color: #0c5460; }
+.error { background: #f8d7da; color: #721c24; }
+</style>

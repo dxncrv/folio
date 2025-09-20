@@ -3,7 +3,7 @@
 const stack = {
 	'Excalidraw': 'material-icon-theme:excalidraw',
 	'VSCode': 'material-icon-theme:vscode',
-	'pnpm': 'material-icon-theme:pnpm',
+	'Copilot': 'material-icon-theme:copilot',
 	'Git': 'material-icon-theme:git',
 	'Svelte': 'material-icon-theme:svelte',
 	'TypeScript': 'vscode-icons:file-type-typescript',
