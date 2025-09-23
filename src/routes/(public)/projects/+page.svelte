@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import Card from '$lib/components/card.svelte';
+    import Card from '$lib/components/project-card.svelte';
 	import Statusbar from '$lib/components/statusbar.svelte';
     import { Facets, Projects } from '$lib/store.svelte';
 

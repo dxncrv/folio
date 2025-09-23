@@ -8,9 +8,9 @@
   Commercial licensing: hello@dxncrv.com
 -->
 <script lang="ts">
-import { createCircle } from './circle.svelte.ts';
+import { CircleFx } from '$lib/_fx/一.svelte.ts';
 
-const circle = createCircle();
+const circle = new CircleFx();
 </script>
 
 <svelte:body onmousemove={circle.onMove} onmouseleave={circle.onLeave} />

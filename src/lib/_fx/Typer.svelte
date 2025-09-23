@@ -9,7 +9,7 @@
 -->
 
 <script lang="ts">
-  import { TyperFx } from './typer.svelte.ts';
+  import { TyperFx } from '$lib/_fx/一.svelte.ts';
   let { text } = $props();
 
   const typer = new TyperFx(

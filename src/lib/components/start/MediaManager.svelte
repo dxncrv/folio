@@ -67,7 +67,7 @@
 		<button class="icon-btn" onclick={() => isCollapsed = !isCollapsed}>
 			{#if isCollapsed} 
 			<iconify-icon icon= "line-md:image-twotone" width="20" height="20"></iconify-icon>
-			{:else} ← 
+			{:else} <iconify-icon icon= "line-md:close" width="20" height="20"></iconify-icon>
 			{/if}
 		</button>
 		{#if !isCollapsed}

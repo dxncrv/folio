@@ -5,7 +5,7 @@ import Typer from '$lib/_fx/Typer.svelte';
 import { slugify } from '$lib/utils';
 import { CaseStudies } from '$lib/store.svelte';
 import SessionTimer from '$lib/components/start/SessionTimer.svelte';
-import LogoutModal from '$lib/components/start/LogoutModal.svelte';
+import Logout from '$lib/components/start/logout.svelte';
 import ProjectGrid from '$lib/components/start/ProjectGrid.svelte';
 import MediaManager from '$lib/components/start/MediaManager.svelte';
 
@@ -208,7 +208,7 @@ async function confirmLogout() {
 	<MediaManager />
 </main>
 
-	<LogoutModal
+	<Logout
 		show={showLogoutConfirm}
 		onCancel={closeLogoutConfirm}
 		onConfirm={confirmLogout}

@@ -1,56 +1,22 @@
-// Small singleton helper to insert boilerplate templates into a textarea's value
-// Designed for Svelte 5 (runes) usage: functions return the new content and cursor
+// Minimal editor helpers: single insert function + short helpers
 export type InsertResult = { content: string; cursor: number };
 
-class EditorTools {
-  private static instance: EditorTools | null = null;
+const placeholders = {
+  image: '![Alt text](/path/to/image.png)',
+  video: '!![Alt text](/path/to/video.mp4)',
+  link: '[Link text](https://example.com)'
+} as const;
 
-  static getInstance() {
-    if (!EditorTools.instance) EditorTools.instance = new EditorTools();
-    return EditorTools.instance;
-  }
-
-  private constructor() {
-    // singleton
-  }
-
-  insertTemplate(template: string, textarea: HTMLTextAreaElement | null, content: string): InsertResult {
-    const start = textarea?.selectionStart ?? content.length;
-    const end = textarea?.selectionEnd ?? start;
-    const before = content.slice(0, start);
-    const after = content.slice(end);
-    const newContent = before + template + after;
-    const cursor = before.length + template.length;
-    return { content: newContent, cursor };
-  }
-
-  imagePlaceholder(): string {
-    return '![Alt text](/path/to/image.png)';
-  }
-
-  videoPlaceholder(): string {
-    return '!![Alt text](/path/to/video.mp4)';
-  }
-
-  linkPlaceholder(): string {
-    return '[Link text](https://example.com)';
-  }
-
-  insertImage(textarea: HTMLTextAreaElement | null, content: string): InsertResult {
-    return this.insertTemplate(this.imagePlaceholder(), textarea, content);
-  }
-
-  insertVideo(textarea: HTMLTextAreaElement | null, content: string): InsertResult {
-    return this.insertTemplate(this.videoPlaceholder(), textarea, content);
-  }
-
-  insertLink(textarea: HTMLTextAreaElement | null, content: string): InsertResult {
-    return this.insertTemplate(this.linkPlaceholder(), textarea, content);
-  }
-
-  insertText(textarea: HTMLTextAreaElement | null, content: string, text: string): InsertResult {
-    return this.insertTemplate(text, textarea, content);
-  }
+export function insert(template: string, textarea: HTMLTextAreaElement | null, content: string): InsertResult {
+  const s = textarea?.selectionStart ?? content.length;
+  const e = textarea?.selectionEnd ?? s;
+  const before = content.slice(0, s);
+  const after = content.slice(e);
+  const newContent = before + template + after;
+  return { content: newContent, cursor: before.length + template.length };
 }
 
-export const EditorTool = EditorTools.getInstance();
+export const insertImage = (t: HTMLTextAreaElement | null, c: string) => insert(placeholders.image, t, c);
+export const insertVideo = (t: HTMLTextAreaElement | null, c: string) => insert(placeholders.video, t, c);
+export const insertLink = (t: HTMLTextAreaElement | null, c: string) => insert(placeholders.link, t, c);
+export const insertText = (t: HTMLTextAreaElement | null, c: string, text: string) => insert(text, t, c);

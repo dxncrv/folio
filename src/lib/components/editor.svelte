@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { EditorTool } from '$lib/editorTools';
+	import { insertImage, insertVideo, insertLink, insertText } from '$lib/editorTools';
 
 	let { initialContent = $bindable(''), slug = '' } = $props();
 
@@ -9,7 +9,7 @@
 	let error = $state('');
 	let exists = $derived(initialContent.trim().length > 0);
 
-	// textarea DOM reference so EditorTool can inspect selectionStart/End
+	// textarea DOM reference so insert functions can inspect selectionStart/End
 	let textareaRef = $state<HTMLTextAreaElement | null>(null);
 
 	$effect(() => {
@@ -22,10 +22,10 @@
 	$effect(() => {
 		const handleInsertMedia = (event: Event) => {
 			const media = (event as CustomEvent).detail as { id: string; type: string; path: string; alt?: string; caption?: string };
-			const insertText = media.type === 'image' 
+			const snippet = media.type === 'image'
 				? `![${media.alt || media.caption || 'Image'}](/${media.path})`
 				: `<video controls><source src="/${media.path}" type="video/${media.path.split('.').pop()}"></video>`;
-			const res = EditorTool.insertText(textareaRef, content, insertText);
+			const res = insertText(textareaRef, content, snippet);
 			content = res.content;
 			textareaRef?.focus();
 			if (textareaRef) {
@@ -96,7 +96,7 @@
 		</div>
 		<div class="left-group">
 			<button class="tool" aria-label="Image tool" onclick={() => {
-				const res = EditorTool.insertImage(textareaRef, content);
+				const res = insertImage(textareaRef, content);
 				content = res.content;
 				// focus and set cursor on next tick
 				textareaRef?.focus();
@@ -107,7 +107,7 @@
 			<iconify-icon icon="line-md:image-twotone" width="16" height="16"></iconify-icon>
 			</button>
 			<button class="tool" aria-label="Video tool" onclick={() => {
-				const res = EditorTool.insertVideo(textareaRef, content);
+				const res = insertVideo(textareaRef, content);
 				content = res.content;
 				textareaRef?.focus();
 				if (textareaRef) {
@@ -117,7 +117,7 @@
 			<iconify-icon icon="line-md:play" width="16" height="16"></iconify-icon>
 			</button>
 			<button class="tool" aria-label="Link tool" onclick={() => {
-				const res = EditorTool.insertLink(textareaRef, content);
+				const res = insertLink(textareaRef, content);
 				content = res.content;
 				textareaRef?.focus();
 				if (textareaRef) {

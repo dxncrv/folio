@@ -1,11 +1,5 @@
 <script lang="ts">
-interface Props {
-	show: boolean;
-	onCancel: () => void;
-	onConfirm: () => void;
-}
-
-let { show, onCancel, onConfirm }: Props = $props();
+let { show, onCancel, onConfirm } = $props();
 </script>
 
 {#if show}
