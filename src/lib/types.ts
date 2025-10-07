@@ -29,3 +29,14 @@ export interface Media {
     caption?: string;
     tags?: string[];
 }
+
+export interface TalkMessage {
+    id: string;
+    username: string;
+    text: string;
+    timestamp: number;
+}
+
+export interface TalkSettings {
+    pollingMode: 'sync' | 'async';
+}

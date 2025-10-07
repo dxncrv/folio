@@ -15,7 +15,7 @@
   const typer = new TyperFx(
     {
       maxLength: 30,
-      speed: 20 
+      speed: 12.5 
     }
   );
 

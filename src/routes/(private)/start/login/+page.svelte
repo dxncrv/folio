@@ -76,13 +76,5 @@
 </main>
 
 <style>
-main { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; }
-.form { display: flex; flex-direction: column; gap: 1rem; max-width: 300px; width: 100%; padding: 2rem; border: 1px solid var(--outline); border-radius: 0.5rem; background: var(--bg); }
-h1 { text-align: center; margin: 0; font-size: 1.5rem; font-family: var(--font-ui); color: var(--accent); }
-input { padding: 0.75rem; background: var(--body-bg); border-radius: 1rem; font-size: 1rem; color: var(--accent)}
-input:focus { border: 2px solid var(--accent); outline: none; }
-input:disabled { opacity: 0.5; }
-p { text-align: center; padding: 0.5rem; border-radius: 0.25rem; margin: 0; font-size: 0.9rem; }
-.loading { background: #d1ecf1; color: #0c5460; }
-.error { background: #f8d7da; color: #721c24; }
+main{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:1rem}.form{display:flex;flex-direction:column;gap:1rem;max-width:300px;width:100%;padding:2rem;border:1px solid var(--outline);border-radius:1rem;background:var(--bg)}h1{text-align:center;margin:0;font-size:1.5rem;font-family:var(--font-ui);color:var(--accent)}input{padding:0.75rem;background:var(--body-bg);border-radius:0.5rem;font-size:1rem;color:var(--accent);border:1px solid var(--outline)}input:focus{border:2px solid var(--accent);outline:none}input:disabled{opacity:0.5}p{text-align:center;padding:0.5rem;border-radius:0.25rem;margin:0;font-size:0.9rem}.loading{background:#d1ecf1;color:#0c5460}.error{background:#f8d7da;color:#721c24}
 </style>

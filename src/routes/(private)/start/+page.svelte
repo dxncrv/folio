@@ -8,6 +8,7 @@ import SessionTimer from '$lib/components/start/SessionTimer.svelte';
 import Logout from '$lib/components/start/logout.svelte';
 import ProjectGrid from '$lib/components/start/ProjectGrid.svelte';
 import MediaManager from '$lib/components/start/MediaManager.svelte';
+import TalkAdmin from '$lib/components/start/TalkAdmin.svelte';
 
 let message = $state<string>('');
 let messageType = $state<'success' | 'error' | 'info' | ''>('');
@@ -204,6 +205,8 @@ async function confirmLogout() {
 			</div>
 		{/if}
 	{/if}
+
+	<TalkAdmin />
 
 	<MediaManager />
 </main>

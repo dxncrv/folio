@@ -4,7 +4,7 @@ import { env } from '$env/dynamic/private';
 
 let redisClient: Redis | null = null;
 
-const getRedisClient = () => {
+export const getRedisClient = () => {
     if (!redisClient) {
         if (!env.REDIS_URL || env.REDIS_URL === 'your_redis_url_here') {
             throw new Error('Redis is not configured. Set REDIS_URL environment variable.');
