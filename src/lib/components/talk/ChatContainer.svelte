@@ -108,19 +108,27 @@
         <ChatAuth onAuthenticated={handleAuthenticated} />
     {:else}
         <div class="chat-header">
-            <div class="header-left">
+            <div class="header-content">
                 <h3>Talk</h3>
-                <span class="user-badge">{currentUser}</span>
-            </div>
-            <div class="header-right">
-                {#if settings.pollingMode === 'async'}
-                    <button class="refresh-btn" onclick={handleRefresh} title="Refresh messages">
-                        ↻
-                    </button>
-                {/if}
-                <span class="mode-indicator" class:sync={settings.pollingMode === 'sync'}>
-                    {settings.pollingMode === 'sync' ? '●' : '○'}
-                </span>
+                <div class="header-right">
+                    <div class="header-info">
+                        <span class="current-user">{currentUser}</span>
+                        {#if settings.pollingMode === 'sync'}
+                            <div class="status-indicator">
+                                <span class="status-dot"></span>
+                                <span class="status-text">Live</span>
+                            </div>
+                        {/if}
+                    </div>
+                    {#if settings.pollingMode === 'async'}
+                        <button class="refresh-btn" onclick={handleRefresh} title="Refresh messages" aria-label="Refresh messages">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                                <path d="M3 12C3 7.03 7.03 3 12 3C16.97 3 21 7.03 21 12C21 16.97 16.97 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                <path d="M3 12L7 8M3 12L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    {/if}
+                </div>
             </div>
         </div>
         <ChatMessages {messages} {currentUser} />
@@ -137,18 +145,16 @@
     }
 
     .chat-header {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(20px);
+    }
+
+    .header-content {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 1rem;
-        border-bottom: 1px solid var(--outline);
-        background: var(--bg);
-    }
-
-    .header-left {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
     }
 
     .header-right {
@@ -157,68 +163,104 @@
         gap: 0.75rem;
     }
 
+    .header-info {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-align: right;
+    }
+
     h3 {
         font-family: var(--font-ui);
-        color: var(--contrast);
-        font-size: 1.25rem;
-        margin: 0;
-    }
-
-    .user-badge {
-        font-family: var(--font-read);
-        color: var(--accent);
-        font-size: 0.85rem;
-        padding: 0.25rem 0.75rem;
-        background: var(--body-bg);
-        border: 1px solid var(--accent);
-        border-radius: 1rem;
-    }
-
-    .mode-indicator {
+        color: #FFFFFF;
         font-size: 1rem;
-        color: var(--font-dim);
-        transition: color 0.3s;
+        margin: 0;
+        font-weight: 600;
+        letter-spacing: -0.02em;
     }
 
-    .mode-indicator.sync {
-        color: var(--accent);
+    .current-user {
+        font-family: var(--font-read);
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.875rem;
+    }
+
+    .status-indicator {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+
+    .status-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #34C759;
         animation: pulse 2s ease-in-out infinite;
     }
 
+    .status-text {
+        font-family: var(--font-read);
+        color: #34C759;
+        font-size: 0.7rem;
+        font-weight: 500;
+    }
+
     @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
+        0%, 100% { 
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% { 
+            opacity: 0.6;
+            transform: scale(0.9);
+        }
     }
 
     .refresh-btn {
-        padding: 0.25rem 0.75rem;
-        background: var(--bg);
-        border: 1px solid var(--outline);
-        border-radius: 0.25rem;
-        color: var(--contrast);
-        font-size: 1.25rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.12);
+        border: none;
+        color: rgba(255, 255, 255, 0.8);
         cursor: pointer;
-        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
     }
 
     .refresh-btn:hover {
-        border-color: var(--accent);
-        color: var(--accent);
+        background: rgba(255, 255, 255, 0.18);
+        color: #FFFFFF;
+        transform: rotate(-45deg);
+    }
+
+    .refresh-btn:active {
+        transform: rotate(-180deg);
     }
 
     /* Mobile responsive */
     @media (max-width: 768px) {
         .chat-header {
-            padding: 0.75rem;
+            padding: 0.5rem 0.75rem;
         }
 
         h3 {
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
-        .user-badge {
-            font-size: 0.75rem;
-            padding: 0.2rem 0.5rem;
+        .current-user {
+            font-size: 0.8rem;
+        }
+
+        .status-text {
+            font-size: 0.65rem;
+        }
+
+        .header-right {
+            gap: 0.5rem;
         }
     }
 </style>

@@ -46,25 +46,41 @@
 
 <div class="auth-container">
     <div class="auth-card">
-        <h2>Start Talking</h2>
-        <p class="subtitle">Enter your name to join</p>
+        <div class="auth-icon">💬</div>
+        <h2>Talk</h2>
+        <p class="subtitle">Enter your name to start chatting</p>
         
-        <input
-            type="text"
-            bind:value={username}
-            onkeydown={handleKeydown}
-            placeholder="Name"
-            disabled={loading}
-            autocomplete="off"
-        />
+        <div class="input-wrapper">
+            <input
+                type="text"
+                bind:value={username}
+                onkeydown={handleKeydown}
+                placeholder="Your name"
+                disabled={loading}
+                autocomplete="off"
+            />
+        </div>
 
         {#if error}
-            <p class="error">{error}</p>
+            <div class="error-message">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                    <path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>{error}</span>
+            </div>
         {/if}
 
-        <button onclick={handleLogin} disabled={loading || !username.trim()}>
-            {loading ? 'Authenticating...' : 'Join Chat'}
+        <button 
+            class="join-button" 
+            onclick={handleLogin} 
+            disabled={loading || !username.trim()}
+            class:loading={loading}
+        >
+            {loading ? 'Joining...' : 'Continue'}
         </button>
+        
+        <p class="hint">Available: alpha, beta, charlie, delta</p>
     </div>
 </div>
 
@@ -75,46 +91,71 @@
         align-items: center;
         height: 100%;
         width: 100%;
+        padding: 1rem;
     }
 
     .auth-card {
-        background: var(--bg);
-        border: 1px solid var(--outline);
-        border-radius: 0.5rem;
-        padding: 2rem;
-        max-width: 400px;
-        width: 90%;
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 20px;
+        padding: 2.5rem 2rem;
+        max-width: 380px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .auth-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        opacity: 0.9;
     }
 
     h2 {
         font-family: var(--font-ui);
-        color: var(--contrast);
+        color: #FFFFFF;
         margin-bottom: 0.5rem;
-        font-size: 1.5rem;
+        font-size: 1.75rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
     }
 
     .subtitle {
         font-family: var(--font-read);
-        color: var(--font-color);
-        margin-bottom: 1.5rem;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 2rem;
         font-size: 0.9rem;
+        text-align: center;
+    }
+
+    .input-wrapper {
+        width: 100%;
+        margin-bottom: 1rem;
     }
 
     input {
         width: 100%;
-        padding: 0.75rem;
-        background: var(--body-bg);
-        border: 1px solid var(--outline);
-        border-radius: 0.25rem;
-        color: var(--contrast);
+        padding: 0.9rem 1rem;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: #FFFFFF;
         font-family: var(--font-read);
         font-size: 1rem;
-        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+    }
+
+    input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
     }
 
     input:focus {
         outline: none;
-        border-color: var(--accent);
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
     }
 
     input:disabled {
@@ -122,33 +163,67 @@
         cursor: not-allowed;
     }
 
-    button {
+    .error-message {
         width: 100%;
-        padding: 0.75rem;
-        background: var(--accent);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: rgba(255, 69, 58, 0.15);
+        border: 1px solid rgba(255, 69, 58, 0.3);
+        border-radius: 12px;
+        color: #FF453A;
+        font-size: 0.85rem;
+        font-family: var(--font-read);
+        margin-bottom: 1rem;
+    }
+
+    .error-message svg {
+        flex-shrink: 0;
+    }
+
+    .join-button {
+        width: 100%;
+        padding: 0.9rem 1rem;
+        background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
         border: none;
-        border-radius: 0.25rem;
-        color: var(--body-bg);
+        border-radius: 12px;
+        color: #FFFFFF;
         font-family: var(--font-ui);
         font-size: 1rem;
-        font-weight: bold;
+        font-weight: 600;
         cursor: pointer;
-        transition: opacity 0.2s;
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 12px rgba(10, 132, 255, 0.4);
+        margin-bottom: 1rem;
+        text-shadow: 0 0.5px 1px rgba(0, 0, 0, 0.1);
     }
 
-    button:hover:not(:disabled) {
-        opacity: 0.8;
+    .join-button:hover:not(:disabled) {
+        background: linear-gradient(135deg, #0071F2 0%, #005BB5 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(10, 132, 255, 0.5);
     }
 
-    button:disabled {
+    .join-button:active:not(:disabled) {
+        transform: translateY(0);
+    }
+
+    .join-button:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+        transform: none;
     }
 
-    .error {
-        color: #ff6b6b;
+    .join-button.loading {
+        opacity: 0.7;
+    }
+
+    .hint {
         font-family: var(--font-read);
-        font-size: 0.85rem;
-        margin-bottom: 1rem;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.45);
+        text-align: center;
+        margin: 0;
     }
 </style>

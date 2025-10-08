@@ -1,6 +1,7 @@
 <script lang="ts">
     let messageText = $state('');
     let sending = $state(false);
+    let textarea: HTMLTextAreaElement | undefined = $state();
 
     interface Props {
         onSend: (text: string) => Promise<void>;
@@ -14,6 +15,11 @@
         const text = messageText.trim();
         messageText = '';
         sending = true;
+
+        // Reset textarea height
+        if (textarea) {
+            textarea.style.height = 'auto';
+        }
 
         try {
             await onSend(text);
@@ -31,47 +37,92 @@
             handleSend();
         }
     }
+
+    function handleInput() {
+        if (!textarea) return;
+        
+        // Auto-resize textarea
+        textarea.style.height = 'auto';
+        textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    }
+
+    $effect(() => {
+        if (textarea) {
+            textarea.focus();
+        }
+    });
 </script>
 
 <div class="input-container">
-    <textarea
-        bind:value={messageText}
-        onkeydown={handleKeydown}
-        placeholder="Type a message..."
-        disabled={sending}
-        rows="1"
-    ></textarea>
-    <button onclick={handleSend} disabled={!messageText.trim() || sending}>
-        {sending ? '...' : '→'}
-    </button>
+    <div class="input-wrapper">
+        <textarea
+            bind:this={textarea}
+            bind:value={messageText}
+            onkeydown={handleKeydown}
+            oninput={handleInput}
+            placeholder="Message"
+            disabled={sending}
+            rows="1"
+        ></textarea>
+        <button 
+            class="send-button" 
+            onclick={handleSend} 
+            disabled={!messageText.trim() || sending}
+            class:active={messageText.trim()}
+            aria-label="Send message"
+            title="Send message"
+        >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                <path d="M2 10L18 10M18 10L11 3M18 10L11 17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    </div>
 </div>
 
 <style>
     .input-container {
-        display: flex;
-        gap: 0.5rem;
-        padding: 1rem;
-        border-top: 1px solid var(--outline);
+        padding: 0.75rem 1rem 1rem 1rem;
         background: var(--body-bg);
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .input-wrapper {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 20px;
+        padding: 0.5rem 0.75rem;
+        transition: all 0.2s ease;
+    }
+
+    .input-wrapper:focus-within {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(255, 255, 255, 0.3);
     }
 
     textarea {
         flex: 1;
-        padding: 0.75rem;
-        background: var(--bg);
-        border: 1px solid var(--outline);
-        border-radius: 0.25rem;
-        color: var(--contrast);
+        background: transparent;
+        border: none;
+        color: #FFFFFF;
         font-family: var(--font-read);
         font-size: 0.95rem;
         resize: none;
-        min-height: 2.5rem;
-        max-height: 8rem;
+        min-height: 22px;
+        max-height: 120px;
+        line-height: 1.4;
+        padding: 0.25rem 0.5rem;
+        overflow-y: auto;
+    }
+
+    textarea::placeholder {
+        color: rgba(255, 255, 255, 0.4);
     }
 
     textarea:focus {
         outline: none;
-        border-color: var(--accent);
     }
 
     textarea:disabled {
@@ -79,23 +130,65 @@
         cursor: not-allowed;
     }
 
-    button {
-        padding: 0 1.5rem;
-        background: var(--accent);
+    textarea::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    textarea::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    textarea::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+    }
+
+    .send-button {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.15);
         border: none;
-        border-radius: 0.25rem;
-        color: var(--body-bg);
-        font-size: 1.5rem;
-        font-weight: bold;
+        color: rgba(255, 255, 255, 0.4);
         cursor: pointer;
-        transition: opacity 0.2s;
         display: flex;
         align-items: center;
         justify-content: center;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
     }
 
-    button:hover:not(:disabled) {
-        opacity: 0.8;
+    .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .send-button.active {
+        background: linear-gradient(135deg, #0A84FF 0%, #0066CC 100%);
+        color: white;
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(10, 132, 255, 0.3);
+    }
+
+    .send-button.active:hover:not(:disabled) {
+        background: linear-gradient(135deg, #0071F2 0%, #005BB5 100%);
+        transform: scale(1.05);
+        box-shadow: 0 2px 12px rgba(10, 132, 255, 0.4);
+    }
+
+    .send-button svg {
+        transition: transform 0.2s ease;
+    }
+
+    .send-button.active:hover:not(:disabled) svg {
+        transform: translateX(2px);
+    }
+
+    /* Mobile responsive */
+    @media (max-width: 768px) {
+        .input-container {
+            padding: 0.5rem;
+        }
     }
 
     button:disabled {
