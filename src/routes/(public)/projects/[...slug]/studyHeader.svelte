@@ -3,16 +3,29 @@
     import { goto } from '$app/navigation';
     import { Projects } from '$lib/store.svelte';
     import { page } from '$app/state';
+    import type { Project } from '$lib/types';
 
-    let project = $derived(Projects.selected.find((project) => slugify(project.title) === page.params.slug));
-	let projectIndex = $derived(Projects.selected.findIndex((project) => slugify(project.title) === page.params.slug));
+    // Context7: /sveltejs/kit - accept server data as props for SSR
+    let { project: serverProject, projects: serverProjects } = $props<{
+        project: Project | undefined;
+        projects: Project[];
+    }>();
+
+    // Use store data if available (client-side), otherwise fallback to server props for SSR
+    const allProjects = $derived(Projects.all.length > 0 ? Projects.selected : serverProjects);
+    const project = $derived(
+        Projects.all.length > 0 
+            ? Projects.selected.find((p: any) => slugify(p.title) === page.params.slug)
+            : serverProject
+    );
+	const projectIndex = $derived(allProjects.findIndex((p: any) => slugify(p.title) === page.params.slug));
 </script>
 
 <header>
     <button
         class="primary"
         disabled={projectIndex <= 0}
-        onclick={() => goto(`/projects/${slugify(Projects.selected[projectIndex - 1].title)}`)}
+        onclick={() => goto(`/projects/${slugify(allProjects[projectIndex - 1].title)}`)}
         aria-label="Previous Project"
     >
         Prev
@@ -25,8 +38,8 @@
     </a>
     <button
         class="primary"
-        disabled={projectIndex >= Projects.selected.length - 1}
-        onclick={() => goto(`/projects/${slugify(Projects.selected[projectIndex + 1].title)}`)}
+        disabled={projectIndex >= allProjects.length - 1}
+        onclick={() => goto(`/projects/${slugify(allProjects[projectIndex + 1].title)}`)}
         aria-label="Next Project"
     >
         Next

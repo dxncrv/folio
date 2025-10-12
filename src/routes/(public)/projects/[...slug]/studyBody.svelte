@@ -3,9 +3,16 @@
     import { page } from '$app/state';
     import { parseMarkdown } from '$lib/markdown';
     import { CaseStudies } from '$lib/store.svelte.ts';
+    import type { CaseStudy } from '$lib/types';
 
-    let content: string | null = $state(null);
-    let slug = $state('');
+    // Context7: /sveltejs/kit - accept server data as props for SSR
+    let { caseStudy: serverCaseStudy, slug: serverSlug } = $props<{
+        caseStudy: CaseStudy | undefined;
+        slug: string;
+    }>();
+
+    let content: string | null = $state(serverCaseStudy?.content ?? null);
+    let slug = $state(serverSlug);
 
     $effect(() => {
         const s = page.params?.slug ?? '';

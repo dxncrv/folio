@@ -3,9 +3,9 @@
 </script>
 <svelte:head>
 	<title>Home - Aashay Mehta</title>
-	<meta name="description" content="I solve questions by fragmenting, analyzing, hypothesizing, prototyping, value testing, and iterating. Interaction designer and full-stack developer." />
-	<meta property="og:title" content="Aashay Mehta - Designer & Developer" />
-	<meta property="og:description" content="I solve questions by fragmenting, analyzing, hypothesizing, prototyping, value testing, and iterating." />
+	<meta name="description" content="UX Engineer bridging design and code with psychology-backed precision. 5+ years creating award-winning digital experiences from research to development." />
+	<meta property="og:title" content="Aashay Mehta - UX Engineer | Designer & Full-Stack Developer" />
+	<meta property="og:description" content="I think like a researcher, design like an architect, and code like an engineer. UX Engineer with 5+ years building user-centered digital experiences." />
 </svelte:head>
 
 <main>

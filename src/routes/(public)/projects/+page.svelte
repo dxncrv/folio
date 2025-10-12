@@ -12,6 +12,15 @@
             Projects.initialize(data.projects);
         }
     });
+
+    // Derive display data directly from server data for SSR indexing
+    // This ensures content is rendered in initial HTML before hydration
+    const projects = $derived(Projects.all.length > 0 ? Projects.selected : data.projects);
+    const selectedProjects = $derived(
+        projects.filter((project: any) => 
+            project.tags.some((tag: string) => Facets.selected().includes(tag))
+        )
+    );
 </script>
 
 <svelte:head>
@@ -19,34 +28,56 @@
 	<meta name="description" content="Portfolio of design and development projects. Explore case studies showcasing interaction design, full-stack development, and creative problem solving." />
 	<meta property="og:title" content="Projects - Aashay Mehta" />
 	<meta property="og:description" content="Portfolio of design and development projects" />
+	<meta property="og:type" content="website" />
+	
+	<!-- Context7: /sveltejs/kit - JSON-LD structured data for SEO -->
+	{@html `<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "CollectionPage",
+			"name": "Projects - Aashay Mehta",
+			"description": "Portfolio of design and development projects",
+			"author": {
+				"@type": "Person",
+				"name": "Aashay Mehta"
+			},
+			"hasPart": ${JSON.stringify(
+				data.projects.map((p: any) => ({
+					"@type": "CreativeWork",
+					"name": p.title,
+					"description": p.desc,
+					"image": p.image,
+					"keywords": p.tags.join(', ')
+				}))
+			)}
+		}
+	</script>`}
 </svelte:head>
 
-<main class:no-projects={Projects.selected.length === 0}>
-    {#if Projects.selected.length !== 0}
+<main class:no-projects={selectedProjects.length === 0}>
+    {#if selectedProjects.length !== 0}
         <Statusbar />
     {:else}
         <p>Z z Z</p>
     {/if}
 	<div id="view">
-		{#each Projects.selected.slice(Projects.range.min, Projects.range.max) as project}
-            {#if project.tags.some((tag) => Facets.selected().includes(tag))}
-				{#key project.title}
-					<Card {project} />
-				{/key}
-			{/if}
+		{#each selectedProjects.slice(Projects.range.min, Projects.range.max) as project}
+			{#key project.title}
+				<Card {project} />
+			{/key}
 		{/each}
 	</div>
-	{#if Projects.selected.length !== 0}
+	{#if selectedProjects.length !== 0}
 		<div class="btn-wrapper">
 			<button
 				class="primary"
 				onclick={Projects.range.prev}
-				disabled={Projects.range.min === 0 || Projects.selected.length === 0}>Prev</button
+				disabled={Projects.range.min === 0 || selectedProjects.length === 0}>Prev</button
 			>
 			<button
 				class="primary"
 				onclick={Projects.range.next}
-				disabled={Projects.range.max >= Projects.selected.length}>Next</button
+				disabled={Projects.range.max >= selectedProjects.length}>Next</button
 			>
 		</div>
 	{/if}

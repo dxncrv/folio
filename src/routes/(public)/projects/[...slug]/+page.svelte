@@ -8,10 +8,23 @@
 
 	let { data } = $props<{ data: PageData }>();
 
-	const slug = $derived(page.params.slug);
-	const project = $derived(Projects.selected.find((p) => slugify(p.title) === slug));
+	const slug = $derived(page.params.slug || '');
+	
+	// This ensures the project is available during initial SSR before client hydration
+	const project = $derived(
+		Projects.all.length > 0 
+			? Projects.selected.find((p: any) => slugify(p.title) === slug)
+			: data.projects.find((p: any) => slugify(p.title) === slug)
+	);
 
-	// Initialize stores with server-loaded data immediately for SSR hydration
+	// Derive case study from server data for SSR, fallback to store
+	const caseStudy = $derived(
+		CaseStudies.all.length > 0
+			? CaseStudies.all.find((cs) => cs.slug === slug)
+			: data.caseStudy
+	);
+
+	// Initialize stores with server-loaded data for client-side interactivity
 	$effect(() => {
 		if (data.projects && data.projects.length > 0) {
 			Projects.initialize(data.projects);
@@ -28,15 +41,33 @@
 		<meta name="description" content={project.desc || `Case study for ${project.title}`} />
 		<meta property="og:title" content={`${project.title} - Case Study`} />
 		<meta property="og:description" content={project.desc || `Case study for ${project.title}`} />
+		<meta property="og:type" content="article" />
 		{#if project.image}
 			<meta property="og:image" content={project.image} />
 		{/if}
+		
+		{@html `<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"@type": "Article",
+				"headline": "${project.title}",
+				"description": "${project.desc || `Case study for ${project.title}`}",
+				"author": {
+					"@type": "Person",
+					"name": "Aashay Mehta"
+				},
+				"keywords": "${project.tags.join(', ')}",
+				${project.image ? `"image": "${project.image}",` : ''}
+				"datePublished": "${project.date || new Date().toISOString()}",
+				"articleBody": "${caseStudy?.content?.substring(0, 500).replace(/"/g, '\\"') || ''}"
+			}
+		</script>`}
 	{/if}
 </svelte:head>
 
 <main>
-	<StudyHeader />
-	<StudyBody />
+	<StudyHeader {project} projects={data.projects} />
+	<StudyBody {caseStudy} {slug} />
 </main>
 
 <style>
