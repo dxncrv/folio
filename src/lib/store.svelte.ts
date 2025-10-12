@@ -89,6 +89,11 @@ class projectsClass {
 			}));
 	});
 
+	// Initialize store with server-loaded data (for SSR)
+	initialize(projects: Project[]) {
+		this.all = projects;
+	}
+
 	// API methods delegate to service layer
 	async fetchProjects() {
 		this.loading = true;
@@ -173,6 +178,14 @@ class caseStudiesClass {
 	// Per-slug loading/error metadata
 	loadingBySlug = $state<Record<string, boolean>>({});
 	errorBySlug = $state<Record<string, string | null>>({});
+
+	// Initialize store with a single server-loaded case study (for SSR)
+	initializeOne(caseStudy: CaseStudy) {
+		this.#cache.set(caseStudy.slug, caseStudy);
+		if (!this.all.find((x) => x.slug === caseStudy.slug)) {
+			this.all = [...this.all, caseStudy];
+		}
+	}
 
 	async fetchAll() {
 		this.loading = true;

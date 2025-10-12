@@ -1,23 +1,37 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { slugify } from '$lib/formatting';
-	import { Projects } from '$lib/store.svelte';
+	import { Projects, CaseStudies } from '$lib/store.svelte';
 	import StudyHeader from './studyHeader.svelte';
 	import StudyBody from './studyBody.svelte';
+	import type { PageData } from './$types';
 
-	let project = $derived(Projects.selected.find((project) => slugify(project.title) === page.params.slug));
+	let { data } = $props<{ data: PageData }>();
 
-	onMount(async () => {
-        // Load projects from API if not already loaded
-        if (Projects.all.length === 0) {
-            await Projects.fetchProjects();
-        }
-    });
+	const slug = $derived(page.params.slug);
+	const project = $derived(Projects.selected.find((p) => slugify(p.title) === slug));
+
+	// Initialize stores with server-loaded data immediately for SSR hydration
+	$effect(() => {
+		if (data.projects && data.projects.length > 0) {
+			Projects.initialize(data.projects);
+		}
+		if (data.caseStudy) {
+			CaseStudies.initializeOne(data.caseStudy);
+		}
+	});
 </script>
 
 <svelte:head>
-	<title>Study - {project?.title}</title>
+	<title>{project?.title || 'Project'} - Case Study</title>
+	{#if project}
+		<meta name="description" content={project.desc || `Case study for ${project.title}`} />
+		<meta property="og:title" content={`${project.title} - Case Study`} />
+		<meta property="og:description" content={project.desc || `Case study for ${project.title}`} />
+		{#if project.image}
+			<meta property="og:image" content={project.image} />
+		{/if}
+	{/if}
 </svelte:head>
 
 <main>

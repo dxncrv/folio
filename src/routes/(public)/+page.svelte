@@ -2,7 +2,10 @@
 	import Socials from '$lib/components/socials.svelte';
 </script>
 <svelte:head>
-	<title>Home</title>
+	<title>Home - Aashay Mehta</title>
+	<meta name="description" content="I solve questions by fragmenting, analyzing, hypothesizing, prototyping, value testing, and iterating. Interaction designer and full-stack developer." />
+	<meta property="og:title" content="Aashay Mehta - Designer & Developer" />
+	<meta property="og:description" content="I solve questions by fragmenting, analyzing, hypothesizing, prototyping, value testing, and iterating." />
 </svelte:head>
 
 <main>

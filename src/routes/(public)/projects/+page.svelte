@@ -1,19 +1,24 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
     import Card from '$lib/components/project-card.svelte';
 	import Statusbar from '$lib/components/statusbar.svelte';
     import { Facets, Projects } from '$lib/store.svelte';
+    import type { PageData } from './$types';
 
-    onMount(async () => {
-        // Load projects from API if not already loaded
-        if (Projects.all.length === 0) {
-            await Projects.fetchProjects();
+    let { data } = $props<{ data: PageData }>();
+
+    // Initialize store with server-loaded data immediately for SSR hydration
+    $effect(() => {
+        if (data.projects && data.projects.length > 0) {
+            Projects.initialize(data.projects);
         }
     });
 </script>
 
 <svelte:head>
-	<title>Projects</title>
+	<title>Projects - Aashay Mehta</title>
+	<meta name="description" content="Portfolio of design and development projects. Explore case studies showcasing interaction design, full-stack development, and creative problem solving." />
+	<meta property="og:title" content="Projects - Aashay Mehta" />
+	<meta property="og:description" content="Portfolio of design and development projects" />
 </svelte:head>
 
 <main class:no-projects={Projects.selected.length === 0}>

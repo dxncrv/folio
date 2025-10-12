@@ -6,7 +6,10 @@
 </script>
 
 <svelte:head>
-	<title>About</title>
+	<title>About - Aashay Mehta</title>
+	<meta name="description" content="Interaction and Experience Designer, Full-stack Developer, and Human. Learn more about my background, skills, and approach to design and development." />
+	<meta property="og:title" content="About - Aashay Mehta" />
+	<meta property="og:description" content="Interaction and Experience Designer, Full-stack Developer, and Human" />
 </svelte:head>
 
 <main>
