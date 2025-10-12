@@ -4,6 +4,7 @@
     let settings = $state<TalkSettings>({ pollingMode: 'sync' });
     let loading = $state(false);
     let message = $state('');
+    let isExpanded = $state(false);
 
     async function loadSettings() {
         try {
@@ -66,51 +67,112 @@
         }
     }
 
+    function toggleExpand() {
+        isExpanded = !isExpanded;
+    }
+
     // Load settings on mount
     $effect(() => {
         loadSettings();
     });
 </script>
 
-<div class="talk-admin">
-    <h3>Talk Chat Settings</h3>
-
-    <div class="setting-group">
-        <label>
-            <span class="label-text">Polling Mode</span>
-            <select bind:value={settings.pollingMode} onchange={updatePollingMode} disabled={loading}>
-                <option value="sync">Synchronous (auto-refresh every 3s)</option>
-                <option value="async">Asynchronous (manual refresh)</option>
-            </select>
-        </label>
-    </div>
-
-    <div class="danger-zone">
-        <h4>Danger Zone</h4>
-        <button class="danger-btn" onclick={clearMessages} disabled={loading}>
-            Clear All Messages
+<section class="talk-admin" class:expanded={isExpanded}>
+    <header onclick={toggleExpand} onkeydown={(e) => e.key === 'Enter' && toggleExpand()} role="button" tabindex="0">
+        <h2>
+            <iconify-icon icon="mdi:chat" width="20" height="20"></iconify-icon>
+            Talk Chat Settings
+        </h2>
+        <button class="toggle-btn" onclick={(e) => { e.stopPropagation(); toggleExpand(); }} aria-label="Toggle talk settings">
+            <iconify-icon 
+                icon={isExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'} 
+                width="20" 
+                height="20"
+            ></iconify-icon>
         </button>
-    </div>
+    </header>
 
-    {#if message}
-        <p class="message" class:success={message.includes('success')}>{message}</p>
+    {#if isExpanded}
+        <div class="content">
+            <div class="setting-group">
+                <label>
+                    <span class="label-text">Polling Mode</span>
+                    <select bind:value={settings.pollingMode} onchange={updatePollingMode} disabled={loading}>
+                        <option value="sync">Synchronous (auto-refresh every 3s)</option>
+                        <option value="async">Asynchronous (manual refresh)</option>
+                    </select>
+                </label>
+            </div>
+
+            <div class="danger-zone">
+                <h4>Danger Zone</h4>
+                <button class="danger-btn" onclick={clearMessages} disabled={loading}>
+                    <iconify-icon icon="mdi:delete-sweep" width="16" height="16"></iconify-icon>
+                    Clear All Messages
+                </button>
+            </div>
+
+            {#if message}
+                <p class="message" class:success={message.includes('success')}>{message}</p>
+            {/if}
+        </div>
     {/if}
-</div>
+</section>
 
 <style>
     .talk-admin {
-        background: var(--bg);
-        border: 1px solid var(--outline);
+        border: 2px solid var(--outline);
         border-radius: 0.5rem;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
+        background: var(--bg);
+        overflow: hidden;
+        margin-top: 2rem;
     }
 
-    h3 {
+    .talk-admin.expanded {
+        border-color: var(--accent);
+    }
+
+    header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--font-dim);
+        cursor: pointer;
+        user-select: none;
+    }
+
+    header:hover {
+        opacity: 0.95;
+    }
+
+    h2 {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin: 0;
         font-family: var(--font-ui);
+        font-size: 1.2rem;
         color: var(--contrast);
-        font-size: 1.25rem;
-        margin-bottom: 1rem;
+    }
+
+    .toggle-btn {
+        background: none;
+        border: none;
+        color: var(--contrast);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        padding: 0.25rem;
+        transition: color 0.2s ease;
+    }
+
+    .toggle-btn:hover {
+        color: var(--accent);
+    }
+
+    .content {
+        padding: 1rem;
     }
 
     h4 {
@@ -131,14 +193,15 @@
     }
 
     .label-text {
-        font-family: var(--font-read);
+        font-family: var(--font-ui);
         color: var(--font-color);
         font-size: 0.9rem;
+        font-weight: 600;
     }
 
     select {
         padding: 0.5rem;
-        background: var(--body-bg);
+        background: var(--bg);
         border: 1px solid var(--outline);
         border-radius: 0.25rem;
         color: var(--contrast);
@@ -164,18 +227,23 @@
 
     .danger-btn {
         padding: 0.5rem 1rem;
-        background: #ff6b6b;
-        border: none;
+        background: none;
+        border: 2px solid var(--outline);
         border-radius: 0.25rem;
-        color: white;
+        color: #ff6b6b;
         font-family: var(--font-ui);
         font-size: 0.9rem;
         cursor: pointer;
-        transition: opacity 0.2s;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
     }
 
     .danger-btn:hover:not(:disabled) {
-        opacity: 0.8;
+        border-color: #ff6b6b;
+        background: #ff6b6b;
+        color: white;
     }
 
     .danger-btn:disabled {
@@ -189,12 +257,14 @@
         border-radius: 0.25rem;
         font-family: var(--font-read);
         font-size: 0.85rem;
-        background: #ff6b6b;
-        color: white;
+        background: #ff6b6b22;
+        border: 1px solid #ff6b6b;
+        color: #ff6b6b;
     }
 
     .message.success {
         background: var(--accent);
         color: var(--body-bg);
+        border-color: var(--accent);
     }
 </style>

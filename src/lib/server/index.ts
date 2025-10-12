@@ -31,7 +31,5 @@ export {
 	clearMessages,
 	getSettings,
 	updateSettings,
-	setTalkSession,
-	getTalkSession,
-	deleteTalkSession
+
 } from './talk.server';

@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { getTalkSession, getMessages, addMessage } from '$lib/server/talk.server';
+import { getMessages, addMessage, isValidUser } from '$lib/server/talk.server';
 
 /**
  * GET /api/talk/messages
@@ -19,16 +19,17 @@ export const GET: RequestHandler = async () => {
 /**
  * POST /api/talk/messages
  * Send a new message (requires authentication)
+ * Username stored directly in cookie for pseudo-auth testing
  */
 export const POST: RequestHandler = async ({ request, cookies }) => {
     try {
-        const sessionToken = cookies.get('talk_session');
-        if (!sessionToken) {
+        const username = cookies.get('talk_session');
+        if (!username) {
             return json({ error: 'Not authenticated' }, { status: 401 });
         }
 
-        const username = await getTalkSession(sessionToken);
-        if (!username) {
+        // Validate username is still in allowed list
+        if (!isValidUser(username)) {
             return json({ error: 'Invalid session' }, { status: 401 });
         }
 

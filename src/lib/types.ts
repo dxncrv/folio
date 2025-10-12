@@ -40,3 +40,19 @@ export interface TalkMessage {
 export interface TalkSettings {
     pollingMode: 'sync' | 'async';
 }
+
+export interface RedisKeyInfo {
+    key: string;
+    type: string;
+    ttl: number;
+    size?: number;
+}
+
+export interface RedisStats {
+    totalKeys: number;
+    memoryUsed: string;
+    memoryUsedBytes: number;
+    connectedClients: number;
+    version: string;
+    uptime: number;
+}

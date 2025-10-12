@@ -85,25 +85,7 @@ export async function updateSettings(settings: TalkSettings): Promise<void> {
 }
 
 /**
- * Store talk session (username in cookie)
+ * Talk sessions are not stored in Redis - pseudo auth for testing only.
+ * Username validation happens via cookie and VALID_USERS check.
+ * No need to persist sessions as this is temporary testing infrastructure.
  */
-export async function setTalkSession(sessionToken: string, username: string, ttlSeconds = 86400): Promise<void> {
-    const client = getRedisClient();
-    await client.set(`talk:session:${sessionToken}`, username, 'EX', ttlSeconds);
-}
-
-/**
- * Get username from talk session
- */
-export async function getTalkSession(sessionToken: string): Promise<string | null> {
-    const client = getRedisClient();
-    return await client.get(`talk:session:${sessionToken}`);
-}
-
-/**
- * Delete talk session
- */
-export async function deleteTalkSession(sessionToken: string): Promise<void> {
-    const client = getRedisClient();
-    await client.del(`talk:session:${sessionToken}`);
-}

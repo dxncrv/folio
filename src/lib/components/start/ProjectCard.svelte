@@ -5,44 +5,81 @@ import Editor from '$lib/components/editor.svelte';
 
 interface Props {
 	project: Project;
-	editingProjectId: string | null;
-	editingJson: string;
 	caseStudyContent: string;
-	onEdit: (project: Project) => void;
-	onSave: (originalTitle: string, json: string) => void;
-	onCancel: () => void;
-	onDelete: (title: string) => void;
+	onSave: (originalTitle: string, updatedProject: Project) => Promise<void>;
+	onDelete: (title: string) => Promise<void>;
 }
 
-let { project, editingProjectId, editingJson, caseStudyContent, onEdit, onSave, onCancel, onDelete }: Props = $props();
+let { project, caseStudyContent, onSave, onDelete }: Props = $props();
+
+// Local editing state - each card manages its own edit mode
+let isEditing = $state(false);
+let editingJson = $state('');
+let isSaving = $state(false);
+
+function startEdit() {
+	isEditing = true;
+	editingJson = JSON.stringify(project, null, 2);
+}
+
+function cancelEdit() {
+	isEditing = false;
+	editingJson = '';
+}
+
+async function saveEdit() {
+	if (isSaving) return;
+	isSaving = true;
+	try {
+		const updatedProject = JSON.parse(editingJson);
+		await onSave(project.title, updatedProject);
+		isEditing = false;
+		editingJson = '';
+	} catch (error) {
+		alert('Invalid JSON: ' + (error instanceof Error ? error.message : 'Unknown error'));
+	} finally {
+		isSaving = false;
+	}
+}
+
+async function handleDelete() {
+	if (isSaving) return;
+	if (!confirm(`Are you sure you want to delete "${project.title}"?`)) return;
+	isSaving = true;
+	try {
+		await onDelete(project.title);
+	} finally {
+		isSaving = false;
+	}
+}
 </script>
 
-<div class="project-card">
+<div class="project-card" class:editing={isEditing}>
 	<div class="project-header">
 		<div class="project-status">
 			<span class="status-circle" class:live={caseStudyContent} class:local={!caseStudyContent}></span>
 		</div>
 		<h3>{project.title}</h3>
-		<div class="project-actions" class:editing={editingProjectId === project.title}>
-			{#if editingProjectId === project.title}
-				<button class="save" onclick={() => onSave(project.title, editingJson)} aria-label="Save project">
-					<iconify-icon icon="line-md:uploading-loop" width="16" height="16"></iconify-icon>
+		<div class="project-actions" class:editing={isEditing}>
+			{#if isEditing}
+				<button class="save" onclick={saveEdit} disabled={isSaving} aria-label="Save project">
+					<iconify-icon icon={isSaving ? "line-md:loading-loop" : "line-md:uploading-loop"} width="16" height="16"></iconify-icon>
 				</button>
-				<button class="cancel" onclick={onCancel} aria-label="Cancel edit">
+				<button class="cancel" onclick={cancelEdit} disabled={isSaving} aria-label="Cancel edit">
 					<iconify-icon icon="line-md:cancel" width="16" height="16"></iconify-icon>
 				</button>
 			{:else}
-				<button class="delete" onclick={() => onDelete(project.title)} aria-label="Delete project">
-					<iconify-icon icon="line-md:remove" width="16" height="16"></iconify-icon>
+				<button class="delete" onclick={handleDelete} disabled={isSaving} aria-label="Delete project">
+					<iconify-icon icon={isSaving ? "line-md:loading-loop" : "line-md:remove"} width="16" height="16"></iconify-icon>
 				</button>
-				<button class="edit" onclick={() => onEdit(project)} aria-label="Edit project">
+				<button class="edit" onclick={startEdit} aria-label="Edit project">
 					<iconify-icon icon="line-md:edit-twotone" width="16" height="16" ></iconify-icon>
 				</button>
 			{/if}
 		</div>
 	</div>
 	<div class="project-json">
-		{#if editingProjectId === project.title}
+		{#if isEditing}
 			<textarea class="fira-code-normal" style="color: var(--accent);" bind:value={editingJson}></textarea>
 		{:else}
 			<pre class="fira-code-normal" style="color: aliceblue;">{JSON.stringify(project, null, 2)}</pre>
@@ -59,6 +96,7 @@ let { project, editingProjectId, editingJson, caseStudyContent, onEdit, onSave, 
 		border-radius: 0.5rem;
 		background: var(--bg);
 		padding: 0.5rem;
+		transition: all 0.2s ease;
 	}
 	.project-header {
 		display: flex;
@@ -144,10 +182,14 @@ let { project, editingProjectId, editingJson, caseStudyContent, onEdit, onSave, 
 		padding: 0.5rem 1rem;
 		border: 2px solid var(--outline);
 	}
-	.save:hover {
+	.save:hover:not(:disabled) {
 		color: var(--accent);
 		border: 2px solid var(--accent);
 		background: var(--bg);
+	}
+	.save:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 	.cancel {
 		background: none;
@@ -155,10 +197,18 @@ let { project, editingProjectId, editingJson, caseStudyContent, onEdit, onSave, 
 		padding: 0.5rem 1rem;
 		border: 2px solid var(--outline);
 	}
-	.cancel:hover {
+	.cancel:hover:not(:disabled) {
 		color: #ff9800;
 		border: 2px solid #ff9800;
 		background: var(--bg);
+	}
+	.cancel:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+	button:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
 	}
 	.project-json {
 		height: 8rem;
