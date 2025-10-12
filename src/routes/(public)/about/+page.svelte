@@ -3,6 +3,9 @@
 	import Letter from './blocks/letter.svelte';
 	import Contact from '$lib/components/contact.svelte';
 	import Socials from '$lib/components/socials.svelte';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 </script>
 
 <svelte:head>
@@ -25,7 +28,7 @@
 		<Contact initialStatus="Ready" />
 		<Socials />
 	</div>
-	<Letter/>
+	<Letter markdownContent={data.markdownContent} />
 </main>
 
 <style>

@@ -6,11 +6,20 @@
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 
-	// File definitions
-	const files = [
-		{ name: 'Hello', content: helloMd },
-		{ name: 'Resume', content: resumeMd }
-	];
+	interface Props {
+		markdownContent: {
+			hello: string;
+			resume: string;
+		};
+	}
+
+	let { markdownContent }: Props = $props();
+
+	// Use server-loaded content if available, fallback to client imports
+	const files = $derived([
+		{ name: 'Hello', content: markdownContent.hello || helloMd },
+		{ name: 'Resume', content: markdownContent.resume || resumeMd }
+	]);
 
 	let activeTab = $state(0);
 	let isLoading = $state(!browser);
@@ -46,35 +55,42 @@
 </script>
 
 <div class="letter">
+	<!-- Always render tabs for SSR -->
 	<div class="tabs">
+		{#each files as file, i}
+			<button
+				class="tab"
+				class:active={activeTab === i}
+				class:loading={isLoading}
+				onclick={() => selectTab(i)}
+				disabled={isLoading}
+			>
+				{file.name}
+			</button>
+		{/each}
+		
+		<!-- Loading overlay for progressive enhancement -->
 		{#if isLoading}
-			<div class="loading-tabs">
+			<div class="loading-tabs-overlay">
 				{#each files as file}
 					<div class="tab-skeleton"></div>
 				{/each}
 			</div>
-		{:else}
-			{#each files as file, i}
-				<button
-					class="tab"
-					class:active={activeTab === i}
-					onclick={() => selectTab(i)}
-				>
-					{file.name}
-				</button>
-			{/each}
 		{/if}
 	</div>
 	
-	{#if isLoading}
-		<div class="content-loading">
-			<div class="loading-shimmer"></div>
-			<div class="loading-shimmer"></div>
-			<div class="loading-shimmer"></div>
-		</div>
-	{:else}
+	<!-- Always render content for SSR, show loading overlay on top -->
+	<div class="content-wrapper">
 		{@html parseMarkdown(files[activeTab].content)}
-	{/if}
+		
+		{#if isLoading}
+			<div class="content-loading-overlay">
+				<div class="loading-shimmer"></div>
+				<div class="loading-shimmer"></div>
+				<div class="loading-shimmer"></div>
+			</div>
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -112,8 +128,12 @@
 		position: relative;
 		transition: color 0.5s;
 	}
-	.tab:hover {
+	.tab:hover:not(.loading) {
 		color: var(--accent);
+	}
+	.tab.loading {
+		pointer-events: none;
+		opacity: 0;
 	}
 
 	.tab.active {
@@ -124,10 +144,14 @@
 		z-index: 1;
 	}
 
-	/* Loading States */
-	.loading-tabs {
+	/* Loading States - Overlay approach for progressive enhancement */
+	.loading-tabs-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
 		display: flex;
 		gap: 0.5rem;
+		z-index: 10;
 	}
 
 	.tab-skeleton {
@@ -139,10 +163,26 @@
 		animation: pulse 1.5s ease-in-out infinite;
 	}
 
-	.content-loading {
+	/* Content wrapper for overlay positioning */
+	.content-wrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 2rem;
+		position: relative;
+		min-height: 200px;
+	}
+
+	.content-loading-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: var(--bg);
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+		z-index: 5;
 	}
 
 	.loading-shimmer {
