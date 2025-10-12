@@ -2,7 +2,7 @@
 import { Projects } from '$lib/store.svelte';
 import type { Project } from '$lib/types';
 import Typer from '$lib/_fx/Typer.svelte';
-import { slugify } from '$lib/utils';
+import { slugify } from '$lib/formatting';
 import { CaseStudies } from '$lib/store.svelte';
 import SessionTimer from '$lib/components/start/SessionTimer.svelte';
 import Logout from '$lib/components/start/logout.svelte';

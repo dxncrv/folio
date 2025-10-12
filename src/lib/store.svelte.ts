@@ -1,5 +1,17 @@
+/**
+ * Client-side reactive stores for managing application state
+ * 
+ * This module handles ONLY reactive state and UI logic.
+ * All API calls are delegated to the service layer (services.ts).
+ * 
+ * Architecture:
+ * - Stores manage $state and $derived reactive variables
+ * - Services handle all fetch/CRUD operations
+ * - Components consume stores for reactivity
+ */
+
 import type { Project, CaseStudy, Media } from './types';
-import { fetchJson } from '$lib/apiClient';
+import { ProjectService, CaseStudyService, MediaService } from './services';
 
 // FacetsClass: facets array is derived from unique tags in data
 class FacetsClass {
@@ -77,12 +89,12 @@ class projectsClass {
 			}));
 	});
 
-	// API methods for CRUD operations
+	// API methods delegate to service layer
 	async fetchProjects() {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson('/api/projects');
+			this.all = await ProjectService.fetchAll();
 		} catch (error) {
 			this.error = error instanceof Error ? error.message : 'Unknown error';
 		} finally {
@@ -94,11 +106,7 @@ class projectsClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson('/api/projects', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(project)
-			});
+			this.all = await ProjectService.create(project);
 		} catch (error) {
 			this.error = error instanceof Error ? error.message : 'Unknown error';
 			throw error;
@@ -111,11 +119,7 @@ class projectsClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson(`/api/projects/${encodeURIComponent(originalTitle)}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(updatedProject)
-			});
+			this.all = await ProjectService.update(originalTitle, updatedProject);
 		} catch (error) {
 			this.error = error instanceof Error ? error.message : 'Unknown error';
 			throw error;
@@ -128,9 +132,7 @@ class projectsClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson(`/api/projects/${encodeURIComponent(title)}`, {
-				method: 'DELETE'
-			});
+			this.all = await ProjectService.delete(title);
 		} catch (error) {
 			this.error = error instanceof Error ? error.message : 'Unknown error';
 			throw error;
@@ -143,7 +145,7 @@ class projectsClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const result = await fetchJson('/api/projects/init', { method: 'POST' });
+			const result = await ProjectService.initializeFromJson();
 			this.all = result.projects;
 			return result;
 		} catch (error) {
@@ -176,7 +178,7 @@ class caseStudiesClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const list: CaseStudy[] = await fetchJson('/api/case-studies');
+			const list = await CaseStudyService.fetchAll();
 			this.all = list;
 			// populate cache
 			for (const cs of list) this.#cache.set(cs.slug, cs);
@@ -199,14 +201,17 @@ class caseStudiesClass {
 
 		const p = (async () => {
 			try {
-				const cs: CaseStudy | null = await fetchJson(`/api/case-studies/${encodeURIComponent(slug)}`);
+				const cs = await CaseStudyService.fetchBySlug(slug);
 				if (!cs) return null;
 				this.#cache.set(slug, cs);
 				// merge into `all` if missing
-				if (!this.all.find(x => x.slug === cs.slug)) this.all = [...this.all, cs];
+				if (!this.all.find((x) => x.slug === cs.slug)) this.all = [...this.all, cs];
 				return cs;
 			} catch (err) {
-				this.errorBySlug = { ...this.errorBySlug, [slug]: err instanceof Error ? err.message : 'Unknown error' };
+				this.errorBySlug = {
+					...this.errorBySlug,
+					[slug]: err instanceof Error ? err.message : 'Unknown error'
+				};
 				return null;
 			} finally {
 				this.loadingBySlug = { ...this.loadingBySlug, [slug]: false };
@@ -222,11 +227,7 @@ class caseStudiesClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson('/api/case-studies', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(caseStudy)
-			});
+			this.all = await CaseStudyService.create(caseStudy);
 			// refresh cache entries
 			for (const cs of this.all) this.#cache.set(cs.slug, cs);
 		} catch (err) {
@@ -241,11 +242,7 @@ class caseStudiesClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson(`/api/case-studies/${encodeURIComponent(slug)}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(updated)
-			});
+			this.all = await CaseStudyService.update(slug, updated);
 			// refresh cache entries and remove old slug if changed
 			for (const cs of this.all) this.#cache.set(cs.slug, cs);
 			if (slug !== updated.slug) this.#cache.delete(slug);
@@ -262,7 +259,7 @@ class caseStudiesClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson(`/api/case-studies/${encodeURIComponent(slug)}`, { method: 'DELETE' });
+			this.all = await CaseStudyService.delete(slug);
 			// update cache
 			this.#cache.delete(slug);
 			for (const cs of this.all) this.#cache.set(cs.slug, cs);
@@ -288,7 +285,7 @@ class mediaClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson('/api/media');
+			this.all = await MediaService.fetchAll();
 		} catch (err) {
 			this.error = err instanceof Error ? err.message : 'Unknown error';
 		} finally {
@@ -300,7 +297,7 @@ class mediaClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson('/api/media', { method: 'POST', body: JSON.stringify(media) });
+			this.all = await MediaService.updateAll(media);
 			return this.all;
 		} catch (err) {
 			this.error = err instanceof Error ? err.message : 'Unknown error';
@@ -314,7 +311,7 @@ class mediaClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson('/api/media', { method: 'PUT', body: JSON.stringify(item) });
+			this.all = await MediaService.updateItem(item);
 			return this.all;
 		} catch (err) {
 			this.error = err instanceof Error ? err.message : 'Unknown error';
@@ -328,7 +325,7 @@ class mediaClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			this.all = await fetchJson('/api/media', { method: 'DELETE', body: JSON.stringify({ id }) });
+			this.all = await MediaService.deleteItem(id);
 			return this.all;
 		} catch (err) {
 			this.error = err instanceof Error ? err.message : 'Unknown error';
@@ -342,7 +339,7 @@ class mediaClass {
 		this.loading = true;
 		this.error = null;
 		try {
-			const result = await fetchJson('/api/media/scan', { method: 'POST' });
+			const result = await MediaService.scan();
 			await this.fetchMedia(); // Refresh after scan
 			return result;
 		} catch (err) {

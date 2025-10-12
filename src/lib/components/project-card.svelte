@@ -1,7 +1,7 @@
 <script lang="ts">
     import images from '$lib/images/index';
     import { Typer } from '$lib';
-    import { slugify } from '$lib/utils';
+    import { slugify } from '$lib/formatting';
     import ProjectTags from './project-tags.svelte';
     
     let { project } = $props();

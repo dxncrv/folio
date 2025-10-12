@@ -1,5 +1,5 @@
 <script lang=ts>
-    import { slugify } from '$lib/utils';
+    import { slugify } from '$lib/formatting';
     import { goto } from '$app/navigation';
     import { Projects } from '$lib/store.svelte';
     import { page } from '$app/state';

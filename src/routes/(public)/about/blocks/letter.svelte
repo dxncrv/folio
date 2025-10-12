@@ -1,7 +1,7 @@
 <script lang="ts">
 	import helloMd from '../blocks/hello.md?raw';
 	import resumeMd from '../blocks/resume.md?raw';
-	import { parseMarkdown } from '$lib/utils';
+	import { parseMarkdown } from '$lib/markdown';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';

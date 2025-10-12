@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import { slugify } from '$lib/utils';
+	import { slugify } from '$lib/formatting';
 	import { Projects } from '$lib/store.svelte';
 	import StudyHeader from './studyHeader.svelte';
 	import StudyBody from './studyBody.svelte';

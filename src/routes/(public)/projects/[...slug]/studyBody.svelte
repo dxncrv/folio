@@ -1,7 +1,7 @@
 
 <script lang="ts">
     import { page } from '$app/state';
-    import { parseMarkdown } from '$lib/utils';
+    import { parseMarkdown } from '$lib/markdown';
     import { CaseStudies } from '$lib/store.svelte.ts';
 
     let content: string | null = $state(null);
