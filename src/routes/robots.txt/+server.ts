@@ -1,4 +1,3 @@
-// Context7: /sveltejs/kit - Robots.txt for SEO
 export async function GET() {
 	const robotsTxt = `User-agent: *
 Allow: /
@@ -9,7 +8,7 @@ Disallow: /start/*
 Disallow: /api/
 
 # Sitemap
-Sitemap: https://aashaymehta.com/sitemap.xml`;
+Sitemap: https://dxncrv.com/sitemap.xml`;
 
 	return new Response(robotsTxt, {
 		headers: {

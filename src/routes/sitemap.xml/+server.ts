@@ -1,7 +1,5 @@
 import { RedisStore } from '$lib/server/redis.server';
-import { slugify } from '$lib/formatting';
 
-// Context7: /sveltejs/kit - Sitemap generation for SEO
 export async function GET() {
 	try {
 		const [projects, caseStudies] = await Promise.all([
@@ -9,7 +7,7 @@ export async function GET() {
 			RedisStore.getCaseStudies()
 		]);
 
-		const baseUrl = 'https://aashaymehta.com'; // Update with your actual domain
+		const baseUrl = 'https://dxncrv.com';
 		const today = new Date().toISOString().split('T')[0];
 
 		// Generate sitemap XML
