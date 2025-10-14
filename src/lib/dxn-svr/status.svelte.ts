@@ -44,9 +44,9 @@ class ServerStatusStore {
 				}
 			};
 
-			this.eventSource.onerror = () => {
-				this.status = 'offline';
-				this.error = 'Connection error';
+			this.eventSource.onerror = (event) => {
+				// On Vercel, SSE connections close after ~25s. Don't mark as error, just reconnect.
+				console.log('[ServerStatus] SSE connection closed, reconnecting...');
 				this.disconnect();
 				this.scheduleReconnect();
 			};

@@ -8,14 +8,26 @@ import type { RequestHandler } from '@sveltejs/kit';
 export const GET: RequestHandler = async () => {
 	const stream = new ReadableStream({
 		async start(controller) {
-			const CHECK_INTERVAL = 5000;
+			const CHECK_INTERVAL = 10000; // 10s to reduce overhead
+			const MAX_DURATION = 20000; // Close before Vercel's 25s timeout
 			let intervalId: NodeJS.Timeout;
+			let timeoutId: NodeJS.Timeout;
 			let isClosed = false;
 
 			const sendEvent = (data: object) => {
 				if (isClosed) return;
 				try {
 					controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`));
+				} catch {
+					isClosed = true;
+				}
+			};
+
+			const sendKeepAlive = () => {
+				if (isClosed) return;
+				try {
+					// SSE comment keepalive (ignored by EventSource)
+					controller.enqueue(new TextEncoder().encode(': keepalive\n\n'));
 				} catch {
 					isClosed = true;
 				}
@@ -50,12 +62,30 @@ export const GET: RequestHandler = async () => {
 				}
 			};
 
+			// Initial check
 			await checkStatus();
-			intervalId = setInterval(checkStatus, CHECK_INTERVAL);
+			
+			// Periodic checks with keepalive
+			intervalId = setInterval(() => {
+				sendKeepAlive();
+				checkStatus();
+			}, CHECK_INTERVAL);
+
+			// Close gracefully before Vercel timeout
+			timeoutId = setTimeout(() => {
+				isClosed = true;
+				clearInterval(intervalId);
+				try {
+					controller.close();
+				} catch {
+					// Connection already closed
+				}
+			}, MAX_DURATION);
 
 			return () => {
 				isClosed = true;
 				clearInterval(intervalId);
+				clearTimeout(timeoutId);
 			};
 		},
 
