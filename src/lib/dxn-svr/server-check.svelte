@@ -1,28 +1,15 @@
 <script lang="ts">
 	import { serverStatus } from '$lib/dxn-svr/status.svelte.ts';
 
-	const CHECK_INTERVAL = 30000; // 30 seconds
-
 	$effect(() => {
-		// Run initial check
-		serverStatus.check();
-
-		// Set up interval to check server status every 30 seconds
-		const interval = setInterval(() => {
-			serverStatus.check();
-		}, CHECK_INTERVAL);
-
-		return () => {
-			clearInterval(interval);
-		};
+		serverStatus.connect();
+		return () => serverStatus.disconnect();
 	});
 </script>
 
 <div class="status-indicator">
-	<span class="svr {serverStatus.status}" aria-label={serverStatus.status}></span>
-	<div class="status-text">
-		<span class="status-label">dxn-svr: <span class="status-value">{serverStatus.status}</span></span>
-	</div>
+	<iconify-icon class="svr {serverStatus.status}" aria-label={serverStatus.status} icon="line-md:monitor-twotone" style="--icon-size:12px"></iconify-icon>
+	<span class="status-label">dxn-svr: <b>{serverStatus.status}</b></span>
 </div>
 
 <style>
@@ -37,44 +24,24 @@
 	}
 
 	.svr {
-		display: inline-block;
 		width: 12px;
 		height: 12px;
-		border-radius: 50%;
 		flex-shrink: 0;
 		transition: all 0.3s ease;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: var(--icon-size, 12px);
+		color: var(--svr-color, var(--accent));
 	}
 
-	.svr.online {
-		background-color: var(--accent);
-		box-shadow: 0 0 10px var(--accent);
-		animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-	}
-
-	.svr.offline {
-		background-color: #ef4444;
-		box-shadow: 0 0 6px rgba(239, 68, 68, 0.4);
-	}
-
-	.svr.checking {
-		background-color: #eab308;
-		animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-	}
+	.svr.online { color: var(--accent); filter: drop-shadow(0 0 10px var(--accent)); }
+	.svr.offline { color: #ef4444; filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.4)); }
+	.svr.connecting { color: #eab308; animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
 
 	@keyframes pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.6;
-		}
-	}
-
-	.status-text {
-		display: flex;
-		flex-direction: column;
-		gap: 0.125rem;
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.6; }
 	}
 
 	.status-label {
@@ -83,23 +50,10 @@
 		opacity: 0.8;
 	}
 
-	.status-value {
+	b {
 		text-transform: capitalize;
 		font-weight: 500;
 		color: var(--accent);
 		opacity: 1;
-	}
-
-	.timestamp {
-		font-size: 0.75rem;
-		color: var(--contrast);
-		opacity: 0.6;
-	}
-
-	.error-msg {
-		font-size: 0.75rem;
-		color: #ef4444;
-		font-style: italic;
-		opacity: 0.8;
 	}
 </style>

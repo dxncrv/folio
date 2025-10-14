@@ -1,49 +1,76 @@
-// Context7: /llmstxt/svelte_dev_llms-full_txt - Svelte 5 $state rune for reactive state
-
-// Response interface from dxn-svr
-interface ServerResponse {
+// Response interface from dxn-svr SSE stream
+interface ServerStatusEvent {
 	status: 'online' | 'offline';
 	timestamp: string;
 	service?: string;
 	error?: string;
 }
 
-// Svelte 5 rune: create reactive state singleton using $state
+/**
+ * Reactive Svelte 5 store for remote server status using EventSource (SSE).
+ */
 class ServerStatusStore {
-	status = $state<'online' | 'offline' | 'checking'>('checking');
+	status = $state<'online' | 'offline' | 'connecting'>('connecting');
 	lastChecked = $state<string | null>(null);
 	error = $state<string | null>(null);
 
-	async check(): Promise<boolean> {
-		this.status = 'checking';
+	private eventSource: EventSource | null = null;
+	private reconnectTimeout: NodeJS.Timeout | null = null;
+	private readonly RECONNECT_DELAY = 3000;
+
+	connect(): void {
+		this.disconnect();
+		this.status = 'connecting';
 		this.error = null;
 
 		try {
-			// Use internal API endpoint to proxy server check (keeps DXN_SERVER_URL private)
-			const response = await fetch('/api/dxn-svr/status', {
-				method: 'GET',
-				signal: AbortSignal.timeout(5000)
-			});
+			this.eventSource = new EventSource('/api/dxn-svr/stream');
 
-			const data: ServerResponse = await response.json();
-			console.log('[ServerStatus] Response:', data);
+			this.eventSource.onopen = () => (this.error = null);
 
-			if (response.ok && data.status === 'online') {
-				this.status = 'online';
-				this.lastChecked = data.timestamp;
-				return true;
-			}
+			this.eventSource.onmessage = ({ data }: MessageEvent) => {
+				try {
+					const parsed: ServerStatusEvent = JSON.parse(data);
+					this.status = parsed.status;
+					this.lastChecked = parsed.timestamp;
+					this.error = parsed.error || null;
+				} catch {
+					console.error('[ServerStatus] Failed to parse SSE message');
+				}
+			};
 
-			console.warn('[ServerStatus] Server offline or error:', data.error || response.status);
-			this.status = 'offline';
-			this.error = data.error || `Server returned ${response.status}`;
-			return false;
+			this.eventSource.onerror = () => {
+				this.status = 'offline';
+				this.error = 'Connection error';
+				this.disconnect();
+				this.scheduleReconnect();
+			};
 		} catch (error) {
-			console.error('[ServerStatus] Check failed:', error);
 			this.status = 'offline';
-			this.error = error instanceof Error ? error.message : 'Unknown error';
-			return false;
+			this.error = error instanceof Error ? error.message : 'Connection failed';
+			this.scheduleReconnect();
 		}
+	}
+
+	disconnect(): void {
+		if (this.reconnectTimeout) {
+			clearTimeout(this.reconnectTimeout);
+			this.reconnectTimeout = null;
+		}
+		this.eventSource?.close();
+		this.eventSource = null;
+	}
+
+	private scheduleReconnect(): void {
+		if (this.reconnectTimeout) return;
+		this.reconnectTimeout = setTimeout(() => {
+			this.reconnectTimeout = null;
+			this.connect();
+		}, this.RECONNECT_DELAY);
+	}
+
+	get isConnected(): boolean {
+		return this.eventSource?.readyState === EventSource.OPEN;
 	}
 }
 
