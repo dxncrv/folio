@@ -1,9 +1,10 @@
 <script>
 	import 'iconify-icon';
 	import { Circle } from '$lib';
+	import Grainy from '$lib/_fx/Grainy.svelte';
 	import Header from '$lib/components/header.svelte';
 	import Timemachine from '$lib/components/timemachine.svelte';
-	import Grainy from '$lib/_fx/Grainy.svelte';
+	import StatusCheck from '$lib/dxn-svr/server-check.svelte';
 </script>
 <svelte:head>
 		<link rel="icon" type="image/png" href="/favicon.png" />
@@ -15,7 +16,7 @@
 		>Under intermittent development 🚧
 	</a>
 	<a href="/start" aria-label="start page">
-		<iconify-icon id="starticon" icon="line-md:cog-filled-loop" width="18" height="18"></iconify-icon>
+		<StatusCheck />
 	</a>
 	<p>© 2024 - handmade with ♡ by @dxncrv</p>
 </footer>

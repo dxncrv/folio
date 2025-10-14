@@ -354,7 +354,6 @@ function toggleExpand() {
 
 <style>
     .redis-inspector {
-        border: 2px solid var(--outline);
         border-radius: 0.5rem;
         background: var(--bg);
         margin-top: 2rem;
@@ -362,7 +361,7 @@ function toggleExpand() {
     }
 
     .redis-inspector.expanded {
-        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(0,0,0,0.02), 0 4px 14px rgba(0,0,0,0.04);
     }
 
     header {

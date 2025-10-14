@@ -138,7 +138,6 @@ async function saveNewProject() {
 
 <style>
 	.projects-container {
-		border: 2px solid var(--outline);
 		border-radius: 0.5rem;
 		background: var(--bg);
 		overflow: hidden;
@@ -146,7 +145,7 @@ async function saveNewProject() {
 	}
 
 	.projects-container.expanded {
-		border-color: var(--accent);
+		box-shadow: 0 4px 12px rgba(0,0,0,0.04);
 	}
 
 	header {

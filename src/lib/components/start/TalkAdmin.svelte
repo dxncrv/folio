@@ -71,7 +71,6 @@
         isExpanded = !isExpanded;
     }
 
-    // Load settings on mount
     $effect(() => {
         loadSettings();
     });
@@ -121,7 +120,6 @@
 
 <style>
     .talk-admin {
-        border: 2px solid var(--outline);
         border-radius: 0.5rem;
         background: var(--bg);
         overflow: hidden;
@@ -129,7 +127,7 @@
     }
 
     .talk-admin.expanded {
-        border-color: var(--accent);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
     }
 
     header {
@@ -222,7 +220,7 @@
 
     .danger-zone {
         padding-top: 1.5rem;
-        border-top: 1px solid var(--outline);
+        border-top: 1px solid rgba(0,0,0,0.04);
     }
 
     .danger-btn {
