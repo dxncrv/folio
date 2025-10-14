@@ -19,6 +19,11 @@ class ServerStatusStore {
 	private readonly RECONNECT_DELAY = 3000;
 
 	connect(): void {
+		// Don't reconnect if already connected or connecting
+		if (this.eventSource && this.eventSource.readyState !== EventSource.CLOSED) {
+			return;
+		}
+
 		this.disconnect();
 		this.status = 'connecting';
 		this.error = null;
