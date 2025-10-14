@@ -1,13 +1,11 @@
 // Context7: /llmstxt/svelte_dev_llms-full_txt - Svelte 5 $state rune for reactive state
-import { PUBLIC_SERVER_URL } from '$env/static/public';
-
-const SERVER_URL = PUBLIC_SERVER_URL || '';
 
 // Response interface from dxn-svr
 interface ServerResponse {
 	status: 'online' | 'offline';
 	timestamp: string;
-	service: string;
+	service?: string;
+	error?: string;
 }
 
 // Svelte 5 rune: create reactive state singleton using $state
@@ -17,39 +15,28 @@ class ServerStatusStore {
 	error = $state<string | null>(null);
 
 	async check(): Promise<boolean> {
-		if (!SERVER_URL) {
-			console.warn('[ServerStatus] No SERVER_URL configured');
-			this.status = 'offline';
-			this.error = 'No server URL configured';
-			return false;
-		}
-
 		this.status = 'checking';
 		this.error = null;
 
 		try {
-			const response = await fetch(SERVER_URL, {
+			// Use internal API endpoint to proxy server check (keeps DXN_SERVER_URL private)
+			const response = await fetch('/api/dxn-svr/status', {
 				method: 'GET',
-				signal: AbortSignal.timeout(5000), // 5 second timeout
-				headers: {
-					'ngrok-skip-browser-warning': 'true' // Skip ngrok browser warning page
-				}
+				signal: AbortSignal.timeout(5000)
 			});
 
-			if (response.ok) {
-				const data: ServerResponse = await response.json();
-				console.log('[ServerStatus] Response:', data);
-				
-				if (data.status === 'online') {
-					this.status = 'online';
-					this.lastChecked = data.timestamp;
-					return true;
-				}
+			const data: ServerResponse = await response.json();
+			console.log('[ServerStatus] Response:', data);
+
+			if (response.ok && data.status === 'online') {
+				this.status = 'online';
+				this.lastChecked = data.timestamp;
+				return true;
 			}
-			
-			console.warn('[ServerStatus] Server returned non-ok response:', response.status);
+
+			console.warn('[ServerStatus] Server offline or error:', data.error || response.status);
 			this.status = 'offline';
-			this.error = `Server returned ${response.status}`;
+			this.error = data.error || `Server returned ${response.status}`;
 			return false;
 		} catch (error) {
 			console.error('[ServerStatus] Check failed:', error);
