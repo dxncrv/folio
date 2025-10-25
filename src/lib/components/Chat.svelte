@@ -21,6 +21,7 @@
 	let messagesContainer: HTMLDivElement | undefined = $state();
 	let lastScrollTop = $state(0);
 	let headerVisible = $state(true);
+	let isAtBottom = $state(false);
 
 	// Memoized formatters (cache date objects to reduce GC pressure)
 	const dateCache = new Map<number, string>();
@@ -129,6 +130,8 @@
 			const st = messagesContainer.scrollTop;
 			headerVisible = st < lastScrollTop || st < 50;
 			lastScrollTop = st;
+			// Check if scrolled to bottom (within 20px tolerance)
+			isAtBottom = messagesContainer.offsetHeight + messagesContainer.scrollTop > messagesContainer.scrollHeight - 20;
 		});
 	}
 
@@ -210,7 +213,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="chat-container">
+		<div class="chat-container" class:at-bottom={isAtBottom}>
 			<header class:hidden={!headerVisible}>
 				<h3>Talk</h3>
 				<div class="user-info">
@@ -290,6 +293,10 @@
 		height: 100%;
 		background: var(--body-bg, #0a0a0a);
 		overscroll-behavior: none;
+		-webkit-user-select: none;
+		user-select: none;
+		-webkit-touch-callout: none;
+		-webkit-text-size-adjust: 100%;
 	}
 
 	/* Auth */
@@ -521,7 +528,11 @@
 		contain-intrinsic-size: auto 400px;
 		min-height: 0;
 		overscroll-behavior: contain;
-		box-shadow: inset 0 8px 14px -12px rgba(0,0,0,0.65), inset 0 -8px 14px -12px rgba(0,0,0,0.55);
+		box-shadow: inset 0 8px 14px -12px rgba(0,0,0,0.65);
+		/* Safari scrolling fixes */
+		-webkit-overflow-scrolling: touch;
+		-webkit-user-select: text;
+		user-select: text;
 	}
 
 	.messages-container {
@@ -740,6 +751,16 @@
 		contain: layout;
 		overscroll-behavior: contain;
 		z-index: 9;
+		/* Safari fixes */
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
+	.chat-container.at-bottom .input-bar {
+		position: static;
+		background: rgba(10, 10, 10, 0.8);
+		backdrop-filter: none;
+		-webkit-backdrop-filter: none;
 	}
 
 	textarea {
