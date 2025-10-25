@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { TalkMessage, TalkSettings } from '$lib/types';
+    import type { TalkMessage } from '$lib/types';
     import ChatAuth from './ChatAuth.svelte';
     import ChatMessages from './ChatMessages.svelte';
     import ChatInput from './ChatInput.svelte';
@@ -7,25 +7,34 @@
     let authenticated = $state(false);
     let currentUser = $state('');
     let messages = $state<TalkMessage[]>([]);
-    let settings = $state<TalkSettings>({ pollingMode: 'sync' });
-    let pollingInterval: NodeJS.Timeout | null = null;
+    let checkingSession = $state(true);
 
-    // Fetch initial settings and messages
+    // Check for existing session on mount
+    async function checkSession() {
+        try {
+            const response = await fetch('/api/talk/session', {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                // User has valid session
+                authenticated = true;
+                currentUser = data.username;
+                await initialize();
+            }
+        } catch (error) {
+            console.error('Session check error:', error);
+        } finally {
+            checkingSession = false;
+        }
+    }
+
+    // Fetch initial messages
     async function initialize() {
         try {
-            // Fetch settings
-            const settingsRes = await fetch('/api/talk/settings');
-            if (settingsRes.ok) {
-                settings = await settingsRes.json();
-            }
-
             // Fetch messages
             await fetchMessages();
-
-            // Start polling if sync mode
-            if (settings.pollingMode === 'sync') {
-                startPolling();
-            }
         } catch (error) {
             console.error('Initialization error:', error);
         }
@@ -47,11 +56,13 @@
             const response = await fetch('/api/talk/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // Include cookies
                 body: JSON.stringify({ text })
             });
 
             if (!response.ok) {
-                throw new Error('Failed to send message');
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.error || 'Failed to send message');
             }
 
             // Immediately fetch messages after sending
@@ -62,72 +73,50 @@
         }
     }
 
-    function startPolling() {
-        if (pollingInterval) return;
-        pollingInterval = setInterval(fetchMessages, 3000);
-    }
-
-    function stopPolling() {
-        if (pollingInterval) {
-            clearInterval(pollingInterval);
-            pollingInterval = null;
-        }
-    }
-
     function handleAuthenticated(username: string) {
         authenticated = true;
         currentUser = username;
         initialize();
     }
 
-    async function handleRefresh() {
-        await fetchMessages();
+    async function handleLogout() {
+        authenticated = false;
+        currentUser = '';
+        messages = [];
     }
 
-    // Cleanup on component destroy
+    // Check session on component mount
     $effect(() => {
-        return () => {
-            stopPolling();
-        };
+        checkSession();
     });
 
-    // Watch settings changes
-    $effect(() => {
-        if (authenticated) {
-            if (settings.pollingMode === 'sync') {
-                startPolling();
-            } else {
-                stopPolling();
-            }
-        }
-    });
 </script>
 
 <div class="chat-container">
-    {#if !authenticated}
+    {#if checkingSession}
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Checking session...</p>
+        </div>
+    {:else if !authenticated}
         <ChatAuth onAuthenticated={handleAuthenticated} />
     {:else}
         <div class="chat-header">
             <div class="header-content">
                 <h3>Talk</h3>
                 <div class="header-right">
-                    <div class="header-info">
-                        <span class="current-user">{currentUser}</span>
-                        {#if settings.pollingMode === 'sync'}
-                            <div class="status-indicator">
-                                <span class="status-dot"></span>
-                                <span class="status-text">Live</span>
-                            </div>
-                        {/if}
-                    </div>
-                    {#if settings.pollingMode === 'async'}
-                        <button class="refresh-btn" onclick={handleRefresh} title="Refresh messages" aria-label="Refresh messages">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                <path d="M3 12C3 7.03 7.03 3 12 3C16.97 3 21 7.03 21 12C21 16.97 16.97 21 12 21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                <path d="M3 12L7 8M3 12L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                        </button>
-                    {/if}
+                    <span class="current-user">{currentUser}</span>
+                    <button 
+                        class="logout-btn" 
+                        onclick={handleLogout}
+                        title="Logout"
+                        aria-label="Logout"
+                    >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                            <path d="M9 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M16 17L21 12M21 12L16 7M21 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -142,6 +131,8 @@
         flex-direction: column;
         height: 100%;
         width: 100%;
+        max-width: 900px;
+        margin: 0 auto;
     }
 
     .chat-header {
@@ -160,14 +151,36 @@
     .header-right {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
+        gap: 0.5rem;
     }
 
-    .header-info {
+    .current-user {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .logout-btn {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        border: none;
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.7);
+        border-radius: 6px;
+        cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        text-align: right;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: rgba(255, 255, 255, 0.95);
+    }
+
+    .logout-btn:active {
+        transform: scale(0.95);
     }
 
     h3 {
@@ -185,62 +198,6 @@
         font-size: 0.875rem;
     }
 
-    .status-indicator {
-        display: flex;
-        align-items: center;
-        gap: 0.35rem;
-    }
-
-    .status-dot {
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: #34C759;
-        animation: pulse 2s ease-in-out infinite;
-    }
-
-    .status-text {
-        font-family: var(--font-read);
-        color: #34C759;
-        font-size: 0.7rem;
-        font-weight: 500;
-    }
-
-    @keyframes pulse {
-        0%, 100% { 
-            opacity: 1;
-            transform: scale(1);
-        }
-        50% { 
-            opacity: 0.6;
-            transform: scale(0.9);
-        }
-    }
-
-    .refresh-btn {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.12);
-        border: none;
-        color: rgba(255, 255, 255, 0.8);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s ease;
-    }
-
-    .refresh-btn:hover {
-        background: rgba(255, 255, 255, 0.18);
-        color: #FFFFFF;
-        transform: rotate(-45deg);
-    }
-
-    .refresh-btn:active {
-        transform: rotate(-180deg);
-    }
-
     /* Mobile responsive */
     @media (max-width: 768px) {
         .chat-header {
@@ -254,13 +211,33 @@
         .current-user {
             font-size: 0.8rem;
         }
+    }
 
-        .status-text {
-            font-size: 0.65rem;
-        }
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        gap: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
 
-        .header-right {
-            gap: 0.5rem;
-        }
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-top-color: rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .loading-container p {
+        font-size: 0.9rem;
+        margin: 0;
     }
 </style>

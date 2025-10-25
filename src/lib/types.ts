@@ -37,8 +37,11 @@ export interface TalkMessage {
     timestamp: number;
 }
 
-export interface TalkSettings {
-    pollingMode: 'sync' | 'async';
+export interface TalkSession {
+    username: string;
+    ip: string;
+    createdAt: number;
+    lastActive: number;
 }
 
 export interface RedisKeyInfo {

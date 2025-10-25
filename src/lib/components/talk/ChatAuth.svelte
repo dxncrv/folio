@@ -17,6 +17,7 @@
             const response = await fetch('/api/talk/auth', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // Include cookies for the response
                 body: JSON.stringify({ username: username.toLowerCase().trim() })
             });
 
@@ -79,8 +80,6 @@
         >
             {loading ? 'Joining...' : 'Continue'}
         </button>
-        
-        <p class="hint">Available: alpha, beta, charlie, delta</p>
     </div>
 </div>
 
@@ -219,11 +218,4 @@
         opacity: 0.7;
     }
 
-    .hint {
-        font-family: var(--font-read);
-        font-size: 0.75rem;
-        color: rgba(255, 255, 255, 0.45);
-        text-align: center;
-        margin: 0;
-    }
 </style>

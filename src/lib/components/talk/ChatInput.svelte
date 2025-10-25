@@ -82,7 +82,7 @@
 <style>
     .input-container {
         padding: 0.75rem 1rem 1rem 1rem;
-        background: var(--body-bg);
+        background: var(--bg);
         border-top: 1px solid rgba(255, 255, 255, 0.05);
     }
 
@@ -144,12 +144,14 @@
     }
 
     .send-button {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
         border-radius: 50%;
         background: rgba(255, 255, 255, 0.15);
         border: none;
-        color: rgba(255, 255, 255, 0.4);
+        color: rgba(255, 255, 255, 0.6);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -178,6 +180,8 @@
 
     .send-button svg {
         transition: transform 0.2s ease;
+        width: 22px;
+        height: 22px;
     }
 
     .send-button.active:hover:not(:disabled) svg {
@@ -200,10 +204,6 @@
     @media (max-width: 768px) {
         .input-container {
             padding: 0.75rem;
-        }
-
-        button {
-            padding: 0 1rem;
         }
     }
 </style>

@@ -165,10 +165,8 @@ export class RedisStore {
  * - folio:projects: Array of Project objects
  * - folio:studies: Array of CaseStudy objects (renamed from caseStudies)
  * - folio:media: Array of Media objects
- * 
- * TALK NAMESPACE (persistent data):
- * - talk:messages: List of TalkMessage objects
- * - talk:settings: TalkSettings object
+ * - folio:talk:messages: List of TalkMessage objects
+ * - folio:talk:sessions: Hash of TalkSession objects, keyed by username:ip
  * 
  * ADMIN NAMESPACE (ephemeral data with TTL):
  * - admin:session:<token>: Admin session tokens (TTL: 3600s)

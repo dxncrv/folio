@@ -24,12 +24,12 @@ export { scanMedia } from './media-scanner.server';
 
 // Talk/chat server utilities
 export {
-	VALID_USERS,
-	isValidUser,
+	sanitizeHtml,
+	createSession,
+	getSession,
+	updateSessionActivity,
+	getAllSessions,
 	getMessages,
 	addMessage,
-	clearMessages,
-	getSettings,
-	updateSettings,
-
+	clearMessages
 } from './talk.server';

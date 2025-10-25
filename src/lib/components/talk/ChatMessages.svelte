@@ -177,6 +177,7 @@
         flex-direction: column;
         gap: 2px;
         padding-bottom: 0.5rem;
+        width: 100%;
     }
 
     .date-separator {
@@ -203,6 +204,7 @@
         margin-bottom: 0.25rem;
         align-items: flex-end;
         animation: slideIn 0.2s ease-out;
+        width: 100%;
     }
 
     .message-wrapper.grouped {
@@ -211,7 +213,7 @@
 
     .message-wrapper.own {
         flex-direction: row-reverse;
-        align-self: flex-end;
+        align-self: flex-start;
     }
 
     @keyframes slideIn {
@@ -250,7 +252,8 @@
         display: flex;
         flex-direction: column;
         gap: 0.25rem;
-        max-width: 65%;
+        max-width: min(90%, 700px);
+        word-break: break-word;
     }
 
     .message-wrapper.own .message-content {
@@ -325,6 +328,12 @@
         white-space: nowrap;
         flex-shrink: 0;
         padding-bottom: 0.125rem;
+        opacity: 0.1;
+        transition: opacity 0.2s ease;
+    }
+
+    .message-wrapper:hover .timestamp {
+        opacity: 1;
     }
 
     /* Mobile responsive */
