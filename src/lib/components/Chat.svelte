@@ -19,9 +19,6 @@
 	let messagesEnd: HTMLDivElement | undefined = $state();
 	let textarea: HTMLTextAreaElement | undefined = $state();
 	let messagesContainer: HTMLDivElement | undefined = $state();
-	let lastScrollTop = $state(0);
-	let headerVisible = $state(true);
-	let isAtBottom = $state(false);
 
 	// Memoized formatters (cache date objects to reduce GC pressure)
 	const dateCache = new Map<number, string>();
@@ -121,20 +118,6 @@
 		}
 	}
 
-	// Scroll handling with RAF debounce
-	let scrollRAF: number;
-	function handleScroll() {
-		cancelAnimationFrame(scrollRAF);
-		scrollRAF = requestAnimationFrame(() => {
-			if (!messagesContainer) return;
-			const st = messagesContainer.scrollTop;
-			headerVisible = st < lastScrollTop || st < 50;
-			lastScrollTop = st;
-			// Check if scrolled to bottom (within 20px tolerance)
-			isAtBottom = messagesContainer.offsetHeight + messagesContainer.scrollTop > messagesContainer.scrollHeight - 20;
-		});
-	}
-
 	// Effects with proper cleanup (/sveltejs/svelte @5.37 $effect.pre for autoscroll)
 	$effect.pre(() => {
 		if (!messagesEnd || !messagesContainer) return;
@@ -146,21 +129,6 @@
 
 	$effect(() => {
 		if (textarea && isAuthenticated) textarea.focus();
-	});
-
-	$effect(() => {
-		return () => cancelAnimationFrame(scrollRAF);
-	});
-
-	// Prevent overscroll bounce (iOS)
-	$effect(() => {
-		if (typeof document === 'undefined') return;
-		const preventDefault = (e: TouchEvent) => {
-			if (e.touches.length > 1) return;
-			e.preventDefault();
-		};
-		document.addEventListener('touchmove', preventDefault, { passive: false });
-		return () => document.removeEventListener('touchmove', preventDefault);
 	});
 
 	// Input handlers
@@ -213,8 +181,8 @@
 			</div>
 		</div>
 	{:else}
-		<div class="chat-container" class:at-bottom={isAtBottom}>
-			<header class:hidden={!headerVisible}>
+		<div class="chat-container">
+			<header>
 				<h3>Talk</h3>
 				<div class="user-info">
 					<span>{currentUser}</span>
@@ -226,7 +194,7 @@
 				</div>
 			</header>
 
-			<div class="messages-container" bind:this={messagesContainer} onscroll={handleScroll}>
+			<div class="messages-container" bind:this={messagesContainer}>
 				{#if messages.length === 0}
 					<div class="empty">
 						<div class="empty-icon">💬</div>
@@ -292,7 +260,6 @@
 		width: 100%;
 		height: 100%;
 		background: var(--body-bg, #0a0a0a);
-		overscroll-behavior: none;
 		-webkit-user-select: none;
 		user-select: none;
 		-webkit-touch-callout: none;
@@ -434,38 +401,8 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		transform: translateZ(0);
-		will-change: transform;
-		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 		contain: layout style;
 		height: 52px;
-	}
-
-	header.hidden {
-		transform: translateY(-100%);
-	}
-
-	/* Bezel indicator when header is hidden */
-	header::after {
-		content: '';
-		position: fixed;
-		top: 0;
-		left: 0;
-		right: 0;
-		height: 2px;
-		background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-		opacity: 1;
-		transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-		pointer-events: none;
-		z-index: 11;
-	}
-
-	header.hidden::after {
-		opacity: 1;
-	}
-
-	header:not(.hidden)::after {
-		opacity: 0;
 	}
 
 	header h3 {
@@ -527,34 +464,8 @@
 		content-visibility: auto;
 		contain-intrinsic-size: auto 400px;
 		min-height: 0;
-		overscroll-behavior: contain;
-		box-shadow: inset 0 8px 14px -12px rgba(0,0,0,0.65);
-		/* Safari scrolling fixes */
-		-webkit-overflow-scrolling: touch;
 		-webkit-user-select: text;
 		user-select: text;
-	}
-
-	.messages-container {
-		scrollbar-width: thin;
-		scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
-	}
-
-	.messages-container::-webkit-scrollbar {
-		width: 4px;
-	}
-
-	.messages-container::-webkit-scrollbar-track {
-		background: transparent;
-	}
-
-	.messages-container::-webkit-scrollbar-thumb {
-		background: rgba(255, 255, 255, 0.25);
-		border-radius: 2px;
-	}
-
-	.messages-container::-webkit-scrollbar-thumb:hover {
-		background: rgba(255, 255, 255, 0.35);
 	}
 
 	.empty {
@@ -749,18 +660,10 @@
 		transform: translateZ(0);
 		will-change: contents;
 		contain: layout;
-		overscroll-behavior: contain;
 		z-index: 9;
 		/* Safari fixes */
 		-webkit-user-select: none;
 		user-select: none;
-	}
-
-	.chat-container.at-bottom .input-bar {
-		position: static;
-		background: rgba(10, 10, 10, 0.8);
-		backdrop-filter: none;
-		-webkit-backdrop-filter: none;
 	}
 
 	textarea {
