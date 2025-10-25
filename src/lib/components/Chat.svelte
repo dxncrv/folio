@@ -19,6 +19,8 @@
 	let messagesEnd: HTMLDivElement | undefined = $state();
 	let textarea: HTMLTextAreaElement | undefined = $state();
 	let messagesContainer: HTMLDivElement | undefined = $state();
+	let lastScrollTop = $state(0);
+	let headerVisible = $state(true);
 
 	// Memoized formatters (cache date objects to reduce GC pressure)
 	const dateCache = new Map<number, string>();
@@ -118,6 +120,18 @@
 		}
 	}
 
+	// Scroll handling - show header on scroll up, hide on scroll down
+	let scrollRAF: number;
+	function handleScroll() {
+		cancelAnimationFrame(scrollRAF);
+		scrollRAF = requestAnimationFrame(() => {
+			if (!messagesContainer) return;
+			const st = messagesContainer.scrollTop;
+			headerVisible = st < lastScrollTop || st < 50;
+			lastScrollTop = st;
+		});
+	}
+
 	// Effects with proper cleanup (/sveltejs/svelte @5.37 $effect.pre for autoscroll)
 	$effect.pre(() => {
 		if (!messagesEnd || !messagesContainer) return;
@@ -129,6 +143,10 @@
 
 	$effect(() => {
 		if (textarea && isAuthenticated) textarea.focus();
+	});
+
+	$effect(() => {
+		return () => cancelAnimationFrame(scrollRAF);
 	});
 
 	// Input handlers
@@ -182,7 +200,7 @@
 		</div>
 	{:else}
 		<div class="chat-container">
-			<header>
+			<header class:hidden={!headerVisible}>
 				<h3>Talk</h3>
 				<div class="user-info">
 					<span>{currentUser}</span>
@@ -194,7 +212,7 @@
 				</div>
 			</header>
 
-			<div class="messages-container" bind:this={messagesContainer}>
+			<div class="messages-container" bind:this={messagesContainer} onscroll={handleScroll}>
 				{#if messages.length === 0}
 					<div class="empty">
 						<div class="empty-icon">💬</div>
@@ -401,8 +419,15 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
+		transform: translateZ(0);
+		will-change: transform;
+		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 		contain: layout style;
 		height: 52px;
+	}
+
+	header.hidden {
+		transform: translateY(-100%);
 	}
 
 	header h3 {
@@ -456,10 +481,12 @@
 		flex: 1;
 		overflow-y: auto;
 		overflow-x: hidden;
-		padding: 1rem;
+		padding: calc(52px + 1rem) 1rem 1rem;
+		padding-bottom: calc(1rem + 48px);
 		display: flex;
 		flex-direction: column;
 		gap: 2px;
+		box-shadow: inset 0 8px 14px -12px rgba(0, 0, 0, 0.65);
 		contain: size layout style paint;
 		content-visibility: auto;
 		contain-intrinsic-size: auto 400px;
@@ -766,10 +793,6 @@
 
 		.msg-content {
 			max-width: 80%;
-		}
-
-		.messages-container {
-			padding: 0.75rem;
 		}
 
 		.input-bar {
