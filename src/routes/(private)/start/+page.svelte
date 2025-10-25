@@ -8,7 +8,6 @@ import SessionTimer from '$lib/components/start/SessionTimer.svelte';
 import Logout from '$lib/components/start/logout.svelte';
 import ProjectGrid from '$lib/components/start/ProjectGrid.svelte';
 import MediaManager from '$lib/components/start/MediaManager.svelte';
-import TalkAdmin from '$lib/components/start/TalkAdmin.svelte';
 import RedisInspector from '$lib/components/start/RedisInspector.svelte';
 
 let message = $state<string>('');
@@ -131,8 +130,6 @@ async function confirmLogout() {
 			onSaveNew={handleSaveNewProject}
 		/>
 	{/if}
-
-	<TalkAdmin />
 
 	<MediaManager />
 </main>

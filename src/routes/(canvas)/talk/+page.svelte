@@ -1,5 +1,5 @@
 <script lang="ts">
-    import ChatContainer from '$lib/components/talk/ChatContainer.svelte';
+    import Chat from '$lib/components/Chat.svelte';
 </script>
 
-<ChatContainer />
+<Chat />

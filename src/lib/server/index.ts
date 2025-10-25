@@ -21,15 +21,3 @@ export { respondJson, normalizeHandlerResults, withHandler, withAdmin } from './
 
 // Media scanning
 export { scanMedia } from './media-scanner.server';
-
-// Talk/chat server utilities
-export {
-	sanitizeHtml,
-	createSession,
-	getSession,
-	updateSessionActivity,
-	getAllSessions,
-	getMessages,
-	addMessage,
-	clearMessages
-} from './talk.server';
