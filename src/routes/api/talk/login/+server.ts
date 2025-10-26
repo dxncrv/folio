@@ -20,11 +20,11 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			return json({ error: 'Username must be 1-50 characters' }, { status: 400 });
 		}
 
-		// Set HttpOnly cookie with username
+		// Set HttpOnly cookie with username (30-day session persistence)
 		cookies.set('talk_username', normalizedUsername, {
 			path: '/',
 			httpOnly: true,
-			secure: false, // set to true in production with HTTPS
+			secure: process.env.NODE_ENV === 'production', // HTTPS only in production
 			sameSite: 'lax',
 			maxAge: 86400 * 30 // 30 days
 		});

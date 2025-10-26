@@ -21,6 +21,8 @@
 	let messagesContainer: HTMLDivElement | undefined = $state();
 	let lastScrollTop = $state(0);
 	let headerVisible = $state(true);
+	let sessionRestored = $state(false);
+	let checkingSession = $state(true);
 
 	// Memoized formatters (cache date objects to reduce GC pressure)
 	const dateCache = new Map<number, string>();
@@ -78,13 +80,25 @@
 		}
 	}
 
-	const handleLogout = () => {
+	const handleLogout = async () => {
+		try {
+			// Clear cookie on server
+			await fetch('/api/talk/logout', {
+				method: 'POST',
+				credentials: 'include'
+			});
+		} catch (e) {
+			console.error('Logout request error:', e);
+		}
+		// Clear client state
 		authenticated = false;
 		currentUser = '';
 		messages = [];
 		messageText = '';
 		authError = '';
 		dateCache.clear();
+		// Reset session flag so session check runs again next time
+		sessionRestored = false;
 	};
 
 	// Message handlers
@@ -133,6 +147,32 @@
 	}
 
 	// Effects with proper cleanup (/sveltejs/svelte @5.37 $effect.pre for autoscroll)
+	// Restore session on mount if available (30-day persistence)
+	$effect(() => {
+		if (sessionRestored) return;
+		sessionRestored = true;
+		(async () => {
+			try {
+				const res = await fetch('/api/talk/session', {
+					method: 'GET',
+					credentials: 'include'
+				});
+				if (res.ok) {
+					const data = await res.json();
+					if (data.authenticated && data.username) {
+						authenticated = true;
+						currentUser = data.username;
+						await fetchMessages();
+					}
+				}
+			} catch (e) {
+				console.error('Session restore error:', e);
+			} finally {
+				checkingSession = false;
+			}
+		})();
+	});
+
 	$effect.pre(() => {
 		if (!messagesEnd || !messagesContainer) return;
 		messages.length;
@@ -170,7 +210,19 @@
 </script>
 
 <div class="chat-wrapper">
-	{#if !authenticated}
+	{#if checkingSession}
+		<div class="auth-container">
+			<div class="session-loader">
+				<div class="spinner">
+					<svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+						<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2" opacity="0.2" />
+						<path d="M12 3c4.97 0 9 4.03 9 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-dasharray="20" stroke-dashoffset="0" />
+					</svg>
+				</div>
+				<p>Checking session...</p>
+			</div>
+		</div>
+	{:else if !authenticated}
 		<div class="auth-container">
 			<div class="auth-card">
 				<div class="auth-icon">💬</div>
@@ -393,6 +445,45 @@
 	.auth-card button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	/* Session loader */
+	.session-loader {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1rem;
+		min-height: 200px;
+	}
+
+	.spinner {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px;
+		height: 40px;
+	}
+
+	.spinner svg {
+		animation: spin 1.5s linear infinite;
+		color: rgba(255, 255, 255, 0.6);
+	}
+
+	@keyframes spin {
+		from {
+			transform: rotate(0deg);
+		}
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	.session-loader p {
+		font: 0.9rem var(--font-read);
+		color: rgba(255, 255, 255, 0.6);
+		margin: 0;
+		letter-spacing: 0.02em;
 	}
 
 	/* Chat */
