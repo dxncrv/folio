@@ -1,4 +1,4 @@
-<!-- Context7: /sveltejs/svelte - Input with character counter and auto-scroll -->
+<!-- Input with character counter and auto-scroll -->
 <script lang="ts">
 	import { talkMessages } from './talkMessages.svelte';
 
@@ -11,14 +11,14 @@
 	let messageText = $state('');
 	let textarea: HTMLTextAreaElement | undefined = $state();
 
-	// Context7: Constants and derived state
-	const MAX_LENGTH = 5000;
+	// Constants and derived state
+	const MAX_LENGTH = 250;
 	const canSend = $derived(!talkMessages.sending && messageText.trim().length > 0);
 	const remainingChars = $derived(MAX_LENGTH - messageText.length);
 	const showCounter = $derived(messageText.length > MAX_LENGTH * 0.8); // Show at 80% threshold
 	const isWarning = $derived(remainingChars < 100);
 
-	// Context7: $effect to focus textarea when needed
+	// $effect to focus textarea when needed
 	$effect(() => {
 		if (textarea) textarea.focus();
 	});
@@ -31,7 +31,7 @@
 
 		const success = await talkMessages.send(text);
 		if (success) {
-			// Context7: Notify parent to scroll after sending
+			// Notify parent to scroll after sending
 			if (onMessageSent) onMessageSent();
 		} else {
 			messageText = text; // Restore on error
@@ -60,18 +60,21 @@
 			bind:value={messageText}
 			onkeydown={handleKeydown}
 			oninput={handleInput}
-			placeholder="Message (Shift+Enter for new line)"
+			placeholder="Message"
 			disabled={talkMessages.sending}
 			maxlength={MAX_LENGTH}
 			rows="1"
 			aria-label="Message input"
 		></textarea>
+	</div>
+	<!-- send-area stacks the optional char counter above the send button -->
+	<div class="send-area">
 		{#if showCounter}
 			<span class="char-counter" class:warning={isWarning} aria-live="polite">
 				{remainingChars}
 			</span>
 		{/if}
-	</div>
+        
 	<button onclick={send} disabled={!canSend} class:active={canSend} aria-label="Send">
 		<svg
 			width="20"
@@ -86,6 +89,7 @@
 			<path d="M2 10h16m0 0l-7-7m7 7l-7 7" />
 		</svg>
 	</button>
+	</div>
 </div>
 
 <style>
@@ -149,18 +153,25 @@
 	}
 
 	/* Character counter */
+	.send-area {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem;
+		flex-shrink: 0;
+	}
+
 	.char-counter {
-		position: absolute;
-		bottom: 0.5rem;
-		right: 0.75rem;
 		font: 600 0.7rem var(--font-ui);
-		color: rgba(255, 255, 255, 0.5);
-		background: rgba(0, 0, 0, 0.6);
-		padding: 0.25rem 0.5rem;
+		color: rgba(255, 255, 255, 0.6);
+		background: rgba(0, 0, 0, 0.45);
+		padding: 0.15rem 0.5rem;
 		border-radius: 8px;
 		pointer-events: none;
 		user-select: none;
-		transition: color 0.2s;
+		transition: color 0.2s, opacity 0.15s;
+		white-space: nowrap;
 	}
 
 	.char-counter.warning {

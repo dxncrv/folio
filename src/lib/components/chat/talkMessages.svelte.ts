@@ -38,6 +38,8 @@ class TalkMessages {
 	// Context7: Use $state.raw for arrays when immutable updates preferred
 	messages = $state<TalkMessage[]>([]);
 	sending = $state(false);
+	editing = $state(false);
+	deleting = $state(false);
 
 	// Derived state (Context7: prefer $derived for computed values)
 	get hasMessages() {
@@ -74,6 +76,56 @@ class TalkMessages {
 			return false;
 		} finally {
 			this.sending = false;
+		}
+	}
+
+	async edit(messageId: string, newText: string): Promise<boolean> {
+		if (!newText.trim()) return false;
+
+		this.editing = true;
+		try {
+			const res = await fetch('/api/talk', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ action: 'edit', messageId, text: newText.trim() })
+			});
+			if (!res.ok) {
+				const error = await res.json();
+				console.error('Edit error:', error);
+				return false;
+			}
+			await this.fetch();
+			return true;
+		} catch (e) {
+			console.error('Edit error:', e);
+			return false;
+		} finally {
+			this.editing = false;
+		}
+	}
+
+	async delete(messageId: string): Promise<boolean> {
+		this.deleting = true;
+		try {
+			const res = await fetch('/api/talk', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ action: 'delete', messageId })
+			});
+			if (!res.ok) {
+				const error = await res.json();
+				console.error('Delete error:', error);
+				return false;
+			}
+			await this.fetch();
+			return true;
+		} catch (e) {
+			console.error('Delete error:', e);
+			return false;
+		} finally {
+			this.deleting = false;
 		}
 	}
 

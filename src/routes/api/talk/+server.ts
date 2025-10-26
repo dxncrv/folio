@@ -15,12 +15,13 @@ const SESSION_MAX_AGE = 86400 * 30; // 30 days
 // Type-safe action routing
 // ============================================================================
 
-type TalkAction = 'login' | 'logout' | 'session' | 'message';
+type TalkAction = 'login' | 'logout' | 'session' | 'message' | 'edit' | 'delete';
 
 interface TalkRequest {
 	readonly action: TalkAction;
 	readonly username?: string;
 	readonly text?: string;
+	readonly messageId?: string;
 }
 
 // ============================================================================
@@ -66,6 +67,54 @@ const addMessage = async (username: string, text: string): Promise<TalkMessage> 
 	};
 	await client.rpush(MESSAGES_KEY, JSON.stringify(message));
 	return message;
+};
+
+/**
+ * Update a message in Redis (only if user owns it)
+ */
+const updateMessage = async (messageId: string, username: string, newText: string): Promise<TalkMessage> => {
+	const client = getRedisClient();
+	const messages = await getMessages();
+	const index = messages.findIndex(m => m.id === messageId);
+	
+	if (index === -1) {
+		throw new Error('Message not found');
+	}
+	
+	if (messages[index].username !== username) {
+		throw new Error('Unauthorized: You can only edit your own messages');
+	}
+	
+	const updatedMessage: TalkMessage = {
+		...messages[index],
+		text: sanitizeHtml(newText.trim()),
+		timestamp: messages[index].timestamp // Keep original timestamp
+	};
+	
+	// Update the message in Redis list
+	await client.lset(MESSAGES_KEY, index, JSON.stringify(updatedMessage));
+	return updatedMessage;
+};
+
+/**
+ * Delete a message from Redis (only if user owns it)
+ */
+const deleteMessage = async (messageId: string, username: string): Promise<void> => {
+	const client = getRedisClient();
+	const messages = await getMessages();
+	const message = messages.find(m => m.id === messageId);
+	
+	if (!message) {
+		throw new Error('Message not found');
+	}
+	
+	if (message.username !== username) {
+		throw new Error('Unauthorized: You can only delete your own messages');
+	}
+	
+	// Mark for deletion by setting to a sentinel value, then remove it
+	// Redis doesn't support LREM by index, so we use LREM by value
+	await client.lrem(MESSAGES_KEY, 1, JSON.stringify(message));
 };
 
 /**
@@ -164,6 +213,60 @@ const handleMessage = async (data: TalkRequest, cookies: Cookies): Promise<Respo
 	return json(message);
 };
 
+/**
+ * Action: Edit a chat message (requires auth and ownership)
+ */
+const handleEdit = async (data: TalkRequest, cookies: Cookies): Promise<Response> => {
+	const username = getAuthUser(cookies);
+	if (!username) {
+		return json({ error: 'Not authenticated' }, { status: 401 });
+	}
+
+	if (!data.messageId) {
+		return json({ error: 'Message ID required' }, { status: 400 });
+	}
+
+	const text = validateMessage(data.text);
+	if (!text) {
+		return json(
+			{ error: `Message must be 1-${MAX_MESSAGE_LENGTH} characters` },
+			{ status: 400 }
+		);
+	}
+
+	try {
+		const message = await updateMessage(data.messageId, username, text);
+		return json(message);
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Failed to edit message';
+		const status = message.includes('Unauthorized') ? 403 : message.includes('not found') ? 404 : 500;
+		return json({ error: message }, { status });
+	}
+};
+
+/**
+ * Action: Delete a chat message (requires auth and ownership)
+ */
+const handleDelete = async (data: TalkRequest, cookies: Cookies): Promise<Response> => {
+	const username = getAuthUser(cookies);
+	if (!username) {
+		return json({ error: 'Not authenticated' }, { status: 401 });
+	}
+
+	if (!data.messageId) {
+		return json({ error: 'Message ID required' }, { status: 400 });
+	}
+
+	try {
+		await deleteMessage(data.messageId, username);
+		return json({ success: true });
+	} catch (error) {
+		const message = error instanceof Error ? error.message : 'Failed to delete message';
+		const status = message.includes('Unauthorized') ? 403 : message.includes('not found') ? 404 : 500;
+		return json({ error: message }, { status });
+	}
+};
+
 // ============================================================================
 // Action Dispatcher - Strategy pattern routing
 // ============================================================================
@@ -174,7 +277,9 @@ const actionHandlers: Record<TalkAction, ActionHandler> = {
 	login: handleLogin,
 	logout: handleLogout,
 	session: handleSession,
-	message: handleMessage
+	message: handleMessage,
+	edit: handleEdit,
+	delete: handleDelete
 } as const;
 
 // ============================================================================
