@@ -60,11 +60,9 @@ class ServerStatusStore {
 		
 		if (document.hidden) {
 			// Tab hidden - stop polling to save resources
-			console.log('[Status] Tab hidden, pausing polling');
 			this.stopPolling();
 		} else {
 			// Tab visible - resume polling and fetch immediately
-			console.log('[Status] Tab visible, resuming polling');
 			this.fetchStatus();
 			this.startPolling();
 		}
