@@ -3,7 +3,6 @@ import { getRedisClient } from '$lib/server/redis.server';
 import { withHandler } from '$lib/server/api-utils.server';
 import { env } from '$env/dynamic/private';
 
-const REDIS_CHANNEL = 'dxn-svr:status';
 const REDIS_STATUS_KEY = 'dxn-svr:current-status';
 const STATUS_TTL = 300; // 5 minutes
 
@@ -21,12 +20,12 @@ interface StatusMessage extends WebhookPayload {
  * Webhook endpoint for dxn-svr to report status changes
  * 
  * Called by dxn-svr on startup (status: 'online') and shutdown (status: 'offline')
+ * Simply stores status in Redis - no pub/sub needed
  * 
  * Architecture:
  * 1. Validate webhook secret
  * 2. Store status in Redis with TTL
- * 3. Publish to Redis pub/sub channel
- * 4. SSE streams broadcast to all connected clients
+ * 3. Frontend polls this status every 30s
  */
 export const POST = withHandler(async ({ request }) => {
 	// Validate webhook secret
@@ -71,20 +70,14 @@ export const POST = withHandler(async ({ request }) => {
 	try {
 		const redis = getRedisClient();
 
-		// Store current status in Redis with TTL
+		// Store current status in Redis with TTL (5 minutes)
 		await redis.set(REDIS_STATUS_KEY, messageJson, 'EX', STATUS_TTL);
 
-		// Publish to Redis pub/sub channel for SSE stream broadcast
-		const subscriberCount = await redis.publish(REDIS_CHANNEL, messageJson);
-
-		console.log(
-			`[Webhook] Status update: ${payload.status} | Broadcasted to ${subscriberCount} subscriber(s)`
-		);
+		console.log(`[Webhook] Status update: ${payload.status}`);
 
 		return json({
 			success: true,
-			status: payload.status,
-			broadcasted: subscriberCount
+			status: payload.status
 		});
 	} catch (error) {
 		console.error('[Webhook] Redis error:', error);
