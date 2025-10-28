@@ -8,6 +8,7 @@ interface ServerStatusEvent {
 
 /**
  * Reactive Svelte 5 store for remote server status using EventSource (SSE).
+ * Context7: /sveltejs/svelte@5.37.0 - Optimized lifecycle with exponential backoff + visibility-aware
  */
 class ServerStatusStore {
 	status = $state<'online' | 'offline' | 'connecting'>('connecting');
@@ -16,11 +17,27 @@ class ServerStatusStore {
 
 	private eventSource: EventSource | null = null;
 	private reconnectTimeout: NodeJS.Timeout | null = null;
-	private readonly RECONNECT_DELAY = 3000;
+	
+	// Exponential backoff config
+	private reconnectAttempts = 0;
+	private readonly BASE_DELAY = 1000;
+	private readonly MAX_DELAY = 30000;
+	private readonly BACKOFF_THRESHOLD = 3; // Switch to visibility-aware after N failures
+	
+	// Visibility-aware mode
+	private visibilityAwareMode = false;
+	private visibilityHandler: (() => void) | null = null;
 
 	connect(): void {
 		// Don't reconnect if already connected or connecting
 		if (this.eventSource && this.eventSource.readyState !== EventSource.CLOSED) {
+			return;
+		}
+
+		// Visibility-aware: only connect if page visible
+		if (this.visibilityAwareMode && typeof document !== 'undefined' && document.hidden) {
+			// Deferred: page hidden
+			this.setupVisibilityHandler();
 			return;
 		}
 
@@ -31,7 +48,10 @@ class ServerStatusStore {
 		try {
 			this.eventSource = new EventSource('/api/dxn-svr/stream');
 
-			this.eventSource.onopen = () => (this.error = null);
+			this.eventSource.onopen = () => {
+				this.error = null;
+				this.reconnectAttempts = 0; // Reset backoff on successful connection
+			};
 
 			this.eventSource.onmessage = ({ data }: MessageEvent) => {
 				try {
@@ -40,13 +60,12 @@ class ServerStatusStore {
 					this.lastChecked = parsed.timestamp;
 					this.error = parsed.error || null;
 				} catch {
-					console.error('[ServerStatus] Failed to parse SSE message');
+					// Parse error
 				}
 			};
 
 			this.eventSource.onerror = (event) => {
 				// On Vercel, SSE connections close after ~25s. Don't mark as error, just reconnect.
-				console.log('[ServerStatus] SSE connection closed, reconnecting...');
 				this.disconnect();
 				this.scheduleReconnect();
 			};
@@ -54,6 +73,11 @@ class ServerStatusStore {
 			this.status = 'offline';
 			this.error = error instanceof Error ? error.message : 'Connection failed';
 			this.scheduleReconnect();
+		}
+		
+		// Setup visibility handler if in visibility-aware mode
+		if (this.visibilityAwareMode) {
+			this.setupVisibilityHandler();
 		}
 	}
 
@@ -64,14 +88,50 @@ class ServerStatusStore {
 		}
 		this.eventSource?.close();
 		this.eventSource = null;
+		this.cleanupVisibilityHandler();
 	}
 
 	private scheduleReconnect(): void {
 		if (this.reconnectTimeout) return;
+		
+		this.reconnectAttempts++;
+		
+		// Switch to visibility-aware mode after threshold
+		if (this.reconnectAttempts >= this.BACKOFF_THRESHOLD && !this.visibilityAwareMode) {
+			this.visibilityAwareMode = true;
+		}
+		
+		// Calculate exponential backoff delay
+		const delay = Math.min(
+			this.BASE_DELAY * Math.pow(2, this.reconnectAttempts - 1),
+			this.MAX_DELAY
+		);
+		
 		this.reconnectTimeout = setTimeout(() => {
 			this.reconnectTimeout = null;
 			this.connect();
-		}, this.RECONNECT_DELAY);
+		}, delay);
+	}
+
+	private setupVisibilityHandler(): void {
+		if (this.visibilityHandler || typeof document === 'undefined') return;
+		
+		this.visibilityHandler = () => {
+			if (document.hidden) {
+				this.disconnect();
+			} else {
+				this.connect();
+			}
+		};
+		
+		document.addEventListener('visibilitychange', this.visibilityHandler);
+	}
+
+	private cleanupVisibilityHandler(): void {
+		if (this.visibilityHandler && typeof document !== 'undefined') {
+			document.removeEventListener('visibilitychange', this.visibilityHandler);
+			this.visibilityHandler = null;
+		}
 	}
 
 	get isConnected(): boolean {

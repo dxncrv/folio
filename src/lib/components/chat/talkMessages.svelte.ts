@@ -3,6 +3,8 @@ import type { TalkMessage } from '$lib/types';
 
 // Use Map for O(1) lookups and efficient caching
 const dateCache = new Map<number, string>();
+// Cache date strings to avoid repeated Date object allocation
+const dateStringCache = new Map<number, string>();
 
 // Pure utility functions (not reactive)
 export const formatTime = (ts: number) => {
@@ -24,12 +26,20 @@ export const formatDate = (ts: number) => {
 	return result;
 };
 
+// Optimized: Cache toDateString to avoid repeated Date allocations
+const getDateString = (ts: number): string => {
+	if (dateStringCache.has(ts)) return dateStringCache.get(ts)!;
+	const dateStr = new Date(ts).toDateString();
+	dateStringCache.set(ts, dateStr);
+	return dateStr;
+};
+
 // Message grouping utilities (pure functions)
 export const shouldGroup = (messages: TalkMessage[], i: number) =>
 	i > 0 && messages[i].username === messages[i - 1].username && messages[i].timestamp - messages[i - 1].timestamp < 60000;
 
 export const shouldShowDate = (messages: TalkMessage[], i: number) =>
-	i === 0 || new Date(messages[i].timestamp).toDateString() !== new Date(messages[i - 1].timestamp).toDateString();
+	i === 0 || getDateString(messages[i].timestamp) !== getDateString(messages[i - 1].timestamp);
 
 export const shouldShowTime = (messages: TalkMessage[], i: number) =>
 	i === messages.length - 1 || messages[i + 1].timestamp - messages[i].timestamp > 60000 || messages[i + 1].username !== messages[i].username;

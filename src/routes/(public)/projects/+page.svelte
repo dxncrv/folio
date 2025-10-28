@@ -13,14 +13,19 @@
         }
     });
 
+    // Optimize: Cache Facets.selected() to avoid multiple calls
+    const selectedFacets = $derived(Facets.selected());
+    
     // Derive display data directly from server data for SSR indexing
     // This ensures content is rendered in initial HTML before hydration
     const projects = $derived(Projects.all.length > 0 ? Projects.selected : data.projects);
     const selectedProjects = $derived(
         projects.filter((project: any) => 
-            project.tags.some((tag: string) => Facets.selected().includes(tag))
+            project.tags.some((tag: string) => selectedFacets.includes(tag))
         )
     );
+    // Optimize: Extract length check to avoid recomputation
+    const hasProjects = $derived(selectedProjects.length > 0);
 </script>
 
 <svelte:head>
@@ -54,8 +59,8 @@
 	</script>`}
 </svelte:head>
 
-<main class:no-projects={selectedProjects.length === 0}>
-    {#if selectedProjects.length !== 0}
+<main class:no-projects={!hasProjects}>
+    {#if hasProjects}
         <Statusbar />
     {:else}
         <p>Z z Z</p>
@@ -67,12 +72,12 @@
 			{/key}
 		{/each}
 	</div>
-	{#if selectedProjects.length !== 0}
+	{#if hasProjects}
 		<div class="btn-wrapper">
 			<button
 				class="primary"
 				onclick={Projects.range.prev}
-				disabled={Projects.range.min === 0 || selectedProjects.length === 0}>Prev</button
+				disabled={Projects.range.min === 0}>Prev</button
 			>
 			<button
 				class="primary"

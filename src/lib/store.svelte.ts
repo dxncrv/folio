@@ -14,13 +14,25 @@ import type { Project, CaseStudy, Media } from './types';
 import { ProjectService, CaseStudyService, MediaService } from './services';
 
 // FacetsClass: facets array is derived from unique tags in data
+// Context7: /sveltejs/svelte@5.37.0 - Memoize tag extraction with equality check
 class FacetsClass {
+	#lastTags: string[] = [];
+	#cachedFacets: { name: string; bool: boolean }[] = [];
+
 	// facets: derived array of unique tags from data, each with a boolean for selection.
 	facets = $derived.by(() => {
-		const uniqueTags = Array.from(
-			new Set(Projects.all.flatMap(project => project.tags))
-		).sort();
-		return uniqueTags.map(tag => ({ name: tag, bool: true }));
+		const allTags = Projects.all.flatMap(project => project.tags);
+		const uniqueTags = Array.from(new Set(allTags)).sort();
+		
+		// Skip recomputation if tags haven't changed
+		if (uniqueTags.length === this.#lastTags.length && 
+		    uniqueTags.every((tag, i) => tag === this.#lastTags[i])) {
+			return this.#cachedFacets;
+		}
+		
+		this.#lastTags = uniqueTags;
+		this.#cachedFacets = uniqueTags.map(tag => ({ name: tag, bool: true }));
+		return this.#cachedFacets;
 	});
 
 	// toggle: toggles the boolean value for a given facet name.
@@ -49,6 +61,8 @@ class projectsClass {
 	loading = $state<boolean>(false);
 	// PUBLIC error state
 	error = $state<string | null>(null);
+	// Flag to prevent redundant initializations
+	#initialized = $state<boolean>(false);
 	// PUBLIC range, state for pagination.
 	range = $state({
 		min: 0,
@@ -68,30 +82,41 @@ class projectsClass {
 	});
 
 	// PUBLIC selected, derived state returns the projects based on the selected facets.
+	// Optimized: Single-pass reduce instead of filter->map chain
 	selected = $derived.by(() => {
-		// Get the selected facets
 		const selectedFacets = Facets.selected();
-		// Filter the projects based on the selected facets and return the projects with the 'desc' and 'tech' properties updated.
-		return this.all
-			.filter((project: Project) => project.tags.some((tag: string) => selectedFacets.includes(tag)))
-			.map((project: Project) => ({
-				...project,
-				desc: selectedFacets
-					.map(facet => project.desc[facet.toLowerCase()])
-					.filter(Boolean)
-					.join(' '),
-				tech: selectedFacets
-					.flatMap(facet => 
-						project.tags.includes(facet) 
-							? (project.tech[facet.toLowerCase()] || [])
-							: []
-					)
-			}));
+		const selectedSet = new Set(selectedFacets); // O(1) lookup vs includes O(n)
+		
+		return this.all.reduce<Project[]>((acc, project) => {
+			// Skip if no matching tags
+			if (!project.tags.some((tag: string) => selectedSet.has(tag))) return acc;
+			
+			// Build desc and tech in single iteration
+			let desc = '';
+			const techArr: string[] = [];
+			
+			for (const facet of selectedFacets) {
+				const facetLower = facet.toLowerCase();
+				const descVal = project.desc[facetLower];
+				if (descVal) desc += (desc ? ' ' : '') + descVal;
+				
+				if (project.tags.includes(facet)) {
+					const techVal = project.tech[facetLower];
+					if (techVal) techArr.push(...techVal);
+				}
+			}
+			
+			acc.push({ ...project, desc: desc as any, tech: techArr as any });
+			return acc;
+		}, []);
 	});
 
 	// Initialize store with server-loaded data (for SSR)
 	initialize(projects: Project[]) {
-		this.all = projects;
+		if (!this.#initialized && projects.length > 0) {
+			this.all = projects;
+			this.#initialized = true;
+		}
 	}
 
 	// API methods delegate to service layer

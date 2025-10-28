@@ -46,9 +46,11 @@ function startTimer() {
 	currentTime = Date.now();
 
 	timerHandle = setInterval(() => {
-		currentTime = Date.now();
+		// Optimize: Single Date.now() call per tick
+		const now = Date.now();
+		currentTime = now;
 		if (!sessionExpiresAt) return;
-		if (sessionExpiresAt - currentTime <= 0) {
+		if (sessionExpiresAt - now <= 0) {
 			// expired: remove stored expiry and stop
 			try { localStorage.removeItem('admin_token_expires'); } catch (e) {}
 			document.cookie = 'admin_token_expires=; path=/; max-age=0';
@@ -64,6 +66,7 @@ function stopTimer() {
 	}
 }
 
+// Context7: /sveltejs/svelte@5.37.0 - Proper $effect teardown for timers
 $effect(() => {
 	startTimer();
 	// keep in sync if another tab updates the expiry
@@ -76,7 +79,10 @@ $effect(() => {
 		}
 	};
 	window.addEventListener('storage', onStorage);
-	return () => window.removeEventListener('storage', onStorage);
+	return () => {
+		window.removeEventListener('storage', onStorage);
+		stopTimer(); // Clean up timer on unmount
+	};
 });
 </script>
 

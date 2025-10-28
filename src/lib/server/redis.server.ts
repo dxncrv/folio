@@ -2,6 +2,7 @@ import Redis from 'ioredis';
 import type { Project, Media } from '$lib/types';
 import { env } from '$env/dynamic/private';
 
+// Context7: /redis/ioredis/v5_4_0 - Singleton with lazy connect and optimized pooling
 let redisClient: Redis | null = null;
 
 export const getRedisClient = () => {
@@ -9,7 +10,15 @@ export const getRedisClient = () => {
         if (!env.REDIS_URL || env.REDIS_URL === 'your_redis_url_here') {
             throw new Error('Redis is not configured. Set REDIS_URL environment variable.');
         }
-        redisClient = new Redis(env.REDIS_URL);
+        redisClient = new Redis(env.REDIS_URL, {
+            lazyConnect: true, // Don't connect until first command
+            maxRetriesPerRequest: 3,
+            enableReadyCheck: true,
+            retryStrategy: (times) => {
+                const delay = Math.min(times * 50, 2000);
+                return delay;
+            }
+        });
         redisClient.on('error', (err) => console.error('Redis connection error:', err));
         redisClient.on('connect', () => console.log('Connected to Redis'));
     }
@@ -19,16 +28,31 @@ export const getRedisClient = () => {
 import type { CaseStudy } from '$lib/types';
 
 // Small generic list store helper to avoid repeating CRUD logic for array-backed keys.
+// Context7: /redis/ioredis/v5_4_0 - Cache parsed results to reduce JSON overhead
 function createListStore<T>(key: string, idSelector: (item: T) => string) {
     const client = getRedisClient;
+    let cachedData: T[] | null = null;
+    let cacheKey: string | null = null;
 
     async function get(): Promise<T[]> {
         const data = await client().get(key);
-        return data ? JSON.parse(data) as T[] : [];
+        if (!data) {
+            cachedData = [];
+            return [];
+        }
+        // Cache only if unchanged
+        if (cacheKey === data) return cachedData!;
+        cachedData = JSON.parse(data) as T[];
+        cacheKey = data;
+        return cachedData;
     }
 
     async function set(items: T[]): Promise<void> {
-        await client().set(key, JSON.stringify(items));
+        const serialized = JSON.stringify(items);
+        await client().set(key, serialized);
+        // Update cache
+        cachedData = items;
+        cacheKey = serialized;
     }
 
     async function add(item: T): Promise<T[]> {

@@ -112,6 +112,15 @@ export class CircleFx {
 		this.#clearTimeouts('decay', 'hide');
 		this.#resetSize();
 	};
+
+	// Context7: /sveltejs/svelte@5.37.0 - Cleanup method for proper lifecycle management
+	destroy = () => {
+		if (this.#raf) cancelAnimationFrame(this.#raf);
+		this.#clearTimeouts('decay', 'hide');
+		this.#raf = null;
+		this.#decayTimeout = null;
+		this.#hideTimeout = null;
+	};
 }
 
 // TyperFx class to manage typing effect state and behavior.
@@ -161,6 +170,14 @@ export class TyperFx {
 
 	showButton = (len: number) => len > this.#cfg.maxLength && !this.state.typing;
 	toggle = () => { this.state.truncated = !this.state.truncated; };
+
+	// Context7: /sveltejs/svelte@5.37.0 - Cleanup method for proper lifecycle management
+	destroy = () => {
+		if (this.#int) {
+			clearInterval(this.#int);
+			this.#int = null;
+		}
+	};
 
 	processText(full: string) {
 		const target = (!this.state.truncated || full.length <= this.#cfg.maxLength)
