@@ -103,6 +103,15 @@
 	$effect(() => {
 		if (scrollTrigger && scrollTrigger > 0) {
 			scrollToBottom();
+			// Context7: Mark messages as read when scrolling to bottom
+			talkMessages.markAsRead();
+		}
+	});
+	
+	// Context7: Mark as read when near bottom
+	$effect(() => {
+		if (isNearBottom && talkMessages.messages.length > 0) {
+			talkMessages.markAsRead();
 		}
 	});
 	
@@ -308,6 +317,14 @@
 									</button>
 								</div>
 							</div>
+							<!-- Context7: Phase 2, Item 7 - Message status indicators -->
+							{#if msg.status === 'pending'}
+								<span class="status pending" title="Sending..." aria-label="Sending">⏳</span>
+							{:else if msg.status === 'sent'}
+								<span class="status sent" title="Sent" aria-label="Sent">✓</span>
+							{:else if msg.status === 'failed'}
+								<span class="status failed" title="Failed to send" aria-label="Failed">⚠️</span>
+							{/if}
 						{:else}
 							<div class="bubble">{msg.text}</div>
 						{/if}
@@ -326,11 +343,22 @@
 {#if !isNearBottom}
 	<button 
 		class="scroll-to-bottom"
-		onclick={scrollToBottom}
+		onclick={() => {
+			scrollToBottom();
+			if (talkMessages.unreadCount > 0) {
+				talkMessages.markAsRead();
+			}
+		}}
 		transition:fly={{ y: 20, duration: 200 }}
-		aria-label="Scroll to bottom"
-		title="Scroll to bottom"
+		aria-label={talkMessages.unreadCount > 0 ? `Scroll to bottom (${talkMessages.unreadCount} unread)` : "Scroll to bottom"}
+		title={talkMessages.unreadCount > 0 ? `${talkMessages.unreadCount} new ${talkMessages.unreadCount === 1 ? 'message' : 'messages'}` : "Scroll to bottom"}
 	>
+		<!-- Context7: Phase 2, Item 8 - Unread count badge -->
+		{#if talkMessages.unreadCount > 0}
+			<span class="unread-badge" transition:fly={{ y: -10, duration: 150 }}>
+				{talkMessages.unreadCount}
+			</span>
+		{/if}
 		<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 			<path d="M12 5v14M19 12l-7 7-7-7"/>
 		</svg>
@@ -649,6 +677,36 @@
 		opacity: 1;
 	}
 
+	/* Phase 2, Item 7 - Message status indicators */
+	.status {
+		font-size: 0.9rem;
+		flex-shrink: 0;
+		padding-bottom: 0.125rem;
+		user-select: none;
+		pointer-events: none;
+		opacity: 0.8;
+		display: flex;
+		align-items: center;
+	}
+
+	.status.pending {
+		animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	}
+
+	.status.sent {
+		color: var(--accent);
+	}
+
+	.status.failed {
+		color: rgba(239, 68, 68, 0.9);
+		cursor: pointer;
+	}
+
+	@keyframes pulse {
+		0%, 100% { opacity: 0.8; }
+		50% { opacity: 0.4; }
+	}
+
 	/* Scroll to bottom button */
 	.scroll-to-bottom {
 		position: fixed;
@@ -682,6 +740,26 @@
 	.scroll-to-bottom svg {
 		width: 18px;
 		height: 18px;
+	}
+
+	/* Phase 2, Item 8 - Unread count badge on button */
+	.unread-badge {
+		position: absolute;
+		top: -6px;
+		right: -6px;
+		min-width: 18px;
+		height: 18px;
+		padding: 0 5px;
+		border-radius: 9px;
+		background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
+		color: #fff;
+		font: 600 0.7rem var(--font-read);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		box-shadow: 0 2px 6px rgba(10, 132, 255, 0.5), 0 0 0 2px var(--body-bg, #0a0a0a);
+		pointer-events: none;
+		line-height: 1;
 	}
 
 	/* Edit Modal */

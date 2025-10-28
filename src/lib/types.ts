@@ -35,6 +35,7 @@ export interface TalkMessage {
     username: string;
     text: string;
     timestamp: number;
+    status?: 'pending' | 'sent' | 'failed'; // Optional for optimistic UI
 }
 
 export interface TalkSession {

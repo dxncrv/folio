@@ -13,7 +13,8 @@ interface ServerStatusEvent {
  * Architecture:
  * 1. dxn-svr sends webhook to /api/dxn-svr/webhook (writes to Redis)
  * 2. Frontend polls /api/dxn-svr/status every 30s (reads from Redis, < 50ms)
- * 3. No SSE, no pub/sub, no Vercel timeout issues
+ * 3. Only polls when tab is visible (Page Visibility API)
+ * 4. No SSE, no pub/sub, no Vercel timeout issues
  */
 class ServerStatusStore {
 	status = $state<'online' | 'offline' | 'connecting'>('connecting');
@@ -27,13 +28,47 @@ class ServerStatusStore {
 		// Fetch immediately
 		await this.fetchStatus();
 		
-		// Then poll every 30 seconds
-		if (!this.pollInterval) {
-			this.pollInterval = setInterval(() => {
-				this.fetchStatus();
-			}, this.POLL_INTERVAL);
+		// Start polling
+		this.startPolling();
+		
+		// Handle page visibility changes
+		if (typeof document !== 'undefined') {
+			document.addEventListener('visibilitychange', this.handleVisibilityChange);
 		}
 	}
+
+	private startPolling(): void {
+		if (this.pollInterval) return;
+		
+		this.pollInterval = setInterval(() => {
+			// Only fetch if tab is visible
+			if (typeof document === 'undefined' || !document.hidden) {
+				this.fetchStatus();
+			}
+		}, this.POLL_INTERVAL);
+	}
+
+	private stopPolling(): void {
+		if (this.pollInterval) {
+			clearInterval(this.pollInterval);
+			this.pollInterval = null;
+		}
+	}
+
+	private handleVisibilityChange = (): void => {
+		if (typeof document === 'undefined') return;
+		
+		if (document.hidden) {
+			// Tab hidden - stop polling to save resources
+			console.log('[Status] Tab hidden, pausing polling');
+			this.stopPolling();
+		} else {
+			// Tab visible - resume polling and fetch immediately
+			console.log('[Status] Tab visible, resuming polling');
+			this.fetchStatus();
+			this.startPolling();
+		}
+	};
 
 	private async fetchStatus(): Promise<void> {
 		try {
@@ -54,9 +89,11 @@ class ServerStatusStore {
 	}
 
 	disconnect(): void {
-		if (this.pollInterval) {
-			clearInterval(this.pollInterval);
-			this.pollInterval = null;
+		this.stopPolling();
+		
+		// Remove visibility change listener
+		if (typeof document !== 'undefined') {
+			document.removeEventListener('visibilitychange', this.handleVisibilityChange);
 		}
 	}
 }

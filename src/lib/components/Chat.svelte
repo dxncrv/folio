@@ -20,6 +20,7 @@
 	// Local UI state with $state rune
 	let headerVisible = $state(true);
 	let scrollTrigger = $state(0);
+	let pollInterval: NodeJS.Timeout | null = null;
 
 	// Initialize on mount with $effect
 	$effect(() => {
@@ -27,9 +28,26 @@
 		(async () => {
 			const restored = await talkAuth.restoreSession();
 			if (restored) {
+				// Context7: Set username for unread filtering
+				talkMessages.setUsername(talkAuth.username);
 				await talkMessages.fetch();
+				// Context7: Mark initial messages as read
+				talkMessages.markAsRead();
+				
+				// Context7: Start polling for new messages every 2 seconds
+				pollInterval = setInterval(async () => {
+					await talkMessages.fetch();
+				}, 2000);
 			}
 		})();
+		
+		// Cleanup polling on unmount
+		return () => {
+			if (pollInterval) {
+				clearInterval(pollInterval);
+				pollInterval = null;
+			}
+		};
 	});
 
 	// Derived state with $derived rune

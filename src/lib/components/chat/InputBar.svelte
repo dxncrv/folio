@@ -1,6 +1,7 @@
 <!-- Input with character counter and auto-scroll -->
 <script lang="ts">
 	import { talkMessages } from './talkMessages.svelte';
+	import { talkAuth } from './talkAuth.svelte';
 
 	interface Props {
 		onMessageSent?: () => void;
@@ -29,7 +30,8 @@
 		messageText = '';
 		if (textarea) textarea.style.height = 'auto';
 
-		const success = await talkMessages.send(text);
+		// Context7: Pass username for optimistic UI
+		const success = await talkMessages.send(text, talkAuth.username);
 		if (success) {
 			// Notify parent to scroll after sending
 			if (onMessageSent) onMessageSent();
