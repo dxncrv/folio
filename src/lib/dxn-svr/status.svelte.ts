@@ -1,6 +1,6 @@
 // Response interface from dxn-svr SSE stream
 interface ServerStatusEvent {
-	status: 'online' | 'offline';
+	status: 'online' | 'offline' | 'connecting';
 	timestamp: string;
 	service?: string;
 	error?: string;
@@ -8,7 +8,7 @@ interface ServerStatusEvent {
 
 /**
  * Reactive Svelte 5 store for remote server status using EventSource (SSE).
- * Context7: /sveltejs/svelte@5.37.0 - Optimized lifecycle with exponential backoff + visibility-aware
+ * Context7: /sveltejs/svelte@5.37.0 - Event-driven updates via Redis pub/sub (no polling)
  */
 class ServerStatusStore {
 	status = $state<'online' | 'offline' | 'connecting'>('connecting');
@@ -17,27 +17,16 @@ class ServerStatusStore {
 
 	private eventSource: EventSource | null = null;
 	private reconnectTimeout: NodeJS.Timeout | null = null;
-	
-	// Exponential backoff config
+
+	// Reconnection config
 	private reconnectAttempts = 0;
-	private readonly BASE_DELAY = 1000;
-	private readonly MAX_DELAY = 30000;
-	private readonly BACKOFF_THRESHOLD = 3; // Switch to visibility-aware after N failures
-	
-	// Visibility-aware mode
-	private visibilityAwareMode = false;
-	private visibilityHandler: (() => void) | null = null;
+	private readonly MAX_QUICK_RETRIES = 3;
+	private readonly QUICK_RETRY_DELAY = 2000; // 2 seconds
+	private readonly SLOW_RETRY_DELAY = 30000; // 30 seconds
 
 	connect(): void {
 		// Don't reconnect if already connected or connecting
 		if (this.eventSource && this.eventSource.readyState !== EventSource.CLOSED) {
-			return;
-		}
-
-		// Visibility-aware: only connect if page visible
-		if (this.visibilityAwareMode && typeof document !== 'undefined' && document.hidden) {
-			// Deferred: page hidden
-			this.setupVisibilityHandler();
 			return;
 		}
 
@@ -49,8 +38,9 @@ class ServerStatusStore {
 			this.eventSource = new EventSource('/api/dxn-svr/stream');
 
 			this.eventSource.onopen = () => {
+				console.log('[SSE] Connected to dxn-svr status stream');
 				this.error = null;
-				this.reconnectAttempts = 0; // Reset backoff on successful connection
+				this.reconnectAttempts = 0; // Reset on successful connection
 			};
 
 			this.eventSource.onmessage = ({ data }: MessageEvent) => {
@@ -59,25 +49,21 @@ class ServerStatusStore {
 					this.status = parsed.status;
 					this.lastChecked = parsed.timestamp;
 					this.error = parsed.error || null;
-				} catch {
-					// Parse error
+				} catch (err) {
+					console.error('[SSE] Failed to parse message:', err);
 				}
 			};
 
 			this.eventSource.onerror = (event) => {
-				// On Vercel, SSE connections close after ~25s. Don't mark as error, just reconnect.
+				console.error('[SSE] Connection error');
 				this.disconnect();
 				this.scheduleReconnect();
 			};
 		} catch (error) {
+			console.error('[SSE] Failed to create connection:', error);
 			this.status = 'offline';
 			this.error = error instanceof Error ? error.message : 'Connection failed';
 			this.scheduleReconnect();
-		}
-		
-		// Setup visibility handler if in visibility-aware mode
-		if (this.visibilityAwareMode) {
-			this.setupVisibilityHandler();
 		}
 	}
 
@@ -86,52 +72,30 @@ class ServerStatusStore {
 			clearTimeout(this.reconnectTimeout);
 			this.reconnectTimeout = null;
 		}
-		this.eventSource?.close();
-		this.eventSource = null;
-		this.cleanupVisibilityHandler();
+
+		if (this.eventSource) {
+			this.eventSource.close();
+			this.eventSource = null;
+		}
 	}
 
 	private scheduleReconnect(): void {
 		if (this.reconnectTimeout) return;
-		
+
 		this.reconnectAttempts++;
-		
-		// Switch to visibility-aware mode after threshold
-		if (this.reconnectAttempts >= this.BACKOFF_THRESHOLD && !this.visibilityAwareMode) {
-			this.visibilityAwareMode = true;
-		}
-		
-		// Calculate exponential backoff delay
-		const delay = Math.min(
-			this.BASE_DELAY * Math.pow(2, this.reconnectAttempts - 1),
-			this.MAX_DELAY
-		);
-		
+
+		// Determine delay: quick retries first, then slow retry
+		const delay =
+			this.reconnectAttempts <= this.MAX_QUICK_RETRIES
+				? this.QUICK_RETRY_DELAY
+				: this.SLOW_RETRY_DELAY;
+
+		console.log(`[SSE] Reconnecting in ${delay / 1000}s (attempt ${this.reconnectAttempts})`);
+
 		this.reconnectTimeout = setTimeout(() => {
 			this.reconnectTimeout = null;
 			this.connect();
 		}, delay);
-	}
-
-	private setupVisibilityHandler(): void {
-		if (this.visibilityHandler || typeof document === 'undefined') return;
-		
-		this.visibilityHandler = () => {
-			if (document.hidden) {
-				this.disconnect();
-			} else {
-				this.connect();
-			}
-		};
-		
-		document.addEventListener('visibilitychange', this.visibilityHandler);
-	}
-
-	private cleanupVisibilityHandler(): void {
-		if (this.visibilityHandler && typeof document !== 'undefined') {
-			document.removeEventListener('visibilitychange', this.visibilityHandler);
-			this.visibilityHandler = null;
-		}
 	}
 
 	get isConnected(): boolean {

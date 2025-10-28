@@ -1,20 +1,36 @@
-import { SERVER_URL } from '$env/static/private';
-import type { RequestHandler } from '@sveltejs/kit';
+import { getRedisClient } from '$lib/server/redis.server';
+import Redis from 'ioredis';
+import { env } from '$env/dynamic/private';
+
+const REDIS_CHANNEL = 'dxn-svr:status';
+const REDIS_STATUS_KEY = 'dxn-svr:current-status';
+
+interface StatusMessage {
+	status: 'online' | 'offline' | 'connecting';
+	timestamp: string;
+	service?: string;
+	error?: string;
+}
 
 /**
- * SSE endpoint that streams server status updates to connected clients.
- * Uses EventSource protocol (text/event-stream).
+ * SSE endpoint that streams server status updates using Redis pub/sub.
+ * NO POLLING - updates are event-driven via Redis pub/sub.
+ * 
+ * Architecture:
+ * 1. Client connects via EventSource
+ * 2. Server sends current status from Redis immediately
+ * 3. Server subscribes to Redis channel
+ * 4. When webhook publishes to Redis, this stream broadcasts to client
+ * 5. Heartbeat comments keep connection alive
  */
-export const GET: RequestHandler = async () => {
+export const GET = async () => {
 	const stream = new ReadableStream({
 		async start(controller) {
-			const CHECK_INTERVAL = 10000; // 10s to reduce overhead
-			const MAX_DURATION = 20000; // Close before Vercel's 25s timeout
-			let intervalId: NodeJS.Timeout;
-			let timeoutId: NodeJS.Timeout;
 			let isClosed = false;
+			let pubSubClient: Redis | null = null;
+			let heartbeatInterval: NodeJS.Timeout | null = null;
 
-			const sendEvent = (data: object) => {
+			const sendEvent = (data: StatusMessage) => {
 				if (isClosed) return;
 				try {
 					controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(data)}\n\n`));
@@ -26,66 +42,71 @@ export const GET: RequestHandler = async () => {
 			const sendKeepAlive = () => {
 				if (isClosed) return;
 				try {
-					// SSE comment keepalive (ignored by EventSource)
 					controller.enqueue(new TextEncoder().encode(': keepalive\n\n'));
 				} catch {
 					isClosed = true;
 				}
 			};
 
-			const sendError = (error: string) =>
-				sendEvent({ status: 'offline', error, timestamp: new Date().toISOString() });
+			try {
+				const redisClient = getRedisClient();
 
-			const checkStatus = async () => {
-				if (isClosed) return;
-
-				if (!SERVER_URL) return sendError('Server URL not configured');
-
-				try {
-					const response = await fetch(SERVER_URL, {
-						signal: AbortSignal.timeout(5000),
-						headers: { 'ngrok-skip-browser-warning': 'true' }
+				// Send current status immediately
+				const currentStatus = await redisClient.get(REDIS_STATUS_KEY);
+				if (currentStatus) {
+					sendEvent(JSON.parse(currentStatus));
+				} else {
+					// No status in Redis yet
+					sendEvent({
+						status: 'connecting',
+						timestamp: new Date().toISOString()
 					});
+				}
 
-					if (response.ok) {
-						const data = await response.json();
-						sendEvent({
-							status: data.status || 'online',
-							timestamp: data.timestamp || new Date().toISOString(),
-							service: data.service
-						});
-					} else {
-						sendError(`Server returned ${response.status}`);
+				// Create dedicated Redis client for pub/sub
+				if (!env.REDIS_URL || env.REDIS_URL === 'your_redis_url_here') {
+					throw new Error('Redis not configured');
+				}
+
+				pubSubClient = new Redis(env.REDIS_URL, {
+					lazyConnect: false,
+					maxRetriesPerRequest: 3
+				});
+
+				// Subscribe to status updates
+				await pubSubClient.subscribe(REDIS_CHANNEL);
+
+				pubSubClient.on('message', (channel, message) => {
+					if (channel === REDIS_CHANNEL && !isClosed) {
+						try {
+							const status: StatusMessage = JSON.parse(message);
+							sendEvent(status);
+						} catch (err) {
+							console.error('[SSE] Failed to parse Redis message:', err);
+						}
 					}
-				} catch (error) {
-					sendError(error instanceof Error ? error.message : 'Unknown error');
-				}
-			};
+				});
 
-			// Initial check
-			await checkStatus();
-			
-			// Periodic checks with keepalive
-			intervalId = setInterval(() => {
-				sendKeepAlive();
-				checkStatus();
-			}, CHECK_INTERVAL);
+				// Send keepalive every 15 seconds
+				heartbeatInterval = setInterval(sendKeepAlive, 15000);
 
-			// Close gracefully before Vercel timeout
-			timeoutId = setTimeout(() => {
-				isClosed = true;
-				clearInterval(intervalId);
-				try {
-					controller.close();
-				} catch {
-					// Connection already closed
-				}
-			}, MAX_DURATION);
+			} catch (error) {
+				console.error('[SSE] Setup error:', error);
+				sendEvent({
+					status: 'offline',
+					error: error instanceof Error ? error.message : 'Setup failed',
+					timestamp: new Date().toISOString()
+				});
+			}
 
+			// Cleanup function
 			return () => {
 				isClosed = true;
-				clearInterval(intervalId);
-				clearTimeout(timeoutId);
+				if (heartbeatInterval) clearInterval(heartbeatInterval);
+				if (pubSubClient) {
+					pubSubClient.unsubscribe(REDIS_CHANNEL);
+					pubSubClient.quit();
+				}
 			};
 		},
 
@@ -94,13 +115,12 @@ export const GET: RequestHandler = async () => {
 		}
 	});
 
-	// SSE requires specific headers
 	return new Response(stream, {
 		headers: {
 			'Content-Type': 'text/event-stream',
 			'Cache-Control': 'no-cache',
 			'Connection': 'keep-alive',
-			'X-Accel-Buffering': 'no' // Disable nginx buffering
+			'X-Accel-Buffering': 'no' // Disable buffering in nginx
 		}
 	});
 };
