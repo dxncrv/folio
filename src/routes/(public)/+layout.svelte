@@ -13,12 +13,13 @@
 <slot />
 <footer>
 	<a href="https://github.com/users/dxncrv/projects/3" target="_blank" rel="noopener noreferrer"
-		>Under intermittent development 🚧
+		aria-label="kanban">
+		<iconify-icon icon="octicon:project-roadmap-16" width="18" height="18" aria-label="project board"></iconify-icon>
 	</a>
 	<a href="/start" aria-label="start page">
 		<StatusCheck />
 	</a>
-	<p>© 2024 - handmade with ♡ by @dxncrv</p>
+	<p>© 2025 handmade with ♡ by @dxncrv</p>
 </footer>
 <Timemachine/>
 <Circle />

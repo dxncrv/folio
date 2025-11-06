@@ -82,14 +82,14 @@ html {
 body {
 	display: flex;
 	flex-direction: column;
-	min-height: 100vh; /* Ensures body fills viewport */
+	min-height: 100vh;
 	align-items: center;
 	background: var(--body-bg) center center/cover no-repeat;
 }
 
 main {
 	width: 100%;
-	flex: 1 0 auto; /* Allows main content to grow and push footer down */
+	flex: 1 0 auto;
 }
 
 p {
@@ -106,12 +106,12 @@ h2 {
 
 footer {
 	width: 100%;
-	margin-top: auto; /* Pushes footer to bottom if content is short */
+	margin-top: auto;
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
 	align-items: center;
-	gap: 3rem;
+	gap: 2rem;
 	user-select: none;
 	text-align: center;
 	padding: 1rem;
