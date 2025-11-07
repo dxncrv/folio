@@ -1,4 +1,4 @@
-import { RedisStore } from '$lib/server/redis.server';
+import { RedisStore } from '$lib/server';
 
 export async function GET() {
 	try {

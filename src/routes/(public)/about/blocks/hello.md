@@ -1,4 +1,4 @@
-## I'm a UX Engineer,
+## UX Engineer,
 
 **I bridge design and code with psychology-backed precision.** From award-winning Unity simulations to modern web applications, I've spent 5+ years turning user research into pleasant digital experiences.
 

@@ -2,10 +2,23 @@
 	import { page } from '$app/state';
 	import { slugify } from '$lib/formatting';
 	import { Projects, CaseStudies } from '$lib/store.svelte';
-	import StudyHeader from './studyHeader.svelte';
-	import StudyBody from './studyBody.svelte';
+	import StudyHeader from './study-header.svelte';
+	import StudyBody from './study-body.svelte';
 	import type { PageData } from './$types';
 
+	/**
+	 * Catchall route pattern: [...]slug captures arbitrary path segments
+	 * and makes them available as a single slug string via page.params.slug
+	 * 
+	 * Context7: /llmstxt/svelte_dev_kit_llms_txt - Svelte 5 $derived
+	 * automatically recomputes slug when params change, enabling reactive routing
+	 * 
+	 * TODO Potential improvements:
+	 * - Use $derived.by() to memoize project/case study lookups if perf becomes an issue
+	 * - Implement proper 404 boundary component when project/caseStudy not found
+	 * - Consider adding route state machine for loading/error states
+	 * - Add analytics tracking for case study views
+	 */
 	let { data } = $props<{ data: PageData }>();
 
 	const slug = $derived(page.params.slug || '');

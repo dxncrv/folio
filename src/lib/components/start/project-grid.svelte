@@ -1,7 +1,7 @@
 <script lang="ts">
 import type { Project } from '$lib/types';
 import { slugify } from '$lib/formatting';
-import ProjectCard from './ProjectCard.svelte';
+import ProjectCard from './project-card.svelte';
 
 interface Props {
 	projects: Project[];

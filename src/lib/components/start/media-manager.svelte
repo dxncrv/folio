@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { MediaStore } from '$lib/store.svelte';
 	import type { Media } from '$lib/types';
-	import MediaItem from './MediaItem.svelte';
+	import MediaItem from './media-item.svelte';
 
 	let editingId = $state<string | null>(null);
 	let editForm = $state<Partial<Media>>({});

@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
-import { RedisStore } from '$lib/server/redis.server';
+import { RedisStore } from '$lib/server';
 
 /**
  * POST /start/login

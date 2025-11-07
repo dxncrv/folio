@@ -1,46 +1,38 @@
 import type { Handle } from '@sveltejs/kit';
-import { isIPWhitelisted } from '$lib/server/security.server';
+import { sequence } from '@sveltejs/kit/hooks';
 import { error } from '@sveltejs/kit';
+import { isIPWhitelisted } from '$lib/server';
 
-export const handle = (async ({ event, resolve }) => {
-	// IP Whitelisting for start page (compact)
-	if (event.url.pathname.startsWith('/start')) {
-		const h = event.request.headers;
+function getClientIP(event: Parameters<Handle>[0]['event']): string {
+    const h = event.request.headers;
+    return (
+        (h.get('x-forwarded-for')?.split(',')[0] || h.get('x-real-ip') || event.getClientAddress() || '')
+    ).trim();
+}
 
-		// prefer first entry of x-forwarded-for, then x-real-ip, then getClientAddress()
-		const clientIP = (
-			(h.get('x-forwarded-for') ?? '').split(',')[0].trim() ||
-			(h.get('x-real-ip') ?? '').trim() ||
-			(event.getClientAddress() ?? '')
-		).trim();
+const ipWhitelist: Handle = ({ event, resolve }) => {
+    if (event.url.pathname.startsWith('/start')) {
+        const clientIP = getClientIP(event);
+        if (!clientIP || !isIPWhitelisted(clientIP)) {
+            console.warn(`BLOCKED /start from ${clientIP}`);
+            throw error(403, 'Access denied: You are not authorized.');
+        }
+        console.debug(`ALLOWED /start from ${clientIP}`);
+    }
+    return resolve(event);
+};
 
-		if (!clientIP || !isIPWhitelisted(clientIP)) {
-			// Log blocked access and throw error
-			console.warn(`BLOCKED /start from ${clientIP}`);
-			throw error(403, 'Access denied: You are not authorized to access this resource.');
-		}
+const themeHandler: Handle = async ({ event, resolve }) => {
+    const newTheme = event.url.searchParams.get('theme');
+    const cookieTheme = event.cookies.get('theme');
+    const theme = newTheme || cookieTheme;
 
-		// Log allowed access
-		console.debug(`ALLOWED /start from ${clientIP}`);
-	}
+    if (theme) {
+        return resolve(event, {
+            transformPageChunk: ({ html }) => html.replace('data-theme=""', `data-theme="${theme}"`)
+        });
+    }
+    return resolve(event);
+};
 
-	// Theme handling
-	let theme: string | null = null;
-
-	const newTheme = event.url.searchParams.get('theme');
-	const cookieTheme = event.cookies.get('theme');
-
-	if (newTheme) {
-		theme = newTheme;
-	} else if (cookieTheme) {
-		theme = cookieTheme;
-	}
-
-	if (theme) {
-		return await resolve(event, {
-			transformPageChunk: ({ html }) => html.replace('data-theme=""', `data-theme="${theme}"`)
-		});
-	}
-
-	return await resolve(event);
-}) satisfies Handle;
+export const handle = sequence(ipWhitelist, themeHandler) satisfies Handle;

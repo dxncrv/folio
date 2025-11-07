@@ -1,13 +1,13 @@
 <!-- /sveltejs/svelte/svelte@5.37.0 - Composition-based chat component -->
 <script lang="ts">
 	import type { TalkMessage } from '$lib/types';
-	import AuthCard from './chat/AuthCard.svelte';
-	import ChatHeader from './chat/ChatHeader.svelte';
-	import InputBar from './chat/InputBar.svelte';
-	import MessageList from './chat/MessageList.svelte';
-	import SessionLoader from './chat/SessionLoader.svelte';
-	import { talkAuth } from './chat/talkAuth.svelte';
-	import { talkMessages } from './chat/talkMessages.svelte';
+	import AuthCard from './chat/auth-card.svelte';
+	import ChatHeader from './chat/chat-header.svelte';
+	import InputBar from './chat/input-bar.svelte';
+	import MessageList from './chat/message-list.svelte';
+	import SessionLoader from './chat/session-loader.svelte';
+	import { talkAuth } from './chat/talk-auth.svelte';
+	import { talkMessages } from './chat/talk-messages.svelte';
 
 	interface Props {
 		initialUsername?: string;

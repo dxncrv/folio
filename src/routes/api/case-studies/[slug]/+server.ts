@@ -1,5 +1,4 @@
-import { RedisStore } from '$lib/server/redis.server';
-import { withHandler, withAdmin } from '$lib/server/api-utils.server';
+import { RedisStore, withHandler, withAdmin } from '$lib/server';
 import type { CaseStudy } from '$lib/types';
 
 // GET: Fetch a specific case study by slug

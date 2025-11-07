@@ -1,6 +1,6 @@
 <!-- Header component with visibility control -->
 <script lang="ts">
-	import { talkAuth } from './talkAuth.svelte';
+	import { talkAuth } from './talk-auth.svelte';
 
 	interface Props {
 		visible: boolean;

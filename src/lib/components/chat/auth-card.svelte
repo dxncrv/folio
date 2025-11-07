@@ -1,7 +1,7 @@
 <!-- Focused sub-component for authentication UI -->
 <script lang="ts">
-	import { talkAuth } from './talkAuth.svelte';
-	import { talkMessages } from './talkMessages.svelte';
+	import { talkAuth } from './talk-auth.svelte';
+	import { talkMessages } from './talk-messages.svelte';
 
 	let inputValue = $state('');
 

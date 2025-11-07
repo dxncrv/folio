@@ -1,5 +1,5 @@
 import type { PageServerLoad } from './$types';
-import { RedisStore } from '$lib/server/redis.server';
+import { RedisStore } from '$lib/server';
 
 // Context7: /sveltejs/kit - Server load function for SSR with proper error handling
 export const load: PageServerLoad = async ({ setHeaders }) => {

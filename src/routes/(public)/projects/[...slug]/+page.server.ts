@@ -1,7 +1,22 @@
 import type { PageServerLoad } from './$types';
-import { RedisStore } from '$lib/server/redis.server';
+import { RedisStore } from '$lib/server';
 import { error } from '@sveltejs/kit';
 
+/**
+ * Catchall route pattern: src/routes/(public)/projects/[...slug]
+ * 
+ * Context7: /llmstxt/svelte_dev_kit_llms_txt - Rest parameter [...]
+ * captures the entire remaining path segment as a string (e.g., "my-project-title")
+ * and makes it available in params.slug. This enables flexible URL structures
+ * for nested content like case studies.
+ * 
+ * Potential improvements to this pattern:
+ * - Add parameterized filtering: allow ?facets=tag1,tag2 to pre-filter projects
+ * - Implement 404 error page component for better UX on missing studies
+ * - Add breadcrumb navigation for case study hierarchy
+ * - Consider URL rewrite middleware for legacy project URLs (SEO redirect)
+ * - Add prefetching of related case studies in +layout for faster nav
+ */
 export const load: PageServerLoad = async ({ params, setHeaders }) => {
 	try {
 		const [projects, caseStudies] = await Promise.all([

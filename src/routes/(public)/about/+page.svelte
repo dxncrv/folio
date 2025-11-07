@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Stack from '$lib/components/stack.svelte';
 	import Letter from './blocks/letter.svelte';
-	import Contact from '$lib/components/contact.svelte';
 	import Socials from '$lib/components/socials.svelte';
 	import type { PageData } from './$types';
 
@@ -10,9 +9,9 @@
 
 <svelte:head>
 	<title>About - Aashay Mehta</title>
-	<meta name="description" content="Interaction and Experience Designer, Full-stack Developer, and Human. Learn more about my background, skills, and approach to design and development." />
+	<meta name="description" content="User Interaction and Experience Designer, Full-stack Developer, and Human. Learn more about my background, skills, and approach to design and development." />
 	<meta property="og:title" content="About - Aashay Mehta" />
-	<meta property="og:description" content="Interaction and Experience Designer, Full-stack Developer, and Human" />
+	<meta property="og:description" content="User Interaction and Experience Designer, Full-stack Developer, and Human" />
 </svelte:head>
 
 <main>
@@ -20,12 +19,11 @@
 		<enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" />
 		<h1>Aashay Mehta</h1>
 		<p>
-			Interaction and Experience <b>Designer</b>;<br />
+			User Interaction and Experience <b>Designer</b>;<br />
 			Full-stack <b>Developer</b>;<br />
 			& <b>Human</b>.
 		</p>
 		<Stack/>
-		<Contact initialStatus="Ready" />
 		<Socials />
 	</div>
 	<Letter markdownContent={data.markdownContent} />

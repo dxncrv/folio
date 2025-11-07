@@ -1,5 +1,4 @@
-import { RedisStore } from '$lib/server/redis.server';
-import { withAdmin } from '$lib/server/api-utils.server';
+import { RedisStore, withAdmin } from '$lib/server';
 import type { Project } from '$lib/types';
 import type { RequestHandler } from './$types';
 

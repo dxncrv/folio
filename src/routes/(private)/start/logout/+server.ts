@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { RedisStore } from '$lib/server/redis.server';
+import { RedisStore } from '$lib/server';
 
 export const POST = async ({ cookies }) => {
   const session = cookies.get('admin_token');

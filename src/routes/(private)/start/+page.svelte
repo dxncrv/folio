@@ -4,11 +4,11 @@ import type { Project } from '$lib/types';
 import Typer from '$lib/_fx/Typer.svelte';
 import { slugify } from '$lib/formatting';
 import { CaseStudies } from '$lib/store.svelte';
-import SessionTimer from '$lib/components/start/SessionTimer.svelte';
+import SessionTimer from '$lib/components/start/session-timer.svelte';
 import Logout from '$lib/components/start/logout.svelte';
-import ProjectGrid from '$lib/components/start/ProjectGrid.svelte';
-import MediaManager from '$lib/components/start/MediaManager.svelte';
-import RedisInspector from '$lib/components/start/RedisInspector.svelte';
+import ProjectGrid from '$lib/components/start/project-grid.svelte';
+import MediaManager from '$lib/components/start/media-manager.svelte';
+import RedisInspector from '$lib/components/start/redis-inspector.svelte';
 
 let message = $state<string>('');
 let messageType = $state<'success' | 'error' | 'info' | ''>('');

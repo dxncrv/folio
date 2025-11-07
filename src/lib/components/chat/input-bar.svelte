@@ -1,7 +1,7 @@
 <!-- Input with character counter and auto-scroll -->
 <script lang="ts">
-	import { talkMessages } from './talkMessages.svelte';
-	import { talkAuth } from './talkAuth.svelte';
+	import { talkMessages } from './talk-messages.svelte';
+	import { talkAuth } from './talk-auth.svelte';
 
 	interface Props {
 		onMessageSent?: () => void;

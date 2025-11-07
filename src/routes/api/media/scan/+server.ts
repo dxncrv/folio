@@ -1,5 +1,4 @@
-import { scanMedia } from '$lib/server/media-scanner.server';
-import { withAdmin } from '$lib/server/api-utils.server';
+import { scanMedia, withAdmin } from '$lib/server';
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = withAdmin(async () => {

@@ -2,8 +2,8 @@
 <script lang="ts">
 	import { fly, fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
-	import { talkMessages, formatDate, formatTime, shouldGroup, shouldShowDate, shouldShowTime } from './talkMessages.svelte';
-	import { talkAuth } from './talkAuth.svelte';
+	import { talkMessages, formatDate, formatTime, shouldGroup, shouldShowDate, shouldShowTime } from './talk-messages.svelte';
+	import { talkAuth } from './talk-auth.svelte';
 	import { prefersReducedMotion } from './motion.svelte';
 
 	interface Props {

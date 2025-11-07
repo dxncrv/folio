@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Socials from '$lib/components/socials.svelte';
+	import Contact from '$lib/components/contact.svelte';
 </script>
 <svelte:head>
 	<title>Home - Aashay Mehta</title>
@@ -9,22 +10,23 @@
 </svelte:head>
 
 <main>
-	<h1>I solve questions</h1>
-	<p>by fragmenting, analyzing, hypothesizing, prototyping, value testing, and iterating 🔁</p>
+	<h1>Solutions Architect</h1>
+	<p>with 5+ years of experience in shipping real impact from conception to measurement</p>
 	<div class="links">
-		<a href="/about">who</a>
+		<a href="/about">About</a>
 		<p>•</p>
-		<a href="/projects">what</a>
+		<a href="/projects">Projects</a>
 	</div>
 	<Socials />
+	<Contact initialStatus="Ready" />
 </main>
 
 <style>
 	.links {
 		display: flex;
 		gap: 1rem;
-		margin-top: 2rem;
-		margin-bottom: 2rem;
+		margin-top: 1rem;
+		margin-bottom: 1rem;
 	}
 	.links a {
 		font-family: var(--font-ui);
@@ -49,6 +51,7 @@
 		flex-direction: column;
 		justify-content: center;
 		align-items: center;
+		gap: 1rem;
 	}
 
 	@media (max-width: 768px) {

@@ -1,7 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { withAdmin } from '$lib/server/api-utils.server';
-import { RedisInspector } from '$lib/server/redis.server';
+import { withAdmin, RedisInspector } from '$lib/server';
 
 // GET: Scan keys and get stats
 export const GET: RequestHandler = withAdmin(async ({ url }) => {
