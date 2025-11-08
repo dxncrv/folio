@@ -168,7 +168,11 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 			return handleSession({ action: 'session' }, cookies);
 		}
 
-		const messages = await getMessages();
+		const limit = Math.max(1, Math.min(1000, parseInt(url.searchParams.get('limit') || '200', 10)));
+		const sinceParam = url.searchParams.get('since');
+		const since = sinceParam ? Number(sinceParam) : undefined;
+
+		const messages = await getMessages({ limit, ...(since ? { since } : {}) });
 		return json(messages);
 	} catch (error) {
 		console.error('[talk] GET error:', error);

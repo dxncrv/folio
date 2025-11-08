@@ -59,7 +59,9 @@ export async function scanMedia(): Promise<Media[]> {
         
         // Remove orphaned media from Redis
         if (toRemove.length > 0) {
-            console.log(`Removing ${toRemove.length} orphaned media entries:`, toRemove.map(m => m.id));
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`Removing ${toRemove.length} orphaned media entries:`, toRemove.map(m => m.id));
+            }
             for (const media of toRemove) {
                 await RedisStore.deleteMedia(media.id);
             }

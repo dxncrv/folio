@@ -1,5 +1,10 @@
 // Pure API service functions - no state management
 // This layer provides reusable API calls that can be used by stores, server code, or components
+// TODO: Implement optimal caching strategy without overengineering:
+// - Cache frequently accessed data (projects, case studies) in Redis with TTL
+// - Use Vercel Edge Network for static data caching
+// - Consider client-side caching for user-specific data
+// - Avoid complex cache invalidation logic; prefer time-based expiration
 import { fetchJson } from './apiClient';
 import type { Project, CaseStudy, Media } from './types';
 

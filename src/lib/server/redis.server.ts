@@ -20,7 +20,9 @@ export const getRedisClient = () => {
             }
         });
         redisClient.on('error', (err) => console.error('Redis connection error:', err));
-        redisClient.on('connect', () => console.log('Connected to Redis'));
+        if (process.env.NODE_ENV === 'development') {
+            redisClient.on('connect', () => console.log('Connected to Redis'));
+        }
     }
     return redisClient;
 };

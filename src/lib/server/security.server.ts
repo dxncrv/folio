@@ -11,7 +11,9 @@ const BASE_WHITELISTED_IPS = [
  * Checks if the given IP is whitelisted
  */
 export const isIPWhitelisted = (ip: string): boolean => {
-    console.log(`Checking IP: ${ip} against whitelist:`, [...BASE_WHITELISTED_IPS, ...(ADMIN_IP ? [ADMIN_IP] : [])]);
+    if (process.env.NODE_ENV === 'development') {
+        console.log(`Checking IP: ${ip} against whitelist:`, [...BASE_WHITELISTED_IPS, ...(ADMIN_IP ? [ADMIN_IP] : [])]);
+    }
     return [...BASE_WHITELISTED_IPS, ...(ADMIN_IP ? [ADMIN_IP] : [])].includes(ip);
 };
 

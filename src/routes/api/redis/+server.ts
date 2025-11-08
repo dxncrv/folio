@@ -38,9 +38,17 @@ export const GET: RequestHandler = withAdmin(async ({ url }) => {
         case 'allKeys':
             // Get detailed info for all keys matching pattern
             const allKeys = await RedisInspector.scanKeys(pattern, limit);
-            const keysInfo = await Promise.all(
-                allKeys.map(k => RedisInspector.getKeyInfo(k))
-            );
+            const batchSize = 50;
+            const keysInfo: any[] = [];
+            
+            for (let i = 0; i < allKeys.length; i += batchSize) {
+                const batch = allKeys.slice(i, i + batchSize);
+                const batchResults = await Promise.all(
+                    batch.map(k => RedisInspector.getKeyInfo(k))
+                );
+                keysInfo.push(...batchResults);
+            }
+            
             return json({ 
                 keys: keysInfo.filter(k => k !== null),
                 count: keysInfo.length 

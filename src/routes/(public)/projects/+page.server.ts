@@ -1,7 +1,11 @@
 import type { PageServerLoad } from './$types';
 import { RedisStore } from '$lib/server';
 
-// Context7: /sveltejs/kit - Server load function for SSR with proper error handling
+// Context7: Server load function for SSR with proper error handling
+// TODO: Optimize SSR projects loading strategy:
+// - Implement pagination in API to load only visible projects (3 at a time)
+// - Cache full project list in Redis with short TTL for admin updates
+// - Consider static generation for public projects if rarely updated
 export const load: PageServerLoad = async ({ setHeaders }) => {
 	try {
 		const projects = await RedisStore.getProjects();

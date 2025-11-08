@@ -44,57 +44,71 @@ export const shouldShowDate = (messages: TalkMessage[], i: number) =>
 export const shouldShowTime = (messages: TalkMessage[], i: number) =>
 	i === messages.length - 1 || messages[i + 1].timestamp - messages[i].timestamp > 60000 || messages[i + 1].username !== messages[i].username;
 
-class TalkMessages {
-	// Context7: Use $state.raw for arrays when immutable updates preferred
-	messages = $state<TalkMessage[]>([]);
-	sending = $state(false);
-	editing = $state(false);
-	deleting = $state(false);
+// Context7: Factory function for creating reactive message store (recommended over class pattern in Svelte 5)
+function createTalkMessages() {
+	// Context7: Use $state.raw for immutable array updates
+	let messages = $state.raw<TalkMessage[]>([]);
+	let sending = $state(false);
+	let editing = $state(false);
+	let deleting = $state(false);
 	
 	// Context7: Track last read timestamp for unread count (initialize to 0 so initial messages aren't marked as unread)
-	lastReadTimestamp = $state(0);
-	currentUsername = $state(''); // Track current user to exclude own messages from unread count
+	let lastReadTimestamp = $state(0);
+	let currentUsername = $state(''); // Track current user to exclude own messages from unread count
 
-	// Derived state (Context7: prefer $derived for computed values)
-	get hasMessages() {
-		return this.messages.length > 0;
-	}
+	// Context7: Use $derived for computed values
+	const hasMessages = $derived(messages.length > 0);
 	
-	// Context7: Unread message count (Phase 2, Item 8) - only count messages from others
-	get unreadCount() {
-		return this.messages.filter(m => 
-			m.timestamp > this.lastReadTimestamp && 
-			m.username !== this.currentUsername
-		).length;
-	}
-	
-	// Context7: Mark messages as read
-	markAsRead() {
-		if (this.messages.length > 0) {
-			this.lastReadTimestamp = this.messages[this.messages.length - 1].timestamp;
+	// Context7: Unread message count - only count messages from others
+	const unreadCount = $derived.by(() =>
+		messages.filter(m => 
+			m.timestamp > lastReadTimestamp && 
+			m.username !== currentUsername
+		).length
+	);
+
+	const markAsRead = () => {
+		if (messages.length > 0) {
+			lastReadTimestamp = messages[messages.length - 1].timestamp;
 		}
-	}
+	};
 	
-	// Context7: Set current username for unread filtering
-	setUsername(username: string) {
-		this.currentUsername = username;
-	}
+	const setUsername = (username: string) => {
+		currentUsername = username;
+	};
 
-	async fetch() {
+	const fetchMessages = async () => {
 		try {
-			const res = await fetch('/api/talk');
+			// Fetch incrementally: request only the last N messages or those since last timestamp
+			const lastTs = messages.length ? messages[messages.length - 1].timestamp : undefined;
+			const params: string[] = [];
+			params.push('limit=200');
+			if (lastTs) params.push(`since=${lastTs}`);
+
+			const res = await globalThis.fetch(`/api/talk${params.length ? `?${params.join('&')}` : ''}`, {
+				credentials: 'include'
+			});
 			if (res.ok) {
-				this.messages = await res.json();
+				const serverMessages: TalkMessage[] = await res.json();
+				if (lastTs) {
+					// Append only new messages (server returns items after 'since')
+					const existing = new Set(messages.map(m => m.id));
+					const toAppend = serverMessages.filter(m => !existing.has(m.id));
+					if (toAppend.length) messages = [...messages, ...toAppend];
+				} else {
+					// Initial load: replace
+					messages = serverMessages;
+				}
 			}
 		} catch (e) {
 			console.error('Fetch error:', e);
 		}
-	}
+	};
 
-	async send(text: string, username: string): Promise<boolean> {
+	const send = async (text: string, username: string): Promise<boolean> => {
 		if (!text.trim()) return false;
 
-		// Context7: Optimistic UI (Phase 2, Item 6)
+		// Context7: Optimistic UI
 		const tempId = `temp-${Date.now()}`;
 		const tempTimestamp = Date.now();
 		const optimisticMsg: TalkMessage = {
@@ -105,11 +119,11 @@ class TalkMessages {
 			status: 'pending'
 		};
 		
-		this.messages = [...this.messages, optimisticMsg];
-		this.sending = true;
+		messages = [...messages, optimisticMsg];
+		sending = true;
 		
 		try {
-			const res = await fetch('/api/talk', {
+			const res = await globalThis.fetch('/api/talk', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -118,66 +132,48 @@ class TalkMessages {
 			
 			if (!res.ok) {
 				// Context7: Mark as failed, keep in UI for retry
-				this.messages = this.messages.map(m => 
+				messages = messages.map(m => 
 					m.id === tempId ? { ...m, status: 'failed' as const } : m
 				);
 				return false;
 			}
 			
-			// Context7: Show 'sent' status briefly
-			this.messages = this.messages.map(m => 
-				m.id === tempId ? { ...m, status: 'sent' as const } : m
+			// Get the server response to extract the actual message
+			const serverMessage: TalkMessage = await res.json();
+			
+			// Context7: Replace optimistic message with server response
+			messages = messages.map(m => 
+				m.id === tempId ? serverMessage : m
 			);
-			
-			// Context7: Wait to show checkmark, then smoothly replace with server data
-			await new Promise(resolve => setTimeout(resolve, 150));
-			
-			// Context7: Fetch and replace temp message with real one
-			const res2 = await fetch('/api/talk');
-			if (res2.ok) {
-				const serverMessages: TalkMessage[] = await res2.json();
-				
-				// Find the matching server message (same text, username, and close timestamp)
-				const matchingMsg = serverMessages.find(m => 
-					m.text === optimisticMsg.text && 
-					m.username === optimisticMsg.username &&
-					Math.abs(m.timestamp - tempTimestamp) < 5000 // Within 5 seconds
-				);
-				
-				if (matchingMsg) {
-					// Replace temp message with server message but keep the temp ID to prevent flash
-					this.messages = this.messages.map(m => 
-						m.id === tempId ? { ...matchingMsg, id: tempId } : m
-					);
-					// Then after a brief moment, update to use all server messages with real IDs
-					setTimeout(() => {
-						this.messages = serverMessages;
-					}, 100);
-				} else {
-					// Fallback: just use server messages
-					this.messages = serverMessages;
-				}
-			}
 			
 			return true;
 		} catch (e) {
 			console.error('Send error:', e);
 			// Context7: Mark as failed on exception
-			this.messages = this.messages.map(m => 
+			messages = messages.map(m => 
 				m.id === tempId ? { ...m, status: 'failed' as const } : m
 			);
 			return false;
 		} finally {
-			this.sending = false;
+			sending = false;
 		}
-	}
+	};
 
-	async edit(messageId: string, newText: string): Promise<boolean> {
+	const edit = async (messageId: string, newText: string): Promise<boolean> => {
 		if (!newText.trim()) return false;
 
-		this.editing = true;
+		// Context7: Store original for rollback on failure
+		const originalMessage = messages.find(m => m.id === messageId);
+		if (!originalMessage) return false;
+
+		// Context7: Optimistic update
+		messages = messages.map(m =>
+			m.id === messageId ? { ...m, text: newText.trim(), status: 'pending' as const } : m
+		);
+
+		editing = true;
 		try {
-			const res = await fetch('/api/talk', {
+			const res = await globalThis.fetch('/api/talk', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -186,22 +182,41 @@ class TalkMessages {
 			if (!res.ok) {
 				const error = await res.json();
 				console.error('Edit error:', error);
+				// Context7: Rollback on failure
+				messages = messages.map(m =>
+					m.id === messageId ? originalMessage : m
+				);
 				return false;
 			}
-			await this.fetch();
+			
+			// Context7: Get server response to sync state
+			const updatedMessage: TalkMessage = await res.json();
+			messages = messages.map(m =>
+				m.id === messageId ? updatedMessage : m
+			);
+			
 			return true;
 		} catch (e) {
 			console.error('Edit error:', e);
+			// Context7: Rollback on error
+			messages = messages.map(m =>
+				m.id === messageId ? originalMessage : m
+			);
 			return false;
 		} finally {
-			this.editing = false;
+			editing = false;
 		}
-	}
+	};
 
-	async delete(messageId: string): Promise<boolean> {
-		this.deleting = true;
+	const deleteMsg = async (messageId: string): Promise<boolean> => {
+		deleting = true;
+		
+		// Context7: Optimistic update - remove from UI immediately
+		const messageToDelete = messages.find(m => m.id === messageId);
+		messages = messages.filter(m => m.id !== messageId);
+		
 		try {
-			const res = await fetch('/api/talk', {
+			const res = await globalThis.fetch('/api/talk', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -210,22 +225,54 @@ class TalkMessages {
 			if (!res.ok) {
 				const error = await res.json();
 				console.error('Delete error:', error);
+				// Context7: Restore message on failure
+				if (messageToDelete) {
+					messages = [...messages, messageToDelete];
+				}
 				return false;
 			}
-			await this.fetch();
 			return true;
 		} catch (e) {
 			console.error('Delete error:', e);
+			// Context7: Restore message on error
+			if (messageToDelete) {
+				messages = [...messages, messageToDelete];
+			}
 			return false;
 		} finally {
-			this.deleting = false;
+			deleting = false;
 		}
-	}
+	};
 
-	clear() {
-		this.messages = [];
+	const clear = () => {
+		messages = [];
 		dateCache.clear();
-	}
+	};
+
+	// Context7: Return public API
+	return {
+		get messages() { return messages; },
+		set messages(value) { messages = value; },
+		get sending() { return sending; },
+		set sending(value) { sending = value; },
+		get editing() { return editing; },
+		set editing(value) { editing = value; },
+		get deleting() { return deleting; },
+		set deleting(value) { deleting = value; },
+		get lastReadTimestamp() { return lastReadTimestamp; },
+		set lastReadTimestamp(value) { lastReadTimestamp = value; },
+		get currentUsername() { return currentUsername; },
+		set currentUsername(value) { currentUsername = value; },
+		get hasMessages() { return hasMessages; },
+		get unreadCount() { return unreadCount; },
+		markAsRead,
+		setUsername,
+		fetch: fetchMessages,
+		send,
+		edit,
+		delete: deleteMsg,
+		clear
+	};
 }
 
-export const talkMessages = new TalkMessages();
+export const talkMessages = createTalkMessages();

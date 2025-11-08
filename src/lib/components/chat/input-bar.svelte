@@ -5,9 +5,10 @@
 
 	interface Props {
 		onMessageSent?: () => void;
+		onActivity?: () => void;
 	}
 
-	const { onMessageSent }: Props = $props();
+	const { onMessageSent, onActivity }: Props = $props();
 
 	let messageText = $state('');
 	let textarea: HTMLTextAreaElement | undefined = $state();
@@ -45,9 +46,11 @@
 			e.preventDefault();
 			send();
 		}
+		if (onActivity) onActivity();
 	}
 
 	function handleInput() {
+		if (onActivity) onActivity();
 		if (textarea) {
 			textarea.style.height = 'auto';
 			textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;

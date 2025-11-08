@@ -94,11 +94,24 @@ export const getAuthUser = (cookies: Cookies): string | null =>
 /**
  * Get all chat messages from Redis
  */
-export const getMessages = async (): Promise<TalkMessage[]> => {
+export type GetMessagesOpts = { limit?: number; since?: number };
+
+export const getMessages = async (opts: GetMessagesOpts = {}): Promise<TalkMessage[]> => {
 	try {
 		const client = getRedisClient();
-		const messages = await client.lrange(MESSAGES_KEY, 0, -1);
-		return messages.map((m) => JSON.parse(m) as TalkMessage);
+		const limit = typeof opts.limit === 'number' && opts.limit > 0 ? opts.limit : 200;
+
+		// Use negative range to fetch only the last `limit` items (efficient on Redis)
+		const raw = await client.lrange(MESSAGES_KEY, -limit, -1);
+		const parsed = raw.map((m) => JSON.parse(m) as TalkMessage);
+
+		// If caller asked for messages since a timestamp, filter in-memory (cheap for small slices)
+		if (typeof opts.since === 'number') {
+			const since = opts.since;
+			return parsed.filter((m) => m.timestamp > since);
+		}
+
+		return parsed;
 	} catch (error) {
 		console.error('[talk] Error fetching messages:', error);
 		return [];
@@ -125,7 +138,9 @@ export const addMessage = async (username: string, text: string): Promise<TalkMe
  */
 export const updateMessage = async (messageId: string, username: string, newText: string): Promise<TalkMessage> => {
 	const client = getRedisClient();
-	const messages = await getMessages();
+	// For edits we need to scan the full list to find the exact index
+	const raw = await client.lrange(MESSAGES_KEY, 0, -1);
+	const messages = raw.map(m => JSON.parse(m) as TalkMessage);
 	const index = messages.findIndex(m => m.id === messageId);
 	
 	if (index === -1) {
@@ -152,7 +167,9 @@ export const updateMessage = async (messageId: string, username: string, newText
  */
 export const deleteMessage = async (messageId: string, username: string): Promise<void> => {
 	const client = getRedisClient();
-	const messages = await getMessages();
+	// Deletion requires full-list scan to find the value to LREM
+	const raw = await client.lrange(MESSAGES_KEY, 0, -1);
+	const messages = raw.map(m => JSON.parse(m) as TalkMessage);
 	const message = messages.find(m => m.id === messageId);
 	
 	if (!message) {

@@ -72,7 +72,9 @@ export const POST = withHandler(async ({ request }) => {
 		// Store current status in Redis with TTL (5 minutes)
 		await redis.set(REDIS_STATUS_KEY, messageJson, 'EX', STATUS_TTL);
 
-		console.log(`[Webhook] Status update: ${payload.status}`);
+		if (process.env.NODE_ENV === 'development') {
+			console.log(`[Webhook] Status update: ${payload.status}`);
+		}
 
 		return json({
 			success: true,

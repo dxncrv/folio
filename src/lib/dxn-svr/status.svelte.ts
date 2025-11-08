@@ -20,11 +20,26 @@ class ServerStatusStore {
 	status = $state<'online' | 'offline' | 'connecting'>('connecting');
 	lastChecked = $state<string | null>(null);
 	error = $state<string | null>(null);
+	connectionStartTime = $state<number | null>(null);
 
 	private pollInterval: NodeJS.Timeout | null = null;
+	private connectionTimeout: NodeJS.Timeout | null = null;
 	private readonly POLL_INTERVAL = 30000; // 30 seconds
+	private readonly CONNECTION_TIMEOUT = 30000; // 30 seconds
 
 	async connect(): Promise<void> {
+		this.connectionStartTime = Date.now();
+		
+		// Set timeout to switch to offline if no successful connection
+		this.connectionTimeout = setTimeout(() => {
+			if (this.status === 'connecting') {
+				console.log('[Status] Connection timeout - switching to offline and stopping checks');
+				this.status = 'offline';
+				this.error = 'Connection timeout';
+				this.stopPolling(); // Stop polling after timeout
+			}
+		}, this.CONNECTION_TIMEOUT);
+		
 		// Fetch immediately
 		await this.fetchStatus();
 		
@@ -65,6 +80,22 @@ class ServerStatusStore {
 			// Tab visible - resume polling and fetch immediately
 			this.fetchStatus();
 			this.startPolling();
+			
+			// Reset connection timeout if still connecting or if we timed out previously
+			if (this.status === 'connecting' || (this.status === 'offline' && this.error === 'Connection timeout')) {
+				if (this.connectionTimeout) {
+					clearTimeout(this.connectionTimeout);
+				}
+				this.connectionStartTime = Date.now();
+				this.connectionTimeout = setTimeout(() => {
+					if (this.status === 'connecting') {
+						console.log('[Status] Connection timeout after visibility change - switching to offline and stopping checks');
+						this.status = 'offline';
+						this.error = 'Connection timeout';
+						this.stopPolling();
+					}
+				}, this.CONNECTION_TIMEOUT);
+			}
 		}
 	};
 
@@ -76,6 +107,12 @@ class ServerStatusStore {
 				this.status = data.status;
 				this.lastChecked = data.timestamp;
 				this.error = data.error || null;
+				
+				// Clear timeout if we get a definitive status
+				if (data.status !== 'connecting' && this.connectionTimeout) {
+					clearTimeout(this.connectionTimeout);
+					this.connectionTimeout = null;
+				}
 			} else {
 				throw new Error(`HTTP ${response.status}`);
 			}
@@ -88,6 +125,11 @@ class ServerStatusStore {
 
 	disconnect(): void {
 		this.stopPolling();
+		
+		if (this.connectionTimeout) {
+			clearTimeout(this.connectionTimeout);
+			this.connectionTimeout = null;
+		}
 		
 		// Remove visibility change listener
 		if (typeof document !== 'undefined') {

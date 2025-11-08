@@ -56,7 +56,7 @@ export const Facets = new FacetsClass();
 // Projects class to manage the projects state and pagination.
 class projectsClass {
 	// PUBLIC all, state for the projects, fetched from the API.
-	all = $state<Project[]>([]);
+	all = $state.raw<Project[]>([]);
 	// PUBLIC loading state
 	loading = $state<boolean>(false);
 	// PUBLIC error state
@@ -192,7 +192,7 @@ export let Projects = new projectsClass();
 
 // CaseStudies class to manage the case studies state and API interactions.
 class caseStudiesClass {
-	all = $state<CaseStudy[]>([]);
+	all = $state.raw<CaseStudy[]>([]);
 	loading = $state<boolean>(false);
 	error = $state<string | null>(null);
 
@@ -315,7 +315,7 @@ export const CaseStudies = new caseStudiesClass();
 
 // Media class to manage media files
 class mediaClass {
-	all = $state<Media[]>([]);
+	all = $state.raw<Media[]>([]);
 	loading = $state<boolean>(false);
 	error = $state<string | null>(null);
 
