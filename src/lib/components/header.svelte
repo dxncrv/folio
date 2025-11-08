@@ -44,8 +44,8 @@
 			</button>
 		{/each}
 		<form id="theme-toggler" method="post" use:enhance={updateTheme}>
-			{@render formBtn('/?/setTheme&theme=light','Toggle Light Theme','light','line-md:lightbulb-twotone')}
-			{@render formBtn('/?/setTheme&theme=dark','Toggle Dark Theme','dark','line-md:lightbulb-off-twotone')}
+			{@render formBtn('/?/setTheme&theme=light','Toggle Light Theme','light','line-md:moon-alt-to-sunny-outline-loop-transition')}
+			{@render formBtn('/?/setTheme&theme=dark','Toggle Dark Theme','dark','line-md:sunny-outline-to-moon-loop-transition')}
 		</form>
 	</menu>
 </nav>
