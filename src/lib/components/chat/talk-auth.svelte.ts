@@ -1,22 +1,20 @@
-// Shared reactive state pattern
-// Creates a singleton auth store following Svelte 5 runes best practices
+// Context7: Factory function pattern for auth store (Svelte 5 best practice)
+// Reactive authentication state management
 
-class TalkAuth {
-	authenticated = $state(false);
-	username = $state('');
-	loading = $state(false);
-	error = $state('');
-	checkingSession = $state(true);
-	sessionRestored = $state(false);
+// Context7: Export type for full TypeScript inference in consuming components
+export type TalkAuthStore = ReturnType<typeof createTalkAuth>;
 
-	// Derived computed values ($derived over $effect for simple derivations)
-	get isAuthenticated() {
-		return this.authenticated;
-	}
+function createTalkAuth() {
+	let authenticated = $state(false);
+	let username = $state('');
+	let loading = $state(false);
+	let error = $state('');
+	let checkingSession = $state(true);
+	let sessionRestored = $state(false);
 
-	async login(usernameInput: string) {
-		this.error = '';
-		this.loading = true;
+	const login = async (usernameInput: string): Promise<boolean> => {
+		error = '';
+		loading = true;
 		try {
 			const res = await fetch('/api/talk', {
 				method: 'POST',
@@ -26,21 +24,21 @@ class TalkAuth {
 			});
 			const data = await res.json();
 			if (!res.ok) {
-				this.error = data.error || 'Authentication failed';
+				error = data.error || 'Authentication failed';
 				return false;
 			}
-			this.authenticated = true;
-			this.username = data.username;
+			authenticated = true;
+			username = data.username;
 			return true;
 		} catch {
-			this.error = 'Connection error';
+			error = 'Connection error';
 			return false;
 		} finally {
-			this.loading = false;
+			loading = false;
 		}
-	}
+	};
 
-	async logout() {
+	const logout = async (): Promise<void> => {
 		try {
 			await fetch('/api/talk', {
 				method: 'POST',
@@ -51,12 +49,12 @@ class TalkAuth {
 		} catch (e) {
 			console.error('Logout request error:', e);
 		}
-		this.reset();
-	}
+		reset();
+	};
 
-	async restoreSession() {
-		if (this.sessionRestored) return;
-		this.sessionRestored = true;
+	const restoreSession = async (): Promise<boolean> => {
+		if (sessionRestored) return authenticated;
+		sessionRestored = true;
 
 		try {
 			const res = await fetch('/api/talk?action=session', {
@@ -66,26 +64,40 @@ class TalkAuth {
 			if (res.ok) {
 				const data = await res.json();
 				if (data.authenticated && data.username) {
-					this.authenticated = true;
-					this.username = data.username;
+					authenticated = true;
+					username = data.username;
 					return true;
 				}
 			}
 		} catch (e) {
 			console.error('Session restore error:', e);
 		} finally {
-			this.checkingSession = false;
+			checkingSession = false;
 		}
 		return false;
-	}
+	};
 
-	reset() {
-		this.authenticated = false;
-		this.username = '';
-		this.error = '';
-		this.sessionRestored = false;
-	}
+	const reset = (): void => {
+		authenticated = false;
+		username = '';
+		error = '';
+		sessionRestored = false;
+	};
+
+	// Context7: Expose public API via getters to preserve reactivity
+	// Wrap state in functions to maintain reactive links in consuming components
+	return {
+		get authenticated() { return authenticated; },
+		get username() { return username; },
+		get loading() { return loading; },
+		get error() { return error; },
+		get checkingSession() { return checkingSession; },
+		login,
+		logout,
+		restoreSession,
+		reset
+	} as const;
 }
 
-// Export singleton instance
-export const talkAuth = new TalkAuth();
+// Export singleton instance with inferred type
+export const talkAuth = createTalkAuth();

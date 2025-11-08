@@ -2,17 +2,24 @@
 <script lang="ts">
 	import { talkAuth } from './talk-auth.svelte';
 	import { talkMessages } from './talk-messages.svelte';
+	import { createFieldValidator, Rules } from './form-validator.svelte';
 
-	let inputValue = $state('');
+	// Context7: Form validator with derived state
+	const usernameField = createFieldValidator('', [
+		Rules.required('Name is required'),
+		Rules.username()
+	]);
 
-	// $derived for computed UI state
-	const canSubmit = $derived(!talkAuth.loading && inputValue.trim().length > 0);
+	// Context7: Derived UI state from validator
+	const canSubmit = $derived(!talkAuth.loading && usernameField.isValid);
 
 	async function handleSubmit() {
 		if (!canSubmit) return;
-		const success = await talkAuth.login(inputValue);
+		usernameField.touch();
+		
+		const success = await talkAuth.login(String(usernameField.value));
 		if (success) {
-			inputValue = '';
+			usernameField.reset();
 			await talkMessages.fetch();
 		}
 	}
@@ -29,14 +36,25 @@
 		<p class="subtitle">Enter your name to start chatting</p>
 		<input
 			type="text"
-			bind:value={inputValue}
+			bind:value={usernameField.value}
 			onkeydown={handleKeydown}
+			onblur={() => usernameField.touch()}
 			placeholder="Your name"
 			disabled={talkAuth.loading}
 			autocomplete="off"
+			aria-invalid={usernameField.isDirty && !usernameField.isValid}
 		/>
-		{#if talkAuth.error}
+		{#if usernameField.isDirty && usernameField.errors.length > 0}
 			<div class="error">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+					<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
+					<path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+				</svg>
+				{usernameField.errors[0]}
+			</div>
+		{/if}
+		{#if talkAuth.error}
+			<div class="error server-error">
 				<svg width="16" height="16" viewBox="0 0 24 24" fill="none">
 					<circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" />
 					<path d="M12 8V12M12 16H12.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
@@ -118,6 +136,10 @@
 		border-color: rgba(255, 255, 255, 0.3);
 	}
 
+	.auth-card input:focus-visible {
+		box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.3);
+	}
+
 	.auth-card input:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
@@ -134,6 +156,12 @@
 		border-radius: 12px;
 		color: #ff453a;
 		font-size: 0.85rem;
+	}
+
+	.error.server-error {
+		background: rgba(255, 99, 71, 0.15);
+		border-color: rgba(255, 99, 71, 0.3);
+		color: #ff6347;
 	}
 
 	.auth-card button {
@@ -159,5 +187,12 @@
 	.auth-card button:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
+	}
+
+	@media (max-width: 768px) {
+		.auth-card input,
+		.auth-card button {
+			font-size: 16px;
+		}
 	}
 </style>

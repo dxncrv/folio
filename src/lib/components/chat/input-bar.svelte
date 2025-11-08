@@ -5,13 +5,13 @@
 
 	interface Props {
 		onMessageSent?: () => void;
-		onActivity?: () => void;
 	}
 
-	const { onMessageSent, onActivity }: Props = $props();
+	const { onMessageSent }: Props = $props();
 
 	let messageText = $state('');
 	let textarea: HTMLTextAreaElement | undefined = $state();
+	let wasFocused = $state(false);
 
 	// Constants and derived state
 	const MAX_LENGTH = 250;
@@ -22,20 +22,24 @@
 
 	// $effect to focus textarea when needed
 	$effect(() => {
-		if (textarea) textarea.focus();
+		// Track if textarea was focused before send
 	});
 
 	async function send() {
 		if (!canSend) return;
 		const text = messageText.trim();
+		wasFocused = textarea === document.activeElement;
 		messageText = '';
-		if (textarea) textarea.style.height = 'auto';
 
 		// Context7: Pass username for optimistic UI
 		const success = await talkMessages.send(text, talkAuth.username);
 		if (success) {
 			// Notify parent to scroll after sending
 			if (onMessageSent) onMessageSent();
+			// Restore focus if it was previously focused
+			if (wasFocused && textarea) {
+				setTimeout(() => textarea?.focus(), 0);
+			}
 		} else {
 			messageText = text; // Restore on error
 		}
@@ -46,15 +50,11 @@
 			e.preventDefault();
 			send();
 		}
-		if (onActivity) onActivity();
 	}
 
-	function handleInput() {
-		if (onActivity) onActivity();
-		if (textarea) {
-			textarea.style.height = 'auto';
-			textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
-		}
+	// Export getters for parent component to access
+	export function getTextarea() {
+		return textarea;
 	}
 </script>
 
@@ -64,12 +64,12 @@
 			bind:this={textarea}
 			bind:value={messageText}
 			onkeydown={handleKeydown}
-			oninput={handleInput}
 			placeholder="Message"
 			disabled={talkMessages.sending}
 			maxlength={MAX_LENGTH}
 			rows="1"
 			aria-label="Message input"
+			style="field-sizing: content"
 		></textarea>
 	</div>
 	<!-- send-area stacks the optional char counter above the send button -->
@@ -150,6 +150,10 @@
 		outline: none;
 		background: rgba(255, 255, 255, 0.15);
 		border-color: rgba(255, 255, 255, 0.3);
+	}
+
+	textarea:focus-visible {
+		box-shadow: 0 0 0 2px rgba(10, 132, 255, 0.2);
 	}
 
 	textarea:disabled {
@@ -244,6 +248,14 @@
 	@media (max-width: 768px) {
 		.input-bar {
 			padding: 0.6rem 0.75rem 0.75rem;
+		}
+
+		textarea {
+			font-size: 16px;
+		}
+
+		button {
+			font-size: 16px;
 		}
 
 		@supports (padding: max(0px)) {

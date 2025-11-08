@@ -1,6 +1,5 @@
-<!-- /sveltejs/svelte/svelte@5.37.0 - Composition-based chat component -->
+<!-- Optimized composition-based chat component (Svelte 5) -->
 <script lang="ts">
-	import type { TalkMessage } from '$lib/types';
 	import AuthCard from './chat/auth-card.svelte';
 	import ChatHeader from './chat/chat-header.svelte';
 	import InputBar from './chat/input-bar.svelte';
@@ -9,126 +8,60 @@
 	import { talkAuth } from './chat/talk-auth.svelte';
 	import { talkMessages } from './chat/talk-messages.svelte';
 
-	interface Props {
-		initialUsername?: string;
-		initialMessages?: TalkMessage[];
-	}
-
-	// Use $props() rune to receive component props
-	const { initialUsername = '', initialMessages = [] }: Props = $props();
-
-	// Local UI state with $state rune
+	// Consolidated UI state
 	let headerVisible = $state(true);
 	let scrollTrigger = $state(0);
-	let pollInterval: NodeJS.Timeout | null = null;
-	let isLive = $state(false);
-	let liveTimer: NodeJS.Timeout | null = null;
-	let lastActivity = $state(Date.now());
+	let isLive = $state(true); // Start polling on page load
+	let inputBar = $state<any>(null); // Component reference
 
-	// Polling control functions
-	function startPolling() {
-		if (pollInterval) return; // Already polling
-		
-		console.log(`[Talk] 🔄 Polling started at ${new Date().toLocaleTimeString()}`);
-		pollInterval = setInterval(async () => {
-			await talkMessages.fetch();
-		}, 2000);
-	}
-
-	function stopPolling() {
-		if (pollInterval) {
-			console.log(`[Talk] ⏹️  Polling stopped at ${new Date().toLocaleTimeString()}`);
-			clearInterval(pollInterval);
-			pollInterval = null;
-		}
-	}
-
-	// Context7: Separate effect for live timer management (reactive to isLive changes)
-	$effect(() => {
-		if (!isLive) {
-			if (liveTimer) {
-				clearTimeout(liveTimer);
-				liveTimer = null;
-			}
-			return;
-		}
-
-		// Reset timer whenever activity occurs or isLive changes
-		lastActivity = Date.now();
-
-		// Use tick() to ensure state is updated before setting timeout
-		const timer = setTimeout(() => {
-			console.log(`[Talk] ⏱️  Live mode timed out after 5 minutes`);
-			isLive = false;
-			stopPolling();
-		}, 5 * 60 * 1000);
-
-		liveTimer = timer;
-
-		return () => {
-			if (timer) clearTimeout(timer);
-		};
-	});
-
-	function toggleLive() {
-		isLive = !isLive;
-	}
-
-	// Activity tracking
-	function onUserActivity() {
-		lastActivity = Date.now();
-		// Timer will automatically reset via the isLive effect
-	}
-
-	// Initialize on mount with $effect
-	$effect(() => {
-		// Restore session on component mount (runs only once)
-		(async () => {
-			const restored = await talkAuth.restoreSession();
-			if (restored) {
-				// Context7: Set username for unread filtering
-				talkMessages.setUsername(talkAuth.username);
-				await talkMessages.fetch();
-				// Context7: Mark initial messages as read
-				talkMessages.markAsRead();
-			}
-		})();
-		
-		// Cleanup on unmount
-		return () => {
-			stopPolling();
-			if (liveTimer) {
-				clearTimeout(liveTimer);
-			}
-		};
-	});
-
-	// Separate effect for polling management (reactive to isLive changes)
-	$effect(() => {
-		if (isLive) {
-			startPolling();
-		} else {
-			stopPolling();
-		}
-	});
-
-	// Derived state with $derived rune
+	// Derived computed values
 	const isLoading = $derived(talkAuth.checkingSession);
 	const isAuthenticated = $derived(talkAuth.authenticated);
 
-	// Handlers for child components
-	function handleHeaderVisibilityChange(visible: boolean) {
-		headerVisible = visible;
-	}
+	// Session restoration - one-time async initialization
+	$effect.pre(() => {
+		(async () => {
+			const restored = await talkAuth.restoreSession();
+			if (restored) {
+				talkMessages.setUsername(talkAuth.username);
+				await talkMessages.fetch();
+				talkMessages.markAsRead();
+			}
+		})();
+	});
 
+	// Polling lifecycle with implicit cleanup
+	$effect(() => {
+		if (!isLive) return;
+
+		console.log(`[Talk] 🔄 Polling started`);
+		const poll = setInterval(() => talkMessages.fetch(), 2000);
+
+		// Auto-disable live mode after 5 minutes
+		const timeout = setTimeout(() => {
+			console.log(`[Talk] ⏱️  Live mode timed out`);
+			isLive = false;
+		}, 5 * 60 * 1000);
+
+		return () => {
+			clearInterval(poll);
+			clearTimeout(timeout);
+			console.log(`[Talk] ⏹️  Polling stopped`);
+		};
+	});
+
+
+	// Handlers for child components (inline for minimal logic)
 	function handleMessageSent() {
-		// Trigger scroll after sending message
 		scrollTrigger = Date.now();
-		onUserActivity();
+		// Activity is tracked automatically in message sending
 	}
 
-	function handleToggleLive() {
-		toggleLive();
+	function restoreInputFocus() {
+		// Restore focus to input field after delete/action
+		if (inputBar?.getTextarea?.()) {
+			setTimeout(() => inputBar.getTextarea()?.focus(), 0);
+		}
 	}
 </script>
 
@@ -140,12 +73,20 @@
 		<AuthCard />
 	{:else}
 		<div class="chat-container">
-			<ChatHeader visible={headerVisible} isLive={isLive} onToggleLive={handleToggleLive} />
-			<MessageList 
-				onHeaderVisibilityChange={handleHeaderVisibilityChange}
-				scrollTrigger={scrollTrigger}
+			<ChatHeader 
+				visible={headerVisible} 
+				isLive={isLive} 
+				onToggleLive={() => isLive = !isLive}
 			/>
-			<InputBar onMessageSent={handleMessageSent} onActivity={onUserActivity} />
+			<MessageList 
+				onHeaderVisibilityChange={(visible) => headerVisible = visible}
+				scrollTrigger={scrollTrigger}
+				onActionComplete={restoreInputFocus}
+			/>
+			<InputBar 
+				bind:this={inputBar}
+				onMessageSent={handleMessageSent}
+			/>
 		</div>
 	{/if}
 </div>
@@ -156,7 +97,6 @@
 		display: flex;
 		width: 100%;
 		height: 100%;
-		background: var(--body-bg, #0a0a0a);
 		-webkit-user-select: none;
 		user-select: none;
 		-webkit-touch-callout: none;

@@ -1,6 +1,9 @@
 // Reactive message store with efficient operations
 import type { TalkMessage } from '$lib/types';
 
+// Context7: Export type for full TypeScript inference in consuming components
+export type TalkMessagesStore = ReturnType<typeof createTalkMessages>;
+
 // Use Map for O(1) lookups and efficient caching
 const dateCache = new Map<number, string>();
 // Cache date strings to avoid repeated Date object allocation
@@ -55,6 +58,9 @@ function createTalkMessages() {
 	// Context7: Track last read timestamp for unread count (initialize to 0 so initial messages aren't marked as unread)
 	let lastReadTimestamp = $state(0);
 	let currentUsername = $state(''); // Track current user to exclude own messages from unread count
+	
+	// Track deleted message IDs to prevent them from reappearing during polling
+	const deletedIds = new Set<string>();
 
 	// Context7: Use $derived for computed values
 	const hasMessages = $derived(messages.length > 0);
@@ -90,14 +96,23 @@ function createTalkMessages() {
 			});
 			if (res.ok) {
 				const serverMessages: TalkMessage[] = await res.json();
+				// Ensure all fetched messages have status: 'sent' (they're already confirmed on server)
+				const messagesToAdd = serverMessages.map(m => ({
+					...m,
+					status: 'sent' as const
+				}));
+				
 				if (lastTs) {
 					// Append only new messages (server returns items after 'since')
+					// Filter out any messages that have been deleted
 					const existing = new Set(messages.map(m => m.id));
-					const toAppend = serverMessages.filter(m => !existing.has(m.id));
+					const toAppend = messagesToAdd.filter(m => 
+						!existing.has(m.id) && !deletedIds.has(m.id)
+					);
 					if (toAppend.length) messages = [...messages, ...toAppend];
 				} else {
-					// Initial load: replace
-					messages = serverMessages;
+					// Initial load: replace - still filter out deleted IDs (shouldn't happen, but be safe)
+					messages = messagesToAdd.filter(m => !deletedIds.has(m.id));
 				}
 			}
 		} catch (e) {
@@ -109,7 +124,7 @@ function createTalkMessages() {
 		if (!text.trim()) return false;
 
 		// Context7: Optimistic UI
-		const tempId = `temp-${Date.now()}`;
+		const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 		const tempTimestamp = Date.now();
 		const optimisticMsg: TalkMessage = {
 			id: tempId,
@@ -123,12 +138,18 @@ function createTalkMessages() {
 		sending = true;
 		
 		try {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+			
 			const res = await globalThis.fetch('/api/talk', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ action: 'message', text: text.trim() })
+				body: JSON.stringify({ action: 'message', text: text.trim() }),
+				signal: controller.signal
 			});
+			
+			clearTimeout(timeoutId);
 			
 			if (!res.ok) {
 				// Context7: Mark as failed, keep in UI for retry
@@ -141,15 +162,15 @@ function createTalkMessages() {
 			// Get the server response to extract the actual message
 			const serverMessage: TalkMessage = await res.json();
 			
-			// Context7: Replace optimistic message with server response
+			// Context7: Replace optimistic message with server response, mark as sent
 			messages = messages.map(m => 
-				m.id === tempId ? serverMessage : m
+				m.id === tempId ? { ...serverMessage, status: 'sent' as const } : m
 			);
 			
 			return true;
 		} catch (e) {
 			console.error('Send error:', e);
-			// Context7: Mark as failed on exception
+			// Context7: Mark as failed on exception (timeout, network error, etc)
 			messages = messages.map(m => 
 				m.id === tempId ? { ...m, status: 'failed' as const } : m
 			);
@@ -189,10 +210,10 @@ function createTalkMessages() {
 				return false;
 			}
 			
-			// Context7: Get server response to sync state
+			// Context7: Get server response to sync state, mark as sent
 			const updatedMessage: TalkMessage = await res.json();
 			messages = messages.map(m =>
-				m.id === messageId ? updatedMessage : m
+				m.id === messageId ? { ...updatedMessage, status: 'sent' as const } : m
 			);
 			
 			return true;
@@ -215,6 +236,9 @@ function createTalkMessages() {
 		const messageToDelete = messages.find(m => m.id === messageId);
 		messages = messages.filter(m => m.id !== messageId);
 		
+		// Track deletion to prevent re-adding during polling
+		deletedIds.add(messageId);
+		
 		try {
 			const res = await globalThis.fetch('/api/talk', {
 				method: 'POST',
@@ -225,18 +249,20 @@ function createTalkMessages() {
 			if (!res.ok) {
 				const error = await res.json();
 				console.error('Delete error:', error);
-				// Context7: Restore message on failure
+				// Context7: Restore message on failure and remove from deleted tracking
 				if (messageToDelete) {
 					messages = [...messages, messageToDelete];
+					deletedIds.delete(messageId);
 				}
 				return false;
 			}
 			return true;
 		} catch (e) {
 			console.error('Delete error:', e);
-			// Context7: Restore message on error
+			// Context7: Restore message on error and remove from deleted tracking
 			if (messageToDelete) {
 				messages = [...messages, messageToDelete];
+				deletedIds.delete(messageId);
 			}
 			return false;
 		} finally {
@@ -249,20 +275,24 @@ function createTalkMessages() {
 		dateCache.clear();
 	};
 
-	// Context7: Return public API
+	const retry = async (failedMessageId: string, username: string): Promise<boolean> => {
+		const failedMsg = messages.find(m => m.id === failedMessageId);
+		if (!failedMsg || failedMsg.status !== 'failed' || !failedMsg.text) return false;
+		
+		// Remove the failed message from the UI
+		messages = messages.filter(m => m.id !== failedMessageId);
+		
+		// Resend the message
+		return await send(failedMsg.text, username);
+	};
+
+	// Context7: Return public API - wrap state in getters to preserve reactivity
+	// This prevents "state_referenced_locally" warnings when accessing from components
 	return {
 		get messages() { return messages; },
-		set messages(value) { messages = value; },
 		get sending() { return sending; },
-		set sending(value) { sending = value; },
 		get editing() { return editing; },
-		set editing(value) { editing = value; },
 		get deleting() { return deleting; },
-		set deleting(value) { deleting = value; },
-		get lastReadTimestamp() { return lastReadTimestamp; },
-		set lastReadTimestamp(value) { lastReadTimestamp = value; },
-		get currentUsername() { return currentUsername; },
-		set currentUsername(value) { currentUsername = value; },
 		get hasMessages() { return hasMessages; },
 		get unreadCount() { return unreadCount; },
 		markAsRead,
@@ -271,8 +301,9 @@ function createTalkMessages() {
 		send,
 		edit,
 		delete: deleteMsg,
+		retry,
 		clear
-	};
+	} as const;
 }
 
 export const talkMessages = createTalkMessages();

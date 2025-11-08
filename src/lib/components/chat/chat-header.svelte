@@ -89,6 +89,7 @@
 	.live-toggle {
 		display: flex;
 		align-items: center;
+		padding: 0.35rem 0.5rem;
 	}
 
 	.toggle-label {
@@ -100,41 +101,42 @@
 	}
 
 	.toggle-text {
-		font: 0.8rem var(--font-read);
-		color: rgba(255, 255, 255, 0.7);
+		font: 0.75rem var(--font-read);
+		color: rgba(255, 255, 255, 0.6);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		font-weight: 500;
 	}
 
 	.toggle-switch {
 		position: relative;
-		width: 40px;
-		height: 22px;
+		width: 36px;
+		height: 20px !important;
 		background: rgba(255, 255, 255, 0.1);
-		border-radius: 11px;
-		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 10px;
+		border: none;
 		cursor: pointer;
 		transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 		padding: 0;
 		display: flex;
 		align-items: center;
+		flex-shrink: 0;
 	}
 
 	.toggle-switch:hover {
 		background: rgba(255, 255, 255, 0.15);
-		border-color: rgba(255, 255, 255, 0.25);
 	}
 
 	.toggle-switch.active {
-		background: rgba(52, 199, 89, 0.25);
-		border-color: rgba(52, 199, 89, 0.4);
+		background: rgba(52, 199, 89, 0.2);
 	}
 
 	.toggle-switch.active:hover {
-		background: rgba(52, 199, 89, 0.35);
-		border-color: rgba(52, 199, 89, 0.6);
+		background: rgba(52, 199, 89, 0.3);
 	}
 
 	.toggle-switch.active .toggle-slider {
-		transform: translateX(18px);
+		transform: translateX(16px);
 		background: #34c759;
 		box-shadow: 0 2px 8px rgba(52, 199, 89, 0.3);
 	}
@@ -143,17 +145,17 @@
 		position: absolute;
 		top: 2px;
 		left: 2px;
-		width: 18px;
-		height: 18px;
+		width: 16px;
+		height: 16px;
 		background: rgba(255, 255, 255, 0.6);
 		border-radius: 50%;
 		transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.25s, box-shadow 0.25s;
-		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 	}
 
 	.toggle-switch:hover .toggle-slider {
 		background: rgba(255, 255, 255, 0.8);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 	}
 
 	.user-info span {

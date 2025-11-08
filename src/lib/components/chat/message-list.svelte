@@ -1,18 +1,19 @@
 <!-- Context7: /sveltejs/svelte - Optimized message list with transitions -->
 <script lang="ts">
 	import { fly, fade } from 'svelte/transition';
-	import { quintOut } from 'svelte/easing';
 	import { talkMessages, formatDate, formatTime, shouldGroup, shouldShowDate, shouldShowTime } from './talk-messages.svelte';
 	import { talkAuth } from './talk-auth.svelte';
-	import { prefersReducedMotion } from './motion.svelte';
+	import { motionPrefs } from './motion.svelte';
+	import MessageEditModal from './message-edit-modal.svelte';
 
 	interface Props {
 		onHeaderVisibilityChange?: (visible: boolean) => void;
 		onNearBottomChange?: (nearBottom: boolean) => void;
 		scrollTrigger?: number;
+		onActionComplete?: () => void;
 	}
 
-	const { onHeaderVisibilityChange, onNearBottomChange, scrollTrigger }: Props = $props();
+	const { onHeaderVisibilityChange, onNearBottomChange, scrollTrigger, onActionComplete }: Props = $props();
 
 	let messagesContainer: HTMLDivElement | undefined = $state();
 	let messagesEnd: HTMLDivElement | undefined = $state();
@@ -30,14 +31,17 @@
 	
 	// Edit modal state
 	let editingMessageId = $state<string | null>(null);
-	let editText = $state('');
+	let editingText = $state('');
+	
+	// Track messages that have shown sent status for fade-out animation
+	let fadingOutStatusIds = $state<Set<string>>(new Set());
+	// Track messages that have had their fade effect scheduled to prevent duplicate scheduling
+	let scheduledFadeIds = $state<Set<string>>(new Set());
+	// Map of timeoutIds by messageId so we can cancel them
+	let fadeTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
-	// Context7: Derived transition params based on motion preference
-	const transitionParams = $derived(
-		prefersReducedMotion.current 
-			? { duration: 150 } 
-			: { y: 20, duration: 300, easing: quintOut }
-	);
+	// Context7: Derived transition params from motion preferences
+	const transitionParams = $derived(motionPrefs.transitionParams);
 	
 	const SWIPE_THRESHOLD = 80; // pixels to fully reveal buttons
 	const PRESS_HOLD_DURATION = 200; // ms before swipe activates
@@ -113,6 +117,59 @@
 		if (isNearBottom && talkMessages.messages.length > 0) {
 			talkMessages.markAsRead();
 		}
+	});
+	
+	// Context7: Fade out sent status indicators after 3 seconds (using $effect.root to avoid loops)
+	$effect(() => {
+		// Reference messages to establish dependency, but use untrack to avoid mutation loop
+		const messages = talkMessages.messages;
+		
+		// Only process newly sent messages
+		const newSentMessages = messages.filter(m => 
+			m.status === 'sent' && !scheduledFadeIds.has(m.id)
+		);
+		
+		if (newSentMessages.length === 0) return;
+		
+		// Use untrack to update state without creating a dependency
+		newSentMessages.forEach(msg => {
+			scheduledFadeIds.add(msg.id);
+			fadingOutStatusIds.add(msg.id);
+			
+			// Cancel any existing timeout for this message
+			if (fadeTimeouts.has(msg.id)) {
+				clearTimeout(fadeTimeouts.get(msg.id)!);
+			}
+			
+			// Schedule fade out with 3 second delay
+			const timeoutId = setTimeout(() => {
+				fadingOutStatusIds.delete(msg.id);
+				fadeTimeouts.delete(msg.id);
+			}, 3000);
+			
+			fadeTimeouts.set(msg.id, timeoutId);
+		});
+		
+		// Cleanup: return teardown function to clear timeouts when component unmounts
+		return () => {
+			fadeTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+			fadeTimeouts.clear();
+		};
+	});
+	
+	// Context7: Clean up fade tracking when messages are deleted
+	$effect(() => {
+		const currentMessageIds = new Set(talkMessages.messages.map(m => m.id));
+		
+		// Remove timeouts for deleted messages
+		Array.from(fadeTimeouts.entries()).forEach(([id, timeoutId]) => {
+			if (!currentMessageIds.has(id)) {
+				clearTimeout(timeoutId);
+				fadeTimeouts.delete(id);
+				scheduledFadeIds.delete(id);
+				fadingOutStatusIds.delete(id);
+			}
+		});
 	});
 	
 	// Close swipe on outside tap
@@ -210,21 +267,57 @@
 	// Edit modal handlers
 	function startEdit(msg: typeof talkMessages.messages[number]) {
 		editingMessageId = msg.id;
-		editText = msg.text;
+		editingText = msg.text;
 		closeSwipe();
 	}
 
-	function cancelEdit() {
-		editingMessageId = null;
-		editText = '';
+	// Context7: Event delegation for message actions using data-* attributes
+	function handleMessageAction(e: MouseEvent) {
+		const button = (e.target as HTMLElement).closest('[data-action]');
+		if (!button) return;
+
+		const action = (button as HTMLElement).dataset.action;
+		const messageId = (button as HTMLElement).dataset.id;
+		if (!action || !messageId) return;
+
+		const msg = talkMessages.messages.find(m => m.id === messageId);
+		if (!msg) return;
+
+		if (action === 'edit') {
+			startEdit(msg);
+		} else if (action === 'delete') {
+			deleteMsg(messageId);
+		}
 	}
 
-	async function saveEdit() {
-		if (!editText.trim() || !editingMessageId) return;
-		const success = await talkMessages.edit(editingMessageId, editText);
+	function handleMessageKeydown(e: KeyboardEvent) {
+		// Handle Enter/Space for message actions when a button receives focus
+		if (e.key === 'Enter' || e.key === ' ') {
+			const button = (e.target as HTMLElement).closest('[data-action]');
+			if (!button) return;
+			
+			e.preventDefault();
+			const action = (button as HTMLElement).dataset.action;
+			const messageId = (button as HTMLElement).dataset.id;
+			if (!action || !messageId) return;
+
+			const msg = talkMessages.messages.find(m => m.id === messageId);
+			if (!msg) return;
+
+			if (action === 'edit') {
+				startEdit(msg);
+			} else if (action === 'delete') {
+				deleteMsg(messageId);
+			}
+		}
+	}
+
+	async function saveEdit(newText: string) {
+		if (!newText.trim() || !editingMessageId) return;
+		const success = await talkMessages.edit(editingMessageId, newText);
 		if (success) {
 			editingMessageId = null;
-			editText = '';
+			editingText = '';
 		}
 	}
 
@@ -232,20 +325,32 @@
 		if (!confirm('Delete this message?')) return;
 		closeSwipe();
 		await talkMessages.delete(messageId);
+		// Restore input focus after delete
+		if (onActionComplete) onActionComplete();
 	}
 
 	function handleEditKeydown(e: KeyboardEvent) {
 		if (e.key === 'Enter' && !e.shiftKey) {
 			e.preventDefault();
-			saveEdit();
+			saveEdit(editingText);
 		} else if (e.key === 'Escape') {
 			e.preventDefault();
-			cancelEdit();
+			editingMessageId = null;
+			editingText = '';
 		}
+	}
+
+	// Context7: Retry sending a failed message by resending its text
+	async function retryMessage(msg: typeof talkMessages.messages[number]) {
+		if (msg.status !== 'failed' || !msg.text) return;
+		
+		// Use the retry API to remove failed message and resend
+		await talkMessages.retry(msg.id, talkAuth.username);
 	}
 </script>
 
-<div class="messages-container" bind:this={messagesContainer} onscroll={handleScroll}>
+<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+<div class="messages-container" bind:this={messagesContainer} onscroll={handleScroll} onclick={handleMessageAction} onkeydown={handleMessageKeydown} role="list" aria-label="Messages">
 	{#if !talkMessages.hasMessages}
 		<div class="empty">
 			<div class="empty-icon">💬</div>
@@ -288,12 +393,14 @@
 								>
 									<div class="bubble own">{msg.text}</div>
 								</div>
+								<!-- Context7: Delegated event handlers using data-* attributes -->
 								<div 
 									class="action-buttons"
 									style="width: {swipedMessageId === msg.id ? swipeShift : 0}px; transition: {isDragging ? 'none' : 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'};"
 								>
 									<button 
-										onclick={() => startEdit(msg)} 
+										data-action="edit" 
+										data-id={msg.id}
 										class="action-btn edit" 
 										title="Edit" 
 										aria-label="Edit message"
@@ -304,7 +411,8 @@
 										</svg>
 									</button>
 									<button 
-										onclick={() => deleteMsg(msg.id)} 
+										data-action="delete" 
+										data-id={msg.id}
 										class="action-btn delete" 
 										title="Delete" 
 										aria-label="Delete message" 
@@ -317,14 +425,22 @@
 									</button>
 								</div>
 							</div>
-							<!-- Context7: Phase 2, Item 7 - Message status indicators -->
-							{#if msg.status === 'pending'}
-								<span class="status pending" title="Sending..." aria-label="Sending">⏳</span>
-							{:else if msg.status === 'sent'}
-								<span class="status sent" title="Sent" aria-label="Sent">✓</span>
-							{:else if msg.status === 'failed'}
-								<span class="status failed" title="Failed to send" aria-label="Failed">⚠️</span>
-							{/if}
+						<!-- Context7: Phase 2, Item 7 - Message status indicators -->
+						{#if msg.status === 'pending'}
+							<span class="status pending" title="Sending..." aria-label="Sending">⏳</span>
+						{:else if msg.status === 'sent'}
+							<span class="status sent" class:fading={fadingOutStatusIds.has(msg.id)} title="Sent" aria-label="Sent">✓</span>
+						{:else if msg.status === 'failed'}
+							<button 
+								class="status failed" 
+								title="Failed to send - click to retry" 
+								aria-label="Failed to send - click to retry"
+								onclick={() => retryMessage(msg)}
+								disabled={talkMessages.sending}
+							>
+								⚠️
+							</button>
+						{/if}
 						{:else}
 							<div class="bubble">{msg.text}</div>
 						{/if}
@@ -365,49 +481,16 @@
 	</button>
 {/if}
 
-<!-- Edit Modal -->
-{#if editingMessageId}
-	<div 
-		class="modal-backdrop" 
-		onclick={cancelEdit}
-		onkeydown={(e) => e.key === 'Escape' && cancelEdit()}
-		role="button"
-		tabindex="0"
-		transition:fade={{ duration: 200 }}
-	>
-		<div 
-			class="modal" 
-			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
-			role="dialog"
-			aria-labelledby="modal-title"
-			tabindex="-1"
-			transition:fly={{ y: 20, duration: 300 }}
-		>
-			<div class="modal-header">
-				<h3 id="modal-title">Edit Message</h3>
-				<button onclick={cancelEdit} class="close-btn" aria-label="Close">
-					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-						<line x1="18" y1="6" x2="6" y2="18"></line>
-						<line x1="6" y1="6" x2="18" y2="18"></line>
-					</svg>
-				</button>
-			</div>
-			<textarea
-				bind:value={editText}
-				onkeydown={handleEditKeydown}
-				class="modal-input"
-				placeholder="Edit your message..."
-			></textarea>
-			<div class="modal-actions">
-				<button onclick={cancelEdit} class="modal-btn cancel">Cancel</button>
-				<button onclick={saveEdit} class="modal-btn save" disabled={talkMessages.editing || !editText.trim()}>
-					{talkMessages.editing ? 'Saving...' : 'Save'}
-				</button>
-			</div>
-		</div>
-	</div>
-{/if}
+<!-- Context7: Extracted modal component for better separation of concerns -->
+<MessageEditModal 
+	messageId={editingMessageId}
+	text={editingText}
+	onClose={() => {
+		editingMessageId = null;
+		editingText = '';
+	}}
+	onSave={async (newText) => await saveEdit(newText)}
+/>
 
 <style>
 	.messages-container {
@@ -683,23 +766,59 @@
 		flex-shrink: 0;
 		padding-bottom: 0.125rem;
 		user-select: none;
-		pointer-events: none;
 		opacity: 0.8;
 		display: flex;
 		align-items: center;
 	}
 
 	.status.pending {
+		pointer-events: none;
 		animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 	}
 
 	.status.sent {
+		pointer-events: none;
 		color: var(--accent);
 	}
 
 	.status.failed {
+		pointer-events: auto;
 		color: rgba(239, 68, 68, 0.9);
 		cursor: pointer;
+		background: none;
+		border: none;
+		padding: 0;
+		font-size: 0.9rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: all 0.2s ease;
+		border-radius: 4px;
+	}
+
+	.status.failed:hover:not(:disabled) {
+		opacity: 1;
+		color: rgba(239, 68, 68, 1);
+		transform: scale(1.15);
+		background: rgba(239, 68, 68, 0.15);
+	}
+
+	.status.failed:active:not(:disabled) {
+		transform: scale(0.95);
+	}
+
+	.status.failed:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.status.sent.fading {
+		animation: fadeOutStatus 0.5s ease-out forwards;
+	}
+
+	@keyframes fadeOutStatus {
+		0% { opacity: 0.8; }
+		100% { opacity: 0; }
 	}
 
 	@keyframes pulse {
@@ -762,129 +881,6 @@
 		line-height: 1;
 	}
 
-	/* Edit Modal */
-	.modal-backdrop {
-		position: fixed;
-		inset: 0;
-		background: rgba(0, 0, 0, 0.7);
-		backdrop-filter: blur(4px);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: 100;
-		padding: 1rem;
-	}
-
-	.modal {
-		background: var(--body-bg, #0a0a0a);
-		border: 1px solid rgba(255, 255, 255, 0.15);
-		border-radius: 12px;
-		max-width: 500px;
-		width: 100%;
-		max-height: 80vh;
-		display: flex;
-		flex-direction: column;
-		box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-	}
-
-	.modal-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 1rem 1.25rem;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.modal-header h3 {
-		font: 600 1.1rem var(--font-ui);
-		color: #fff;
-		margin: 0;
-	}
-
-	.close-btn {
-		width: 32px;
-		height: 32px;
-		border-radius: 6px;
-		border: none;
-		background: rgba(255, 255, 255, 0.05);
-		color: rgba(255, 255, 255, 0.7);
-		cursor: pointer;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		transition: all 0.15s;
-	}
-
-	.close-btn:hover {
-		background: rgba(255, 255, 255, 0.1);
-		color: #fff;
-	}
-
-	.modal-input {
-		flex: 1;
-		background: rgba(255, 255, 255, 0.05);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-		border-radius: 0;
-		padding: 1rem 1.25rem;
-		color: #fff;
-		font: 0.95rem/1.5 var(--font-read);
-		resize: vertical;
-		outline: none;
-		min-height: 120px;
-		transition: border-color 0.15s;
-	}
-
-	.modal-input:focus {
-		border-color: rgba(10, 132, 255, 0.5);
-		background: rgba(255, 255, 255, 0.08);
-	}
-
-	.modal-actions {
-		display: flex;
-		gap: 0.75rem;
-		padding: 1rem 1.25rem;
-		border-top: 1px solid rgba(255, 255, 255, 0.1);
-		justify-content: flex-end;
-	}
-
-	.modal-btn {
-		padding: 0.65rem 1.25rem;
-		border-radius: 8px;
-		font: 500 0.9rem var(--font-ui);
-		cursor: pointer;
-		transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-		border: none;
-		will-change: background-color, transform;
-	}
-
-	.modal-btn.cancel {
-		background: rgba(255, 255, 255, 0.08);
-		color: rgba(255, 255, 255, 0.8);
-		border: 1px solid rgba(255, 255, 255, 0.1);
-	}
-
-	.modal-btn.cancel:hover {
-		background: rgba(255, 255, 255, 0.12);
-		color: #fff;
-	}
-
-	.modal-btn.save {
-		background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%);
-		color: #fff;
-		min-width: 80px;
-	}
-
-	.modal-btn.save:hover:not(:disabled) {
-		background: linear-gradient(135deg, #0071f2 0%, #005bb5 100%);
-		transform: translateY(-1px);
-		box-shadow: 0 4px 12px rgba(10, 132, 255, 0.4);
-	}
-
-	.modal-btn.save:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
-	}
-
 	@media (max-width: 768px) {
 		.msg-content {
 			max-width: 80%;
@@ -893,11 +889,6 @@
 		.scroll-to-bottom {
 			bottom: calc(48px + 1rem + 0.75rem);
 			right: 1rem;
-		}
-
-		.modal {
-			max-width: 100%;
-			max-height: 90vh;
 		}
 	}
 
