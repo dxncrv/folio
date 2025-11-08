@@ -8,7 +8,6 @@
     main {
         display: flex;
         flex-direction: column;
-        margin: 2rem 2rem 2rem 2rem;
         height: calc(100vh - 4rem);
         width: calc(100% - 4rem);
         background: black;
@@ -25,9 +24,8 @@
     }
     @media (max-width: 768px) {
         main {
-            margin: 0.65rem 1rem 0.65rem 1rem;
             height: calc(100vh - 1.25rem);
-            width: calc(100% - 1.25rem);
+            width: calc(100%);
             border-radius: 0.5rem;
         }
     }
