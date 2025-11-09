@@ -19,8 +19,8 @@ Thumbs.db
 !.env.example
 !.env.test
 
-# Agent Instructions
-AGENT_INSTRUCTIONS.md
+# Copilot Instructions
+copilot-Instructions.md
 
 # Vite
 vite.config.js.timestamp-*

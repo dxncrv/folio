@@ -154,12 +154,6 @@ Stores manage reactive state and delegate to services:
 ```typescript
 import { Projects } from '$lib/store.svelte';
 
-// In component
-onMount(() => {
-  Projects.fetchProjects(); // Calls ProjectService internally
-});
-```
-
 ## Content Management
 
 ### Admin Interface
@@ -169,13 +163,6 @@ Access the admin dashboard at `/start` (requires auth):
 - Manage projects and case studies
 - Upload and organize media
 - View real-time content updates
-
-### Authentication
-
-Two methods supported:
-
-1. **Header-based**: Include `x-admin-token` header with `ADMIN_TOKEN` value
-2. **Cookie-based**: Session cookie `admin_token` validated against Redis
 
 ### Markdown Content
 
@@ -200,7 +187,6 @@ vercel
 Set environment variables in Vercel dashboard:
 - `REDIS_URL`
 - `ADMIN_TOKEN`
-- `ADMIN_IP` (optional)
 
 ### Other Platforms
 
@@ -220,12 +206,8 @@ The project is designed to support multiple sub-projects under `/(canvas)`:
 - **Layout inheritance**: Canvas layout for experimental projects
 - **Isolated routing**: Each canvas project is self-contained
 
-See "Design System Recommendations" section below for expansion guidelines.
-
 ## License
 
 See [LICENSE](LICENSE) file.
 
 ---
-
-*Built with ❤️ using SvelteKit 5*

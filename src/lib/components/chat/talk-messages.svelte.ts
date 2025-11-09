@@ -83,10 +83,16 @@ function createTalkMessages() {
 		currentUsername = username;
 	};
 
+	let fetchCount = 0; // Track fetch calls for periodic full refresh
+	
 	const fetchMessages = async () => {
 		try {
+			// Every 30th fetch (60 seconds with 2s polling), do a full refresh to catch deletions
+			const shouldFullRefresh = fetchCount % 30 === 0;
+			fetchCount++;
+			
 			// Fetch incrementally: request only the last N messages or those since last timestamp
-			const lastTs = messages.length ? messages[messages.length - 1].timestamp : undefined;
+			const lastTs = messages.length && !shouldFullRefresh ? messages[messages.length - 1].timestamp : undefined;
 			const params: string[] = [];
 			params.push('limit=200');
 			if (lastTs) params.push(`since=${lastTs}`);
@@ -102,7 +108,7 @@ function createTalkMessages() {
 					status: 'sent' as const
 				}));
 				
-				if (lastTs) {
+				if (lastTs && !shouldFullRefresh) {
 					// Append only new messages (server returns items after 'since')
 					// Filter out any messages that have been deleted
 					const existing = new Set(messages.map(m => m.id));
@@ -111,8 +117,16 @@ function createTalkMessages() {
 					);
 					if (toAppend.length) messages = [...messages, ...toAppend];
 				} else {
-					// Initial load: replace - still filter out deleted IDs (shouldn't happen, but be safe)
-					messages = messagesToAdd.filter(m => !deletedIds.has(m.id));
+					// Initial load or full refresh: replace with server state
+					// Keep optimistic pending messages, replace the rest
+					const pendingMessages = messages.filter(m => m.status === 'pending');
+					const serverIds = new Set(messagesToAdd.map(m => m.id));
+					
+					// Merge: server messages + pending optimistic messages not yet confirmed
+					messages = [
+						...messagesToAdd.filter(m => !deletedIds.has(m.id)),
+						...pendingMessages.filter(m => !serverIds.has(m.id))
+					].sort((a, b) => a.timestamp - b.timestamp);
 				}
 			}
 		} catch (e) {
@@ -161,6 +175,9 @@ function createTalkMessages() {
 			
 			// Get the server response to extract the actual message
 			const serverMessage: TalkMessage = await res.json();
+			
+			// Context7: Add minimum delay to ensure pending state is visible (500ms)
+			await new Promise(resolve => setTimeout(resolve, 150));
 			
 			// Context7: Replace optimistic message with server response, mark as sent
 			messages = messages.map(m => 
