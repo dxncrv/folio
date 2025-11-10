@@ -34,6 +34,7 @@ interface TalkRequest {
 	readonly username?: string;
 	readonly text?: string;
 	readonly messageId?: string;
+	readonly expiresIn?: number; // Expiration time in seconds (for disappearing messages)
 }
 
 /**
@@ -86,7 +87,17 @@ const handleMessage = async (data: TalkRequest, cookies: Cookies): Promise<Respo
 		);
 	}
 
-	const { message, version } = await getService().addMessage(username, text);
+	// Validate expiresIn (0-60 seconds)
+	let expiresIn = data.expiresIn;
+	if (expiresIn !== undefined) {
+		if (typeof expiresIn !== 'number' || expiresIn < 0 || expiresIn > 60) {
+			return json({ error: 'expiresIn must be between 0-60 seconds' }, { status: 400 });
+		}
+		// Round to nearest 5 seconds
+		expiresIn = Math.round(expiresIn / 5) * 5;
+	}
+
+	const { message, version } = await getService().addMessage(username, text, expiresIn);
 	return json({ ...message, version });
 };
 

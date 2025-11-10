@@ -163,8 +163,25 @@ function createTalkMessages() {
 			console.error('Fetch error:', e);
 		}
 	};
+	
+	// Cleanup expired messages from local state
+	const cleanupExpiredMessages = () => {
+		const now = Date.now();
+		const beforeCount = messages.length;
+		
+		messages = messages.filter(m => {
+			// Keep if no expiration
+			if (!m.expiresAt || m.expiresAt === 0) return true;
+			// Remove if expired
+			return m.expiresAt > now;
+		});
+		
+		if (messages.length < beforeCount) {
+			console.log(`[TalkMessages] Cleaned up ${beforeCount - messages.length} expired message(s)`);
+		}
+	};
 
-	const send = async (text: string, username: string): Promise<boolean> => {
+	const send = async (text: string, username: string, expiresIn?: number): Promise<boolean> => {
 		if (!text.trim()) return false;
 
 		// Context7: Optimistic UI with guaranteed unique temp ID
@@ -175,7 +192,8 @@ function createTalkMessages() {
 			username: username,
 			text: text.trim(),
 			timestamp: tempTimestamp,
-			status: 'pending'
+			status: 'pending',
+			...(expiresIn && expiresIn > 0 ? { expiresAt: tempTimestamp + expiresIn * 1000 } : {})
 		};
 		
 		messages = [...messages, optimisticMsg];
@@ -185,11 +203,16 @@ function createTalkMessages() {
 			const controller = new AbortController();
 			const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 			
+			const payload: any = { action: 'message', text: text.trim() };
+			if (expiresIn && expiresIn > 0) {
+				payload.expiresIn = expiresIn;
+			}
+			
 			const res = await globalThis.fetch('/api/talk', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ action: 'message', text: text.trim() }),
+				body: JSON.stringify(payload),
 				signal: controller.signal
 			});
 			
@@ -362,7 +385,8 @@ function createTalkMessages() {
 		edit,
 		delete: deleteMsg,
 		retry,
-		clear
+		clear,
+		cleanupExpired: cleanupExpiredMessages
 	} as const;
 }
 

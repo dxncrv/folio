@@ -154,10 +154,30 @@ class ZsetHashAdapter implements StorageAdapter {
 		ids.forEach(id => pipeline.get(`${HASH_PREFIX}${id}`));
 		const results = await pipeline.exec();
 		
-		return results!
+		const now = Date.now();
+		const expiredIds: string[] = [];
+		
+		const messages = results!
 			.map(([err, data]) => (err || !data ? null : JSON.parse(data as string) as TalkMessage))
-			.filter((m): m is TalkMessage => m !== null)
+			.filter((m): m is TalkMessage => {
+				if (!m) return false;
+				// Filter out expired messages
+				if (m.expiresAt && m.expiresAt <= now) {
+					expiredIds.push(m.id);
+					return false;
+				}
+				return true;
+			})
 			.reverse(); // Return in chronological order
+		
+		// Clean up expired message references from ZSET
+		if (expiredIds.length > 0) {
+			const cleanupPipeline = this.client.pipeline();
+			expiredIds.forEach(id => cleanupPipeline.zrem(ZSET_KEY, id));
+			await cleanupPipeline.exec();
+		}
+		
+		return messages;
 	}
 
 	async getById(id: string): Promise<TalkMessage | null> {
@@ -169,6 +189,13 @@ class ZsetHashAdapter implements StorageAdapter {
 		const pipeline = this.client.pipeline();
 		pipeline.zadd(ZSET_KEY, msg.timestamp, msg.id); // Add to sorted set
 		pipeline.set(`${HASH_PREFIX}${msg.id}`, JSON.stringify(msg)); // Store message data
+		
+		// Set TTL if message has expiration
+		if (msg.expiresAt && msg.expiresAt > Date.now()) {
+			const ttlSeconds = Math.ceil((msg.expiresAt - Date.now()) / 1000);
+			pipeline.expire(`${HASH_PREFIX}${msg.id}`, ttlSeconds);
+		}
+		
 		await pipeline.exec();
 	}
 
@@ -221,12 +248,14 @@ export class MessageService {
 		return v ? parseInt(v, 10) : 0;
 	}
 
-	async addMessage(username: string, text: string): Promise<{ message: TalkMessage; version: number }> {
+	async addMessage(username: string, text: string, expiresIn?: number): Promise<{ message: TalkMessage; version: number }> {
+		const now = Date.now();
 		const message: TalkMessage = {
-			id: `msg-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+			id: `msg-${now}-${Math.random().toString(36).substring(7)}`,
 			username,
 			text,
-			timestamp: Date.now()
+			timestamp: now,
+			...(expiresIn && expiresIn > 0 ? { expiresAt: now + expiresIn * 1000 } : {})
 		};
 		await this.storage.add(message);
 		const version = await this.incr();

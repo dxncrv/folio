@@ -36,6 +36,7 @@ export interface TalkMessage {
     text: string;
     timestamp: number;
     status?: 'pending' | 'sent' | 'failed'; // Optional for optimistic UI
+    expiresAt?: number; // Unix timestamp when message should disappear (0 = never)
 }
 
 export interface TalkSession {

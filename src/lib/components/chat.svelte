@@ -38,6 +38,15 @@ Fully self-contained, no external component dependencies
 	let messageText = $state('');
 	let textarea: HTMLTextAreaElement | undefined = $state();
 	
+	// Disappearing message timer state (0 = off, 5-60 in 5s increments)
+	let disappearTimer = $state(0);
+	
+	// Track real-time countdown for disappearing messages (used ONLY in template, doesn't trigger reactivity)
+	let countdownTick = $state(0);
+	
+	// Track last cleanup time to avoid cleanup on every tick
+	let lastCleanupTime = 0;
+	
 	// Consolidated edit modal state
 	let editModal = $state({ id: null as string | null, text: '', visible: false });
 	
@@ -201,6 +210,26 @@ Fully self-contained, no external component dependencies
 	
 	// Cleanup scroll RAF
 	$effect(() => cancelAnimationFrame(scrollRAF));
+	
+	// Update countdown every second - decoupled from message state to avoid triggering scroll effects
+	$effect(() => {
+		const interval = setInterval(() => {
+			// Update countdown ticker for UI
+			countdownTick++;
+			
+			// Smart cleanup: only run if we haven't cleaned up in the last 500ms
+			// and there are potentially expired messages
+			const now = Date.now();
+			if (now - lastCleanupTime > 500) {
+				const hasExpiring = talkMessages.messages.some(m => m.expiresAt && m.expiresAt > 0 && m.expiresAt <= now + 1000);
+				if (hasExpiring) {
+					talkMessages.cleanupExpired();
+					lastCleanupTime = now;
+				}
+			}
+		}, 1000);
+		return () => clearInterval(interval);
+	});
 
 	// ===== EVENT HANDLERS =====
     
@@ -253,13 +282,21 @@ Fully self-contained, no external component dependencies
 	async function sendMessage() {
 		if (!canSend) return;
 		const text = messageText.trim();
+		const expiresIn = disappearTimer > 0 ? disappearTimer : undefined;
 		messageText = '';
-		const sendPromise = talkMessages.send(text, talkAuth.username);
+		const sendPromise = talkMessages.send(text, talkAuth.username, expiresIn);
 		await tick();
 		messagesEnd?.scrollIntoView({ behavior: 'smooth' });
 		if (!await sendPromise) messageText = text;
 		await tick();
 		textarea?.focus();
+	}
+	
+	// Timer dial handler
+	function cycleTimer() {
+		if (disappearTimer === 0) disappearTimer = 5;
+		else if (disappearTimer >= 60) disappearTimer = 0;
+		else disappearTimer += 5;
 	}
     
 	function handleInputKeydown(e: KeyboardEvent) {
@@ -441,6 +478,8 @@ Fully self-contained, no external component dependencies
 					{@const showTime = shouldShowTime(talkMessages.messages, i)}
 					{@const swiped = gesture.swipedId === msg.id}
 					{@const isLast = i === talkMessages.messages.length - 1}
+					{@const isDisappearing = msg.expiresAt && msg.expiresAt > 0}
+					{@const timeLeft = isDisappearing && countdownTick >= 0 ? Math.max(0, Math.ceil((msg.expiresAt! - Date.now()) / 1000)) : 0}
                     
 					{#if showDate}
 						<div class="date-divider" transition:fade={{ duration: transitionDuration }}>
@@ -478,6 +517,12 @@ Fully self-contained, no external component dependencies
 											tabindex="0"
 										>
 											<div class="bubble-meta" class:always-visible={isLast}>
+												{#if isDisappearing && timeLeft > 0}
+													<div class="disappear-timer">
+														<iconify-icon icon="mdi:clock-outline" width="14"></iconify-icon>
+														<span>{timeLeft}s</span>
+													</div>
+												{/if}
 												{#if showTime || isLast}
 													<span class="time">{formatTime(msg.timestamp)}</span>
 												{/if}
@@ -493,6 +538,7 @@ Fully self-contained, no external component dependencies
 												class="bubble own"
 												class:pending={msg.status === 'pending'}
 												class:failed={msg.status === 'failed'}
+												class:disappearing={isDisappearing}
 											>
 												{msg.text}
 											</div>
@@ -515,10 +561,17 @@ Fully self-contained, no external component dependencies
 										<div class="bubble"
 											class:pending={msg.status === 'pending'}
 											class:failed={msg.status === 'failed'}
+											class:disappearing={isDisappearing}
 										>
 											{msg.text}
 										</div>
 										<div class="bubble-meta" class:always-visible={isLast}>
+											{#if isDisappearing && timeLeft > 0}
+												<div class="disappear-timer">
+													<iconify-icon icon="mdi:clock-outline" width="14"></iconify-icon>
+													<span>{timeLeft}s</span>
+												</div>
+											{/if}
 											{#if showTime || isLast}
 												<span class="time">{formatTime(msg.timestamp)}</span>
 											{/if}
@@ -583,16 +636,33 @@ Fully self-contained, no external component dependencies
 					></textarea>
 				</div>
 				<div class="send-area">
-					{#if showCounter}
-						<span class="char-counter" class:warning={isWarning} transition:fade={{ duration: 150 }}>
-							{remainingChars}
-						</span>
-					{/if}
+					<!-- Disappearing message timer dial -->
+					<button 
+						class="timer-dial" 
+						class:active={disappearTimer > 0}
+						onclick={cycleTimer}
+						title={disappearTimer > 0 ? `Disappearing message: ${disappearTimer}s` : 'Send disappearing message'}
+						aria-label={disappearTimer > 0 ? `Disappearing in ${disappearTimer} seconds` : 'Disappearing message timer'}
+					>
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<circle cx="12" cy="12" r="10" />
+							<polyline points="12 6 12 12 16 14" />
+						</svg>
+						{#if disappearTimer > 0}
+							<span class="timer-value" transition:fade={{ duration: 150 }}>{disappearTimer}s</span>
+						{/if}
+					</button>
+					
 					<button onclick={sendMessage} disabled={!canSend} class:active={canSend} aria-label="Send message" title="Send">
 						<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
 							<path d="M2 10h16m0 0l-7-7m7 7l-7 7" />
 						</svg>
 					</button>
+					{#if showCounter}
+						<span class="char-counter" class:warning={isWarning} transition:fade={{ duration: 150 }}>
+							{remainingChars}
+						</span>
+					{/if}
 				</div>
 			</div>
 		</div>
@@ -1202,6 +1272,38 @@ Fully self-contained, no external component dependencies
 		border-color: rgba(255, 100, 100, 0.5);
 		background: rgba(255, 100, 100, 0.15);
 	}
+	
+	/* Disappearing message style - blue dashed outline, no fill */
+	.bubble.disappearing {
+		background: transparent !important;
+		border: 2px solid var(--color-glass);
+		box-shadow: none !important;
+	}
+	
+	.bubble.disappearing:hover {
+		background: rgba(10, 132, 255, 0.05) !important;
+		border-color: var(--color-primary-hover);
+	}
+	
+	/* Disappearing message countdown timer */
+	.disappear-timer {
+		position: absolute;
+		top:0.25rem;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+		font: 600 0.7rem var(--font-ui);
+		color: var(--color-warning);
+		background: var(--color-glass);
+		padding: 0.2rem 0.5rem;
+		border-radius: 8px;
+		user-select: none;
+		white-space: nowrap;
+	}
+	
+	.disappear-timer iconify-icon {
+		display: inline-flex;
+	}
 
 	.time {
 		font: 0.7rem var(--font-read);
@@ -1412,9 +1514,63 @@ Fully self-contained, no external component dependencies
 
 	.send-area {
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		align-items: center;
 		gap: 0.5rem;
+	}
+	
+	/* Timer dial button */
+	.timer-dial {
+		position: relative;
+		background: rgba(255, 255, 255, 0.15);
+		border: 1px solid rgba(255, 255, 255, 0.25);
+		border-radius: 50%;
+		width: 42px;
+		height: 42px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all 0.2s;
+		color: rgba(255, 255, 255, 0.7);
+		flex-shrink: 0;
+	}
+	
+	.timer-dial:hover {
+		background: rgba(255, 255, 255, 0.2);
+		border-color: rgba(255, 255, 255, 0.35);
+		color: #fff;
+		transform: scale(1.05);
+	}
+	
+	.timer-dial.active {
+		background: var(--color-primary);
+		border-color: var(--color-primary);
+		color: #fff;
+		box-shadow: 0 2px 8px rgba(10, 132, 255, 0.4);
+	}
+	
+	.timer-dial.active:hover {
+		background: var(--color-primary-hover);
+		box-shadow: 0 2px 12px rgba(10, 132, 255, 0.5);
+	}
+	
+	.timer-dial svg {
+		width: 20px;
+		height: 20px;
+	}
+	
+	.timer-value {
+		position: absolute;
+		bottom: -8px;
+		right: -4px;
+		background: var(--color-primary);
+		color: #fff;
+		font: 600 0.65rem var(--font-ui);
+		padding: 0.1rem 0.35rem;
+		border-radius: 8px;
+		box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+		pointer-events: none;
 	}
 
 	.char-counter {
