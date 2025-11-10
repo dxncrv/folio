@@ -23,6 +23,9 @@ importers:
       '@fontsource/hanken-grotesk':
         specifier: ^5.2.8
         version: 5.2.8
+      '@fontsource/redacted-script':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@fontsource/solway':
         specifier: ^5.2.8
         version: 5.2.8
@@ -310,6 +313,9 @@ packages:
 
   '@fontsource/hanken-grotesk@5.2.8':
     resolution: {integrity: sha512-J/e6hdfNCbyc4WK5hmZtk0zjaIsFx3pvCdPVxY25iYw2C9v1ZggGz4nfHnRjMhcz4WfaadUuwLNtvj8sQ70tkg==}
+
+  '@fontsource/redacted-script@5.2.8':
+    resolution: {integrity: sha512-NOEGJyurXvCx5egCha9yUQB+Tt0IxXriacykYiRlohUvhdbKvisHbucAHQaK8N5/LLB6rlX62SrX8C9+t41PYQ==}
 
   '@fontsource/solway@5.2.8':
     resolution: {integrity: sha512-BsMsMhOkOlYguY51nPMMfx8aH+QLaFFTrqV+DLJNO/yXWtPfn+M28Z6vxzo0M3+4ZMTWjDoAR9K7XOiIqa3Rcw==}
@@ -1760,6 +1766,8 @@ snapshots:
   '@fontsource/fira-code@5.2.7': {}
 
   '@fontsource/hanken-grotesk@5.2.8': {}
+
+  '@fontsource/redacted-script@5.2.8': {}
 
   '@fontsource/solway@5.2.8': {}
 

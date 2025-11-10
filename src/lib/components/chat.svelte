@@ -7,6 +7,7 @@ Fully self-contained, no external component dependencies
 	import { fly, fade } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 	import { MediaQuery } from 'svelte/reactivity';
+	import { tick } from 'svelte';
 	import { talkAuth } from './chat/talk-auth.svelte';
 	import { talkMessages, formatDate, formatTime, shouldGroup, shouldShowDate, shouldShowTime } from './chat/talk-messages.svelte';
 	import type { TalkMessage } from '$lib/types';
@@ -83,56 +84,99 @@ Fully self-contained, no external component dependencies
 				talkMessages.setUsername(talkAuth.username);
 				await talkMessages.fetch();
 				talkMessages.markAsRead();
+				// Scroll to bottom after DOM update
+				await tick();
+				if (messagesEnd) {
+					messagesEnd.scrollIntoView({ behavior: 'auto' });
+					didInitialAutoScroll = true;
+				}
 			}
 		})();
 	});
 	
-	// Polling and read-marking combined
+	// SSE + polling for real-time + resilience
 	$effect(() => {
-		// Polling
-		if (ui.isLive && isAuthenticated) {
-			console.log('[Talk] 🔄 Polling started');
-			const poll = setInterval(() => talkMessages.fetch(), 2000);
-			const timeout = setTimeout(() => {
-				console.log('[Talk] ⏱️ Live mode timed out');
-				ui.isLive = false;
-			}, 5 * 60 * 1000);
-			return () => {
-				clearInterval(poll);
-				clearTimeout(timeout);
-				console.log('[Talk] ⏹️ Polling stopped');
-			};
+		if (!ui.isLive || !isAuthenticated) return;
+		
+		console.log('[Talk] 🔄 SSE + polling started');
+		let eventSource: EventSource | null = null;
+		let fallbackPoll: ReturnType<typeof setInterval> | null = null;
+		let liveTimeout: ReturnType<typeof setTimeout> | null = null;
+		
+		// SSE for real-time updates (optimized: SSE triggers immediate fetch, no redundant polling)
+		try {
+			eventSource = new EventSource('/api/talk/stream', { withCredentials: true });
+			
+			eventSource.addEventListener('message', (ev: Event) => {
+				if (!(ev instanceof MessageEvent)) return;
+				try {
+					const event = JSON.parse(ev.data);
+					// Optimized: Delta sync via single fetch after SSE notification
+					talkMessages.fetch();
+				} catch (e) {
+					console.error('[SSE] Parse error:', e);
+				}
+			});
+			
+			eventSource.addEventListener('error', () => {
+				console.log('[SSE] Connection lost, activating fallback polling');
+				eventSource?.close();
+				eventSource = null;
+				// Fallback: poll every 5s (only when SSE is unavailable)
+				if (!fallbackPoll) {
+					fallbackPoll = setInterval(() => talkMessages.fetch(), 5000);
+				}
+			});
+		} catch (e) {
+			console.error('[SSE] Setup failed:', e);
+			// Fallback immediately if SSE init fails
+			fallbackPoll = setInterval(() => talkMessages.fetch(), 5000);
 		}
 		
-		// Mark as read when near bottom
-		if (nearBottom && talkMessages.messages.length > 0) {
-			talkMessages.markAsRead();
-		}
+		// 5-minute timeout for live mode
+		liveTimeout = setTimeout(() => {
+			console.log('[Talk] ⏱️ Live mode timed out');
+			ui.isLive = false;
+		}, 5 * 60 * 1000);
+		
+		return () => {
+			eventSource?.close();
+			if (fallbackPoll) clearInterval(fallbackPoll);
+			if (liveTimeout) clearTimeout(liveTimeout);
+			console.log('[Talk] ⏹️ Live updates stopped');
+		};
 	});
 	
-	// Auto-scroll before render (synchronous DOM update)
-	// Uses $effect.pre for immediate scroll updates before paint
-	$effect.pre(() => {
-		if (!messagesEnd || !messagesContainer) return;
+	// Auto-scroll logic using $effect (runs AFTER DOM updates, when messages.length changes)
+	// Handles: initial load, own messages, near-bottom scrolling
+	$effect(() => {
+		// Track messages.length to trigger on new messages (messages uses $state.raw)
 		const msgCount = talkMessages.messages.length;
-		if (msgCount === 0) return;
+		if (!messagesEnd || !messagesContainer || msgCount === 0) return;
 		
-		const msgs = talkMessages.messages;
-		const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
-		const nearBottom = scrollTop + clientHeight > scrollHeight - 20;
-		const lastMsg = msgs[msgs.length - 1];
-		const isOurMessage = lastMsg?.username === talkAuth.username;
-		
-		if (!didInitialAutoScroll) {
-			messagesEnd.scrollIntoView({ behavior: 'auto' });
-			didInitialAutoScroll = true;
-			return;
-		}
-		
-		// Auto-scroll if: near bottom, content shorter than viewport, or we sent the message
-		if (nearBottom || scrollHeight <= clientHeight || isOurMessage) {
-			messagesEnd.scrollIntoView({ behavior: 'auto' });
-		}
+		// Wait for DOM to update, then check scroll position
+		queueMicrotask(() => {
+			if (!messagesContainer || !messagesEnd) return;
+			
+			const { scrollTop, scrollHeight, clientHeight } = messagesContainer;
+			const isNearBottom = scrollTop + clientHeight > scrollHeight - 100;
+			const lastMsg = talkMessages.messages[msgCount - 1];
+			const isOurMessage = lastMsg?.username === talkAuth.username;
+			
+			// Force scroll on: initial load OR sending own message
+			if (!didInitialAutoScroll || isOurMessage) {
+				messagesEnd.scrollIntoView({ behavior: 'smooth' });
+				if (!didInitialAutoScroll) {
+					didInitialAutoScroll = true;
+				}
+				return;
+			}
+			
+			// Auto-scroll if near bottom or content shorter than viewport
+			if (isNearBottom || scrollHeight <= clientHeight) {
+				messagesEnd.scrollIntoView({ behavior: 'smooth' });
+			}
+		});
 	});
 	
 	// Event listeners for swipe and modal cleanup
@@ -211,9 +255,11 @@ Fully self-contained, no external component dependencies
 		const text = messageText.trim();
 		messageText = '';
 		const sendPromise = talkMessages.send(text, talkAuth.username);
-		setTimeout(() => messagesEnd?.scrollIntoView({ behavior: 'smooth' }), 0);
+		await tick();
+		messagesEnd?.scrollIntoView({ behavior: 'smooth' });
 		if (!await sendPromise) messageText = text;
-		setTimeout(() => textarea?.focus(), 0);
+		await tick();
+		textarea?.focus();
 	}
     
 	function handleInputKeydown(e: KeyboardEvent) {

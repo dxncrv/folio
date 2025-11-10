@@ -11,7 +11,7 @@
  */
 
 // Redis and storage
-export { getRedisClient, RedisStore, RedisInspector } from './redis.server';
+export { getRedisClient, getRedisSubscriber, RedisStore, RedisInspector } from './redis.server';
 
 // Security and authentication
 export { isIPWhitelisted, isAuthorizedWrite } from './security.server';
@@ -24,20 +24,20 @@ export { scanMedia } from './media-scanner.server';
 
 // Talk chat utilities
 export {
-	MESSAGES_KEY,
 	MAX_MESSAGE_LENGTH,
 	USERNAME_MAX_LENGTH,
 	SESSION_MAX_AGE,
-	sanitizeHtml,
 	validateUsername,
 	validateMessage,
 	getCookieConfig,
 	setSessionCookie,
 	clearSessionCookie,
-	getAuthUser,
-	getMessages,
-	addMessage,
-	updateMessage,
-	deleteMessage
+	getAuthUser
 } from './talk.server';
+
+// Message service with versioning and pub/sub
+export { MessageService, CHANNEL, type MessageEvent } from './message-service.server';
+
+// Shared pub/sub manager
+export { pubsubManager } from './pubsub.server';
 

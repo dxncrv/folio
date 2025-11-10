@@ -4,10 +4,18 @@ import type { TalkMessage } from '$lib/types';
 // Context7: Export type for full TypeScript inference in consuming components
 export type TalkMessagesStore = ReturnType<typeof createTalkMessages>;
 
-// Use Map for O(1) lookups and efficient caching
+// Use Map for O(1) lookups with size limits to prevent memory leaks
+const MAX_CACHE_SIZE = 200;
 const dateCache = new Map<number, string>();
-// Cache date strings to avoid repeated Date object allocation
 const dateStringCache = new Map<number, string>();
+
+// LRU cache helper: remove oldest entry when limit reached
+function limitCacheSize(cache: Map<any, any>, maxSize: number) {
+	if (cache.size > maxSize) {
+		const firstKey = cache.keys().next().value;
+		cache.delete(firstKey);
+	}
+}
 
 // Pure utility functions (not reactive)
 export const formatTime = (ts: number) => {
@@ -25,6 +33,7 @@ export const formatDate = (ts: number) => {
 	const ds = d.toDateString();
 	const result =
 		ds === today ? 'Today' : ds === yesterday ? 'Yesterday' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+	limitCacheSize(dateCache, MAX_CACHE_SIZE);
 	dateCache.set(ts, result);
 	return result;
 };
@@ -33,6 +42,7 @@ export const formatDate = (ts: number) => {
 const getDateString = (ts: number): string => {
 	if (dateStringCache.has(ts)) return dateStringCache.get(ts)!;
 	const dateStr = new Date(ts).toDateString();
+	limitCacheSize(dateStringCache, MAX_CACHE_SIZE);
 	dateStringCache.set(ts, dateStr);
 	return dateStr;
 };
@@ -55,12 +65,21 @@ function createTalkMessages() {
 	let editing = $state(false);
 	let deleting = $state(false);
 	
+	// Versioning for delta sync
+	let lastSeenVersion = $state(0);
+	
 	// Context7: Track last read timestamp for unread count (initialize to 0 so initial messages aren't marked as unread)
 	let lastReadTimestamp = $state(0);
 	let currentUsername = $state(''); // Track current user to exclude own messages from unread count
 	
 	// Track deleted message IDs to prevent them from reappearing during polling
 	const deletedIds = new Set<string>();
+	
+	// Counter for guaranteed unique temp IDs
+	let tempIdCounter = 0;
+	
+	// Map temp IDs to server IDs to prevent duplicates during SSE updates
+	const tempToServerIdMap = new Map<string, string>();
 
 	// Context7: Use $derived for computed values
 	const hasMessages = $derived(messages.length > 0);
@@ -83,51 +102,62 @@ function createTalkMessages() {
 		currentUsername = username;
 	};
 
+	// Apply delta: MERGE incoming with existing (never lose old messages!)
+	const applyDelta = (delta: { version: number; messages: TalkMessage[] }) => {
+		const { version, messages: serverMessages } = delta;
+		
+		// Mark all server messages as sent
+		const incoming = serverMessages.map(m => ({ ...m, status: 'sent' as const }));
+		const incomingIds = new Set(incoming.map(m => m.id));
+		
+		// Keep only pending/failed optimistic messages that haven't been confirmed
+		const pending = messages.filter(m => {
+			if (!m.id.startsWith('temp-')) return false;
+			if (m.status !== 'pending' && m.status !== 'failed') return false;
+			// Don't keep if already mapped to server message
+			const serverId = tempToServerIdMap.get(m.id);
+			return !serverId || !incomingIds.has(serverId);
+		});
+		
+		// Merge: incoming (server truth) + pending (optimistic)
+		// CRITICAL: Use server as source of truth for deletions
+		// Incoming contains what server has, pending contains what we're optimistically sending
+		const merged = [
+			...incoming,
+			...pending.filter(m => {
+				const serverId = tempToServerIdMap.get(m.id);
+				return !serverId || !incomingIds.has(serverId);
+			})
+		].sort((a, b) => a.timestamp - b.timestamp);
+		
+		// Deduplicate by ID (keep first occurrence)
+		const seen = new Set<string>();
+		messages = merged.filter(m => {
+			if (seen.has(m.id)) return false;
+			seen.add(m.id);
+			return true;
+		});
+		
+		// Clean up temp mappings for messages that are now confirmed
+		for (const [tempId, serverId] of tempToServerIdMap.entries()) {
+			if (!messages.find(m => m.id === tempId)) {
+				tempToServerIdMap.delete(tempId);
+			}
+		}
+		
+		lastSeenVersion = version;
+	};
+	
 	let fetchCount = 0; // Track fetch calls for periodic full refresh
 	
 	const fetchMessages = async () => {
 		try {
-			// Every 30th fetch (60 seconds with 2s polling), do a full refresh to catch deletions
-			const shouldFullRefresh = fetchCount % 30 === 0;
-			fetchCount++;
-			
-			// Fetch incrementally: request only the last N messages or those since last timestamp
-			const lastTs = messages.length && !shouldFullRefresh ? messages[messages.length - 1].timestamp : undefined;
-			const params: string[] = [];
-			params.push('limit=200');
-			if (lastTs) params.push(`since=${lastTs}`);
-
-			const res = await globalThis.fetch(`/api/talk${params.length ? `?${params.join('&')}` : ''}`, {
+			const res = await globalThis.fetch('/api/talk?limit=200', {
 				credentials: 'include'
 			});
 			if (res.ok) {
-				const serverMessages: TalkMessage[] = await res.json();
-				// Ensure all fetched messages have status: 'sent' (they're already confirmed on server)
-				const messagesToAdd = serverMessages.map(m => ({
-					...m,
-					status: 'sent' as const
-				}));
-				
-				if (lastTs && !shouldFullRefresh) {
-					// Append only new messages (server returns items after 'since')
-					// Filter out any messages that have been deleted
-					const existing = new Set(messages.map(m => m.id));
-					const toAppend = messagesToAdd.filter(m => 
-						!existing.has(m.id) && !deletedIds.has(m.id)
-					);
-					if (toAppend.length) messages = [...messages, ...toAppend];
-				} else {
-					// Initial load or full refresh: replace with server state
-					// Keep optimistic pending messages, replace the rest
-					const pendingMessages = messages.filter(m => m.status === 'pending');
-					const serverIds = new Set(messagesToAdd.map(m => m.id));
-					
-					// Merge: server messages + pending optimistic messages not yet confirmed
-					messages = [
-						...messagesToAdd.filter(m => !deletedIds.has(m.id)),
-						...pendingMessages.filter(m => !serverIds.has(m.id))
-					].sort((a, b) => a.timestamp - b.timestamp);
-				}
+				const data = await res.json();
+				applyDelta(data);
 			}
 		} catch (e) {
 			console.error('Fetch error:', e);
@@ -137,8 +167,8 @@ function createTalkMessages() {
 	const send = async (text: string, username: string): Promise<boolean> => {
 		if (!text.trim()) return false;
 
-		// Context7: Optimistic UI
-		const tempId = `temp-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+		// Context7: Optimistic UI with guaranteed unique temp ID
+		const tempId = `temp-${Date.now()}-${++tempIdCounter}`;
 		const tempTimestamp = Date.now();
 		const optimisticMsg: TalkMessage = {
 			id: tempId,
@@ -173,10 +203,14 @@ function createTalkMessages() {
 				return false;
 			}
 			
-			// Get the server response to extract the actual message
-			const serverMessage: TalkMessage = await res.json();
+			// Get the server response with version
+			const data = await res.json();
+			const { version, ...serverMessage } = data;
 			
-			// Context7: Add minimum delay to ensure pending state is visible (500ms)
+			// Map temp ID to server ID for deduplication
+			tempToServerIdMap.set(tempId, serverMessage.id);
+			
+			// Context7: Add minimum delay to ensure pending state is visible
 			await new Promise(resolve => setTimeout(resolve, 150));
 			
 			// Context7: Replace optimistic message with server response, mark as sent
@@ -184,6 +218,7 @@ function createTalkMessages() {
 				m.id === tempId ? { ...serverMessage, status: 'sent' as const } : m
 			);
 			
+			if (version) lastSeenVersion = version;
 			return true;
 		} catch (e) {
 			console.error('Send error:', e);
@@ -227,12 +262,14 @@ function createTalkMessages() {
 				return false;
 			}
 			
-			// Context7: Get server response to sync state, mark as sent
-			const updatedMessage: TalkMessage = await res.json();
+			// Context7: Get server response with version
+			const data = await res.json();
+			const { version, ...updatedMessage } = data;
 			messages = messages.map(m =>
 				m.id === messageId ? { ...updatedMessage, status: 'sent' as const } : m
 			);
 			
+			if (version) lastSeenVersion = version;
 			return true;
 		} catch (e) {
 			console.error('Edit error:', e);
@@ -273,6 +310,9 @@ function createTalkMessages() {
 				}
 				return false;
 			}
+			
+			const data = await res.json();
+			if (data.version) lastSeenVersion = data.version;
 			return true;
 		} catch (e) {
 			console.error('Delete error:', e);
@@ -290,6 +330,9 @@ function createTalkMessages() {
 	const clear = () => {
 		messages = [];
 		dateCache.clear();
+		dateStringCache.clear();
+		deletedIds.clear();
+		tempToServerIdMap.clear();
 	};
 
 	const retry = async (failedMessageId: string, username: string): Promise<boolean> => {

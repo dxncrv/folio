@@ -15,7 +15,6 @@ import type { TalkMessage } from '$lib/types';
 // Configuration Constants
 // ============================================================================
 
-export const MESSAGES_KEY = 'folio:talk:messages';
 export const MAX_MESSAGE_LENGTH = 5000;
 export const USERNAME_MAX_LENGTH = 50;
 export const SESSION_MAX_AGE = 86400 * 30; // 30 days
@@ -23,18 +22,6 @@ export const SESSION_MAX_AGE = 86400 * 30; // 30 days
 // ============================================================================
 // Sanitization & Validation
 // ============================================================================
-
-/**
- * Sanitize HTML to prevent XSS - escapes dangerous characters
- * @pure
- */
-export const sanitizeHtml = (text: string): string =>
-	text
-		.replace(/&/g, '&amp;')
-		.replace(/</g, '&lt;')
-		.replace(/>/g, '&gt;')
-		.replace(/"/g, '&quot;')
-		.replace(/'/g, '&#039;');
 
 /**
  * Validate and normalize username input
@@ -90,97 +77,5 @@ export const getAuthUser = (cookies: Cookies): string | null =>
 // ============================================================================
 // Message Operations
 // ============================================================================
-
-/**
- * Get all chat messages from Redis
- */
-export type GetMessagesOpts = { limit?: number; since?: number };
-
-export const getMessages = async (opts: GetMessagesOpts = {}): Promise<TalkMessage[]> => {
-	try {
-		const client = getRedisClient();
-		const limit = typeof opts.limit === 'number' && opts.limit > 0 ? opts.limit : 200;
-
-		// Use negative range to fetch only the last `limit` items (efficient on Redis)
-		const raw = await client.lrange(MESSAGES_KEY, -limit, -1);
-		const parsed = raw.map((m) => JSON.parse(m) as TalkMessage);
-
-		// If caller asked for messages since a timestamp, filter in-memory (cheap for small slices)
-		if (typeof opts.since === 'number') {
-			const since = opts.since;
-			return parsed.filter((m) => m.timestamp > since);
-		}
-
-		return parsed;
-	} catch (error) {
-		console.error('[talk] Error fetching messages:', error);
-		return [];
-	}
-};
-
-/**
- * Add message to Redis with sanitization
- */
-export const addMessage = async (username: string, text: string): Promise<TalkMessage> => {
-	const client = getRedisClient();
-	const message: TalkMessage = {
-		id: `${Date.now()}-${Math.random().toString(36).substring(7)}`,
-		username,
-		text: sanitizeHtml(text.trim()),
-		timestamp: Date.now()
-	};
-	await client.rpush(MESSAGES_KEY, JSON.stringify(message));
-	return message;
-};
-
-/**
- * Update a message in Redis (only if user owns it)
- */
-export const updateMessage = async (messageId: string, username: string, newText: string): Promise<TalkMessage> => {
-	const client = getRedisClient();
-	// For edits we need to scan the full list to find the exact index
-	const raw = await client.lrange(MESSAGES_KEY, 0, -1);
-	const messages = raw.map(m => JSON.parse(m) as TalkMessage);
-	const index = messages.findIndex(m => m.id === messageId);
-	
-	if (index === -1) {
-		throw new Error('Message not found');
-	}
-	
-	if (messages[index].username !== username) {
-		throw new Error('Unauthorized: You can only edit your own messages');
-	}
-	
-	const updatedMessage: TalkMessage = {
-		...messages[index],
-		text: sanitizeHtml(newText.trim()),
-		timestamp: messages[index].timestamp // Keep original timestamp
-	};
-	
-	// Update the message in Redis list
-	await client.lset(MESSAGES_KEY, index, JSON.stringify(updatedMessage));
-	return updatedMessage;
-};
-
-/**
- * Delete a message from Redis (only if user owns it)
- */
-export const deleteMessage = async (messageId: string, username: string): Promise<void> => {
-	const client = getRedisClient();
-	// Deletion requires full-list scan to find the value to LREM
-	const raw = await client.lrange(MESSAGES_KEY, 0, -1);
-	const messages = raw.map(m => JSON.parse(m) as TalkMessage);
-	const message = messages.find(m => m.id === messageId);
-	
-	if (!message) {
-		throw new Error('Message not found');
-	}
-	
-	if (message.username !== username) {
-		throw new Error('Unauthorized: You can only delete your own messages');
-	}
-	
-	// Mark for deletion by setting to a sentinel value, then remove it
-	// Redis doesn't support LREM by index, so we use LREM by value
-	await client.lrem(MESSAGES_KEY, 1, JSON.stringify(message));
-};
+// NOTE: Message CRUD operations moved to MessageService (ZSET+HASH storage)
+// Use MessageService for add/update/delete operations

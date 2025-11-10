@@ -53,6 +53,7 @@
 		"@fontsource/averia-serif-libre": "^5.2.7",
 		"@fontsource/fira-code": "^5.2.7",
 		"@fontsource/hanken-grotesk": "^5.2.8",
+		"@fontsource/redacted-script": "^5.2.8",
 		"@fontsource/solway": "^5.2.8",
 		"ioredis": "^5.8.2"
 	}

@@ -40,18 +40,19 @@ let showForm = false;
 	{#if !showForm}
 		<button type="button" class="primary" onclick={() => showForm = true}>Get in touch</button>
 	{:else}
-		<form onsubmit={handleSubmit}>
+	<form onsubmit={handleSubmit}>
+			<button class="close-btn" onclick={() => showForm = false} aria-label="Close form"><iconify-icon icon="line-md:close"></iconify-icon></button>
 			<p>Status: <span class:fail={status.startsWith('Failed')}>{status}</span></p>
 			<input type="hidden" name="access_key" value="489cc2ff-5a51-4737-a5c9-8491e6cf8038" />
 			<textarea name="message" placeholder="Hey dude, stop planting mint directly in soil, its taking over my backyard!" required></textarea>
 			<div>
 				<input id="email" name="email" type="email" placeholder="angry@neighbor.com" required />
-				<button type="submit"> Submit </button>
+				<button type="submit" class="submit-btn"> Submit </button>
 			</div>
 		</form>
 	{/if}
 </div>
 
 <style>
-.contact-form{display:flex;align-items:center;flex-direction:column;gap:1rem}.contact-form button{width:fit-content}.contact-form button:hover{color:var(--accent);border:1px solid var(--accent)}.contact-form span{color:var(--accent)}.contact-form span.fail{color:salmon}.contact-form form{display:flex;flex-direction:column;gap:1rem}.contact-form form *:focus{outline:var(--accent) 1px solid}.contact-form form textarea{min-height:5rem;max-height:15rem;font-family:var(--font-read);font-size:.9rem;color:var(--contrast);padding:.5rem;background-color:var(--body-bg);border:1px solid var(--outline);border-radius:.5rem;resize:vertical}.contact-form form div{display:flex;flex-wrap:wrap;gap:1rem}.contact-form form div *{padding:.5rem}.contact-form form input{max-width:11rem;flex-grow:1;font-family:var(--font-read);color:var(--contrast);background-color:var(--body-bg);border:1px solid var(--outline);border-radius:.5rem}.contact-form form button{font-family:var(--font-ui);font-size:1rem;color:var(--accent-dim);background-color:var(--bg);border:1px solid var(--accent-dim);border-radius:.5rem;cursor:pointer;transition:color .2s}.contact-form form button:hover{color:var(--accent);border:1px solid var(--accent)}.contact-form p{margin:0;font-size:.9rem}
+.contact-form{display:flex;align-items:center;flex-direction:column;gap:1rem}.contact-form span{color:var(--accent)}.contact-form span.fail{color:salmon}.contact-form form{display:flex;flex-direction:column;gap:1rem}.contact-form form *:focus{outline:var(--accent) 1px solid}.contact-form form textarea{min-height:5rem;max-height:15rem;font-family:var(--font-read);font-size:.9rem;color:var(--contrast);padding:.5rem;background-color:var(--body-bg);border:1px solid var(--outline);border-radius:.5rem;resize:vertical}.contact-form form div{display:flex;flex-wrap:wrap;gap:1rem}.contact-form form div *{padding:.5rem}.contact-form form input{max-width:11rem;flex-grow:1;font-family:var(--font-read);color:var(--contrast);background-color:var(--body-bg);border:1px solid var(--outline);border-radius:.5rem}.submit-btn{font-family:var(--font-ui);font-size:1rem;color:var(--accent-dim);background-color:var(--bg);border:1px solid var(--accent-dim);border-radius:.5rem;cursor:pointer;transition:color .2s;padding:.5rem .75rem}.submit-btn:hover{color:var(--accent);border:1px solid var(--accent)}.contact-form p{margin:0;font-size:.9rem}.contact-form form{position:relative}.close-btn{position:absolute;top:0;right:0;background:none;border:none;cursor:pointer;color:var(--contrast)}
 </style>

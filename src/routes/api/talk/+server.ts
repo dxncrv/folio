@@ -1,24 +1,31 @@
 import { json, type Cookies } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import {
-	MESSAGES_KEY,
 	MAX_MESSAGE_LENGTH,
 	USERNAME_MAX_LENGTH,
-	sanitizeHtml,
 	validateUsername,
 	validateMessage,
 	setSessionCookie,
 	clearSessionCookie,
 	getAuthUser,
-	getMessages,
-	addMessage,
-	updateMessage,
-	deleteMessage
-} from '$lib/server/talk.server';
+	MessageService
+} from '$lib/server';
+import { getRedisClient } from '$lib/server/redis.server';
 import type { TalkMessage } from '$lib/types';
 
+// Singleton service instance
+let messageService: MessageService | null = null;
+const getService = () => {
+	if (!messageService) {
+		const client = getRedisClient();
+		messageService = new MessageService(client, client);
+	}
+	return messageService;
+};
+
 // Modern RequestHandler patterns for API routes
-// Redis LRANGE/RPUSH for message persistence
+// Storage: ZSET (message IDs sorted by timestamp) + HASH (message data)
+// See MessageService for implementation details
 
 type TalkAction = 'login' | 'logout' | 'session' | 'message' | 'edit' | 'delete';
 
@@ -79,8 +86,8 @@ const handleMessage = async (data: TalkRequest, cookies: Cookies): Promise<Respo
 		);
 	}
 
-	const message = await addMessage(username, text);
-	return json(message);
+	const { message, version } = await getService().addMessage(username, text);
+	return json({ ...message, version });
 };
 
 /**
@@ -105,8 +112,8 @@ const handleEdit = async (data: TalkRequest, cookies: Cookies): Promise<Response
 	}
 
 	try {
-		const message = await updateMessage(data.messageId, username, text);
-		return json(message);
+		const { message, version } = await getService().updateMessage(data.messageId, username, text);
+		return json({ ...message, version });
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Failed to edit message';
 		const status = message.includes('Unauthorized') ? 403 : message.includes('not found') ? 404 : 500;
@@ -128,8 +135,8 @@ const handleDelete = async (data: TalkRequest, cookies: Cookies): Promise<Respon
 	}
 
 	try {
-		await deleteMessage(data.messageId, username);
-		return json({ success: true });
+		const { version } = await getService().deleteMessage(data.messageId, username);
+		return json({ success: true, version });
 	} catch (error) {
 		const message = error instanceof Error ? error.message : 'Failed to delete message';
 		const status = message.includes('Unauthorized') ? 403 : message.includes('not found') ? 404 : 500;
@@ -159,6 +166,7 @@ const actionHandlers: Record<TalkAction, ActionHandler> = {
 /**
  * GET /api/talk
  * Fetch all messages or check session (via ?action=session)
+ * Returns { version, messages } for delta support
  */
 export const GET: RequestHandler = async ({ url, cookies }) => {
 	try {
@@ -169,11 +177,14 @@ export const GET: RequestHandler = async ({ url, cookies }) => {
 		}
 
 		const limit = Math.max(1, Math.min(1000, parseInt(url.searchParams.get('limit') || '200', 10)));
-		const sinceParam = url.searchParams.get('since');
-		const since = sinceParam ? Number(sinceParam) : undefined;
-
-		const messages = await getMessages({ limit, ...(since ? { since } : {}) });
-		return json(messages);
+		
+		const service = getService();
+		const [version, messages] = await Promise.all([
+			service.getVersion(),
+			service.getMessages(limit)
+		]);
+		
+		return json({ version, messages });
 	} catch (error) {
 		console.error('[talk] GET error:', error);
 		return json({ error: 'Request failed' }, { status: 500 });

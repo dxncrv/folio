@@ -4,6 +4,7 @@ import { env } from '$env/dynamic/private';
 
 // Context7: /redis/ioredis/v5_4_0 - Singleton with lazy connect and optimized pooling
 let redisClient: Redis | null = null;
+let redisSubscriber: Redis | null = null;
 
 export const getRedisClient = () => {
     if (!redisClient) {
@@ -25,6 +26,29 @@ export const getRedisClient = () => {
         }
     }
     return redisClient;
+};
+
+// Dedicated subscriber client for pub/sub (cannot be used for regular commands)
+export const getRedisSubscriber = () => {
+    if (!redisSubscriber) {
+        if (!env.REDIS_URL || env.REDIS_URL === 'your_redis_url_here') {
+            throw new Error('Redis is not configured. Set REDIS_URL environment variable.');
+        }
+        redisSubscriber = new Redis(env.REDIS_URL, {
+            lazyConnect: true,
+            maxRetriesPerRequest: 3,
+            enableReadyCheck: true,
+            retryStrategy: (times) => {
+                const delay = Math.min(times * 50, 2000);
+                return delay;
+            }
+        });
+        redisSubscriber.on('error', (err) => console.error('Redis subscriber error:', err));
+        if (process.env.NODE_ENV === 'development') {
+            redisSubscriber.on('connect', () => console.log('Redis subscriber connected'));
+        }
+    }
+    return redisSubscriber;
 };
 
 import type { CaseStudy } from '$lib/types';
@@ -191,8 +215,18 @@ export class RedisStore {
  * - folio:projects: Array of Project objects
  * - folio:studies: Array of CaseStudy objects (renamed from caseStudies)
  * - folio:media: Array of Media objects
- * - folio:talk:messages: List of TalkMessage objects
- * - folio:talk:sessions: Hash of TalkSession objects, keyed by username:ip
+ * 
+ * CHAT STORAGE (canvas:talk:*):
+ * - canvas:talk:messages (ZSET): Message index sorted by timestamp (ID → timestamp)
+ * - canvas:talk:msg:* (STRING): Individual message data (one key per message)
+ * - canvas:talk:version (COUNTER): Global version for client delta sync
+ * - canvas:talk:events (CHANNEL): Pub/sub channel for real-time updates
+ * 
+ * Note: One-KV-per-message (ZSET + HASH) pattern is standard practice for:
+ *   - O(1) get/update/delete vs O(N) with LIST
+ *   - Efficient pagination without deserializing entire dataset
+ *   - Better scalability for 50+ concurrent users
+ *   See message-service.server.ts for detailed architecture rationale.
  * 
  * ADMIN NAMESPACE (ephemeral data with TTL):
  * - admin:session:<token>: Admin session tokens (TTL: 3600s)
