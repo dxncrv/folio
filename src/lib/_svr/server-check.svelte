@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { serverStatus } from '$lib/dxn-svr/status.svelte.ts';
+	import { serverStatus } from '$lib/_svr/status.svelte';
 
 	$effect(() => {
 		serverStatus.connect();
@@ -9,7 +9,7 @@
 
 <div class="status-indicator">
 	<iconify-icon class="svr {serverStatus.status}" aria-label={serverStatus.status} icon="line-md:monitor-twotone" style="--icon-size:12px"></iconify-icon>
-	<span class="status-label">dxn-svr: <b>{serverStatus.status}</b></span>
+	<span class="status-label">svr: <b>{serverStatus.status}</b></span>
 </div>
 
 <style>

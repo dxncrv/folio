@@ -4,7 +4,7 @@
 	import Grainy from '$lib/_fx/Grainy.svelte';
 	import Header from '$lib/components/header.svelte';
 	import Timemachine from '$lib/components/timemachine.svelte';
-	import StatusCheck from '$lib/dxn-svr/server-check.svelte';
+	import StatusCheck from '$lib/_svr/server-check.svelte';
 </script>
 <svelte:head>
 		<link rel="icon" type="image/png" href="/favicon.png" />

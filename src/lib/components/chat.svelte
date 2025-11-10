@@ -26,7 +26,7 @@ Fully self-contained, no external component dependencies
 	let auth = $state({ username: '', error: '', touched: false });
 	
 	// Consolidated UI state
-	let ui = $state({ headerVisible: true, isLive: false });
+	let ui = $state({ headerVisible: true, isLive: true });
 	
 	// Message list state with refs
 	let messagesContainer: HTMLDivElement | undefined = $state();
