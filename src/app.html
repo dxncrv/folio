@@ -4,9 +4,11 @@
 		<meta charset="utf-8" />
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		<!-- TODO - implement @iconify/svelte to bundle icons -->
+		
+		<!-- Performance: Preconnect to external resources -->
+		<link rel="preconnect" href="https://code.iconify.design" />
+		<link rel="dns-prefetch" href="https://code.iconify.design" />
 		<script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js" defer></script>
-		<!-- END TODO -->
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

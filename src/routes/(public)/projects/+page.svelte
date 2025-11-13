@@ -2,6 +2,7 @@
     import Card from '$lib/components/project-card.svelte';
 	import Statusbar from '$lib/components/statusbar.svelte';
     import { Facets, Projects } from '$lib/store.svelte';
+    import { getCanonicalUrl } from '$lib/seo';
     import type { PageData } from './$types';
 
     let { data } = $props<{ data: PageData }>();
@@ -31,9 +32,11 @@
 <svelte:head>
 	<title>Projects - Aashay Mehta</title>
 	<meta name="description" content="Portfolio of design and development projects. Explore case studies showcasing interaction design, full-stack development, and creative problem solving." />
+	<link rel="canonical" href={getCanonicalUrl('/projects')} />
 	<meta property="og:title" content="Projects - Aashay Mehta" />
 	<meta property="og:description" content="Portfolio of design and development projects" />
 	<meta property="og:type" content="website" />
+	<meta property="og:url" content={getCanonicalUrl('/projects')} />
 	
 	<!-- Context7: /sveltejs/kit - JSON-LD structured data for SEO -->
 	{@html `<script type="application/ld+json">

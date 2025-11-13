@@ -10,7 +10,9 @@ export async function GET() {
 		const baseUrl = 'https://dxncrv.com';
 		const today = new Date().toISOString().split('T')[0];
 
-		// Generate sitemap XML
+		// Generate sitemap XML with current date as lastmod
+		// Note: Project and CaseStudy types don't include date fields
+		// In the future, consider adding updatedAt/createdAt to these types
 		const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<!-- Static pages -->

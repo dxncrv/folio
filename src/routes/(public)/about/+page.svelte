@@ -2,16 +2,41 @@
 	import Stack from '$lib/components/stack.svelte';
 	import Letter from './blocks/letter.svelte';
 	import Socials from '$lib/components/socials.svelte';
+	import { getCanonicalUrl, DEFAULT_OG_IMAGE, generatePersonSchema, SITE_URL } from '$lib/seo';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+
+	const personSchema = generatePersonSchema({
+		description: 'User Interaction and Experience Designer, Full-stack Developer, and Human. UX Engineer with 5+ years of experience building user-centered digital experiences.',
+		image: `${SITE_URL}${DEFAULT_OG_IMAGE}`,
+		knowsAbout: [
+			'User Experience Design',
+			'Interaction Design',
+			'Full-Stack Development',
+			'SvelteKit',
+			'TypeScript',
+			'UI/UX Research',
+			'Front-end Development',
+			'Back-end Development'
+		]
+	});
 </script>
 
 <svelte:head>
 	<title>About - Aashay Mehta</title>
 	<meta name="description" content="User Interaction and Experience Designer, Full-stack Developer, and Human. Learn more about my background, skills, and approach to design and development." />
+	<link rel="canonical" href={getCanonicalUrl('/about')} />
 	<meta property="og:title" content="About - Aashay Mehta" />
 	<meta property="og:description" content="User Interaction and Experience Designer, Full-stack Developer, and Human" />
+	<meta property="og:image" content={`${getCanonicalUrl('')}${DEFAULT_OG_IMAGE}`} />
+	<meta property="og:image:width" content="800" />
+	<meta property="og:image:height" content="800" />
+	<meta property="og:url" content={getCanonicalUrl('/about')} />
+	<meta property="og:type" content="profile" />
+	
+	<!-- Person Schema for SEO -->
+	{@html `<script type="application/ld+json">${JSON.stringify(personSchema)}</script>`}
 </svelte:head>
 
 <main>

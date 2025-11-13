@@ -97,6 +97,11 @@ async function confirmLogout() {
 }
 </script>
 
+<svelte:head>
+	<title>Admin - Start</title>
+	<meta name="robots" content="noindex, nofollow" />
+</svelte:head>
+
 <main>
 	<header>
 		<a href="/" class="logo">

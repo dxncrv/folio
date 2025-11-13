@@ -7,6 +7,9 @@ const markdownFiles = import.meta.glob('./blocks/*.md', {
 	import: 'default'
 }) as Record<string, string>;
 
+// Enable prerendering for static generation and better SEO
+export const prerender = true;
+
 export const load: PageServerLoad = async () => {
 	// Extract markdown content from glob imports
 	return {

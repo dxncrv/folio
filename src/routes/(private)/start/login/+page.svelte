@@ -56,6 +56,11 @@
   }
 </script>
 
+<svelte:head>
+	<title>Admin Login</title>
+	<meta name="robots" content="noindex, nofollow" />
+</svelte:head>
+
 <main>
   <div class="form">
     <h1>Login</h1>

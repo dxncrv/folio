@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { slugify } from '$lib/formatting';
 	import { Projects, CaseStudies } from '$lib/store.svelte';
+	import { getCanonicalUrl, SITE_URL, generateBreadcrumbSchema } from '$lib/seo';
 	import StudyHeader from './study-header.svelte';
 	import StudyBody from './study-body.svelte';
 	import type { PageData } from './$types';
@@ -52,13 +53,20 @@
 	<title>{project?.title || 'Project'} - Case Study</title>
 	{#if project}
 		<meta name="description" content={project.desc || `Case study for ${project.title}`} />
+		<link rel="canonical" href={getCanonicalUrl(`/projects/${slug}`)} />
 		<meta property="og:title" content={`${project.title} - Case Study`} />
 		<meta property="og:description" content={project.desc || `Case study for ${project.title}`} />
 		<meta property="og:type" content="article" />
+		<meta property="og:url" content={getCanonicalUrl(`/projects/${slug}`)} />
 		{#if project.image}
-			<meta property="og:image" content={project.image} />
+			<meta property="og:image" content={project.image.startsWith('http') ? project.image : `${SITE_URL}${project.image}`} />
+			<meta property="og:image:width" content="1200" />
+			<meta property="og:image:height" content="630" />
+			<meta name="twitter:card" content="summary_large_image" />
+			<meta name="twitter:image" content={project.image.startsWith('http') ? project.image : `${SITE_URL}${project.image}`} />
 		{/if}
 		
+		<!-- Article Schema -->
 		{@html `<script type="application/ld+json">
 			{
 				"@context": "https://schema.org",
@@ -75,6 +83,13 @@
 				"articleBody": "${caseStudy?.content?.substring(0, 500).replace(/"/g, '\\"') || ''}"
 			}
 		</script>`}
+		
+		<!-- Breadcrumb Schema -->
+		{@html `<script type="application/ld+json">${JSON.stringify(generateBreadcrumbSchema([
+			{ name: 'Home', url: '/' },
+			{ name: 'Projects', url: '/projects' },
+			{ name: project.title, url: `/projects/${slug}` }
+		]))}</script>`}
 	{/if}
 </svelte:head>
 
