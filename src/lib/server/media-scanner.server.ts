@@ -1,4 +1,4 @@
-import { readdir, stat } from 'fs/promises';
+import { readdir } from 'fs/promises';
 import { join, extname } from 'path';
 import { RedisStore } from './redis.server';
 import type { Media } from '$lib/types';

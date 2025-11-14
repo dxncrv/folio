@@ -23,9 +23,17 @@ const ipWhitelist: Handle = ({ event, resolve }) => {
 };
 
 const themeHandler: Handle = async ({ event, resolve }) => {
-    const newTheme = event.url.searchParams.get('theme');
-    const cookieTheme = event.cookies.get('theme');
-    const theme = newTheme || cookieTheme;
+    let theme: string | undefined;
+    
+    try {
+        // searchParams throws during prerendering, so wrap in try-catch
+        const newTheme = event.url.searchParams.get('theme');
+        const cookieTheme = event.cookies.get('theme');
+        theme = newTheme || cookieTheme;
+    } catch {
+        // During prerendering, just use cookie theme if available
+        theme = event.cookies.get('theme');
+    }
 
     if (theme) {
         return resolve(event, {
