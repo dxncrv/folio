@@ -25,7 +25,7 @@
             <span class="title">{project.title}</span>
         </h2>
     </a>
-    <Typer text={project.desc} />
+    <!-- <Typer text={project.desc} /> -->
     <!-- Tech used -->
     <ProjectTags tech={project.tech} />
 </div>

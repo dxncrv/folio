@@ -44,8 +44,8 @@
 		<enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" />
 		<h1>Aashay Mehta</h1>
 		<p>
-			User Interaction and Experience <b>Designer</b>;<br />
-			Full-stack <b>Developer</b>;<br />
+			UI/UX <b>Designer</b><br />
+			Full-stack <b>Developer</b><br />
 			& <b>Human</b>.
 		</p>
 		<Stack/>
