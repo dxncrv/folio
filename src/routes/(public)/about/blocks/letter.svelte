@@ -130,14 +130,14 @@
 <style>
 	/* Layout */
 	.letter {
-		margin-top: 1rem;
+		margin: 1rem;
 		position: relative;
 		display: flex;
 		flex-direction: column;
 		gap: 2rem;
 		padding: 4rem;
 		height: fit-content;
-		width: 35%;
+		width: 37.5%;
 		background: var(--bg);
 		border-radius: 1rem;
 		border: 1px solid var(--font-dim);
@@ -282,9 +282,9 @@
 		padding: 0.25rem 0.5rem;
 		border-radius: 0.25rem;
 		color: var(--accent);
-		font-family: 'Courier New', Consolas, monospace;
-		font-size: 0.9em;
-		border: 1px solid var(--outline);
+		font-family: 'Fira Code', Consolas, monospace;
+		font-size: 0.8rem;
+		border: 1px solid var(--font-dim);
 	}
 
 	:global(.letter p) {
@@ -373,7 +373,7 @@
 		margin-top: 0;
 	}
 
-	:global(.letter .accordion-content > *:last-child) {
+	:global(.letter .accordion-content > blockquote:last-child) {
 		margin-bottom: 1rem;
 	}
 
@@ -386,6 +386,7 @@
 
 	@media (max-width: 768px) {
 		.letter {
+			margin: 0;
 			margin-top: 2.5rem;
 			padding: 2rem;
 			width: 100%;

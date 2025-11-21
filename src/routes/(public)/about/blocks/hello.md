@@ -4,5 +4,5 @@
 
 **My edge?** I think like a researcher, design like an architect, and code like an engineer. Whether it's leading full-stack UX projects or building data-driven prototypes, I eliminate the translation layer between design and development.
 
-**Ready to see my digital solutions for humans?**  
+**Ready to see my digital solutions?**  
 [Explore my work →](/projects)
