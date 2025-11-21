@@ -66,7 +66,7 @@
     {#if hasProjects}
         <Statusbar />
     {:else}
-        <p>Z z Z</p>
+        <p>Select either code or design projects to view.</p>
     {/if}
 	<div id="view">
 		{#each selectedProjects.slice(Projects.range.min, Projects.range.max) as project}
@@ -99,7 +99,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: space-between;
-        border: 1px solid var(--font-dim);
+        /* border: 1px solid var(--bg); */
         border-radius: 1rem;
     }
     main.no-projects {
