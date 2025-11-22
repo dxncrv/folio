@@ -1,5 +1,9 @@
 <script>
 	import '../app.css';
+	import { setThemeStore, themeStore } from '$lib/theme.svelte';
+
+	// Initialize theme context for all child components
+	setThemeStore(themeStore);
 </script>
 
 <svelte:head>

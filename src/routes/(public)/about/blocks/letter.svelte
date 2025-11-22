@@ -138,6 +138,7 @@
 		padding: 4rem;
 		height: fit-content;
 		width: 37.5%;
+		min-width: 625px;
 		background: var(--bg);
 		border-radius: 1rem;
 		border: 1px solid var(--font-dim);

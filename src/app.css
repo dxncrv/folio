@@ -45,8 +45,8 @@ html {
 /* Light mode theme toggle variables and styles */
 [data-theme='light'] {
 	--body-bg: hsl(15, 20%, 93.5%);
-	--accent: hsl(205, 100%, 40%);
-	--accent-dim: hsl(205, 35%, 60%);
+	--accent: hsl(200, 100%, 40%);
+	--accent-dim: hsl(215, 59%, 40%);
 	--outline: hsl(0, 0%, 50%);
 	--bg: hsl(0, 0%, 100%);
 	--font-dim: hsl(0, 0%, 65%);

@@ -22,7 +22,7 @@ let {
 }: Props = $props();
 
 // Expand/collapse state using Svelte 5 $state rune
-let isExpanded = $state(true); // Default to expanded for better UX
+let isExpanded = $state(false); // Initialize as collapsed
 
 // Derived project count
 let projectCount = $derived(projects.length);
