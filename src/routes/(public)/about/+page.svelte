@@ -8,17 +8,18 @@
 	let { data }: { data: PageData } = $props();
 
 	const personSchema = generatePersonSchema({
-		description: 'User Interaction and Experience Designer, Full-stack Developer, and Human. UX Engineer with 5+ years of experience building user-centered digital experiences.',
+		description: 'User Interaction and Experience Designer, Full-stack Developer, and Human. Solutions Architect with 5+ years of experience building user-centered digital experiences.',
 		image: `${SITE_URL}${DEFAULT_OG_IMAGE}`,
 		knowsAbout: [
 			'User Experience Design',
 			'Interaction Design',
-			'Full-Stack Development',
 			'SvelteKit',
 			'TypeScript',
-			'UI/UX Research',
+			'UI/UX Design',
+			'Research',
 			'Front-end Development',
-			'Back-end Development'
+			'Back-end Development',
+			'Full-Stack Development'
 		]
 	});
 </script>

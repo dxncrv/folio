@@ -15,7 +15,8 @@ export const load: PageServerLoad = async () => {
 	return {
 		markdownContent: {
 			hello: markdownFiles['./blocks/hello.md'] || '',
-			resume: markdownFiles['./blocks/resume.md'] || ''
+			resume: markdownFiles['./blocks/resume.md'] || '',
+			pubs: markdownFiles['./blocks/pubs.md'] || ''
 		}
 	};
 };

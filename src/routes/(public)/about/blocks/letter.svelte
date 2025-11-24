@@ -1,6 +1,7 @@
 <script lang="ts">
 	import helloMd from '../blocks/hello.md?raw';
 	import resumeMd from '../blocks/resume.md?raw';
+	import pubsMd from '../blocks/pubs.md?raw';
 	import { parseMarkdown } from '$lib/markdown';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
@@ -10,6 +11,7 @@
 		markdownContent: {
 			hello: string;
 			resume: string;
+			pubs: string;
 		};
 	}
 
@@ -17,8 +19,9 @@
 
 	// Use server-loaded content if available, fallback to client imports
 	const files = $derived([
-		{ name: 'Hello', content: markdownContent.hello || helloMd },
-		{ name: 'Resume', content: markdownContent.resume || resumeMd }
+		{ name: 'Intro', content: markdownContent.hello || helloMd },
+		{ name: 'Resume', content: markdownContent.resume || resumeMd },
+		{ name: 'Papers', content: markdownContent.pubs || pubsMd }
 	]);
 
 	let activeTab = $state(0);
@@ -309,7 +312,6 @@
 
 	/* Blockquote Styles */
 	:global(.letter blockquote) {
-		margin: 0 1rem;
 		padding: 0 1rem;
 		border-left: 3px solid var(--font-dim);
 		color: var(--contrast);
@@ -325,6 +327,9 @@
 		padding: 0;
 		margin: 0;
 		background: transparent;
+	}
+	:global(.letter .accordion-content blockquote) {
+		margin: 0 1rem;
 	}
 
 	/* Accordion Styles */
