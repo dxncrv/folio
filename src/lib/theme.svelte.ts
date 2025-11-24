@@ -25,20 +25,10 @@ class ThemeStore {
 
 	constructor() {
 		// Initialize from document on browser
+		// The inline script in app.html has already set the correct theme
 		if (browser) {
-			// Check cookie first to handle prerendered pages where data-theme might be stale
-			const cookieMatch = document.cookie.match(/theme=([^;]+)/);
-			const cookieTheme = cookieMatch ? cookieMatch[1] as Theme : null;
-			const domTheme = document.documentElement.getAttribute('data-theme') as Theme;
-			
-			// Prioritize cookie, then DOM, then default to dark
-			const initialTheme = cookieTheme || domTheme || 'dark';
+			const initialTheme = (document.documentElement.getAttribute('data-theme') || 'dark') as Theme;
 			this.theme = initialTheme;
-
-			// Ensure DOM is in sync if we found a cookie that differs from the static HTML
-			if (initialTheme !== domTheme) {
-				document.documentElement.setAttribute('data-theme', initialTheme);
-			}
 		}
 	}
 

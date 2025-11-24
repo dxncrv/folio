@@ -29,16 +29,14 @@ const themeHandler: Handle = async ({ event, resolve }) => {
 	try {
 		const newTheme = event.url.searchParams.get('theme');
 		const cookieTheme = event.cookies.get('theme');
-		theme = newTheme || cookieTheme;
+		theme = newTheme || cookieTheme || 'dark';
 	} catch {
-		theme = event.cookies.get('theme');
+		theme = event.cookies.get('theme') || 'dark';
 	}
-	if (theme) {
-		return resolve(event, {
-			transformPageChunk: ({ html }) => html.replace('data-theme=""', `data-theme="${theme}"`)
-		});
-	}
-	return resolve(event);
+	// Always inject theme (default to 'dark' for prerendered pages)
+	return resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('data-theme=""', `data-theme="${theme}"`)
+	});
 };
 
 export const handle = sequence(ipWhitelist, themeHandler) satisfies Handle;
