@@ -11,33 +11,48 @@
  */
 
 import { createContext } from 'svelte';
+import { browser } from '$app/environment';
 
 export type Theme = 'light' | 'dark';
 export type BlendMode = 'color-dodge' | 'color-burn';
 
 class ThemeStore {
-	// Current active theme, tracked from document
+	// Current active theme
 	theme = $state<Theme>('dark');
 
-	// Derived blend mode based on theme (computed once and cached)
+	// Derived blend mode based on theme
 	blendMode = $derived<BlendMode>(this.theme === 'light' ? 'color-dodge' : 'color-burn');
 
 	constructor() {
 		// Initialize from document on browser
-		if (typeof document !== 'undefined') {
-			const initialTheme = (document.documentElement.getAttribute('data-theme') || 'dark') as Theme;
+		if (browser) {
+			// Check cookie first to handle prerendered pages where data-theme might be stale
+			const cookieMatch = document.cookie.match(/theme=([^;]+)/);
+			const cookieTheme = cookieMatch ? cookieMatch[1] as Theme : null;
+			const domTheme = document.documentElement.getAttribute('data-theme') as Theme;
+			
+			// Prioritize cookie, then DOM, then default to dark
+			const initialTheme = cookieTheme || domTheme || 'dark';
 			this.theme = initialTheme;
 
-			// Listen for theme changes via MutationObserver
-			const observer = new MutationObserver(() => {
-				const newTheme = (document.documentElement.getAttribute('data-theme') || 'dark') as Theme;
-				if (newTheme !== this.theme) {
-					this.theme = newTheme;
-				}
-			});
-
-			observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+			// Ensure DOM is in sync if we found a cookie that differs from the static HTML
+			if (initialTheme !== domTheme) {
+				document.documentElement.setAttribute('data-theme', initialTheme);
+			}
 		}
+	}
+
+	set(newTheme: Theme) {
+		this.theme = newTheme;
+		if (browser) {
+			document.documentElement.setAttribute('data-theme', newTheme);
+			// Set cookie for 1 year
+			document.cookie = `theme=${newTheme}; path=/; max-age=31536000; SameSite=Lax`;
+		}
+	}
+
+	toggle() {
+		this.set(this.theme === 'light' ? 'dark' : 'light');
 	}
 }
 

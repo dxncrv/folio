@@ -1,9 +1,8 @@
 <script lang="ts">
 	// Importing and utility functions
-	import { updateTheme } from '$lib/utils';
 	import { Facets } from '$lib/store.svelte';
+	import { themeStore } from '$lib/theme.svelte';
 	import { page } from '$app/state';
-	import { enhance } from '$app/forms';
 	import { Dot } from '$lib';
 
 	// Initialising the navigation links
@@ -20,8 +19,8 @@
 
 </script>
 
-	{#snippet formBtn(action: string, label: string, id: string, icon: string)}
-		<button formaction={action} aria-label={label}>
+	{#snippet themeBtn(theme: 'light' | 'dark', label: string, id: string, icon: string)}
+		<button onclick={() => themeStore.set(theme)} aria-label={label}>
 			<iconify-icon id={id} icon={icon} width="28" height="28"></iconify-icon>
 		</button>
 	{/snippet}
@@ -43,10 +42,10 @@
 				{name}
 			</button>
 		{/each}
-		<form id="theme-toggler" method="post" use:enhance={updateTheme}>
-			{@render formBtn('/?/setTheme&theme=light','Toggle Light Theme','light','line-md:moon-alt-to-sunny-outline-loop-transition')}
-			{@render formBtn('/?/setTheme&theme=dark','Toggle Dark Theme','dark','line-md:sunny-outline-to-moon-loop-transition')}
-		</form>
+		<div id="theme-toggler">
+			{@render themeBtn('light','Toggle Light Theme','light','line-md:moon-alt-to-sunny-outline-loop-transition')}
+			{@render themeBtn('dark','Toggle Dark Theme','dark','line-md:sunny-outline-to-moon-loop-transition')}
+		</div>
 	</menu>
 </nav>
 

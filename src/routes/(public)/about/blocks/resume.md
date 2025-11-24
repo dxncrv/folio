@@ -1,8 +1,10 @@
-**Research & Infrastructure Manager** [HeartLife](https://heartlife.ca/) `0.34 FTE`  
+## My inflated titles:  
+
+**Research & Digital Infrastructure Manager** @ [HeartLife Foundation](https://heartlife.ca/)  
+**Technical Consultant** @ [ALIVE Research Lab](https://alivelab.ca/)  
+<!-- **Full-stack Developer** @ [The SOGC](https://caps.sogc.org/) `0.1 FTE`   -->
 <!-- `Jul '25 -> N/A` -->
 <!-- >Managing WordPress site development, performance optimization, and digital marketing implementation. Enhanced site functionality with multilingual filtering, caching, and GTM integration. Led brand transition across 18+ pages while maintaining accessibility and SEO standards. -->
-**Software Developer** [ALIVE Research](https://alivelab.ca/) `0.12 FTE`  
-**Full-stack Developer** [The SOGC](https://caps.sogc.org/) `0.10 FTE`  
 <!-- `Oct '25 -> Oct '26` -->
 <!-- >Implemented headless WordPress architecture with Svelte frontend. Reconfigured server infrastructure, database routing, and CMS deployment for improved performance and scalability. -->
 
@@ -17,7 +19,7 @@
 <<<
 
 >>> **University of British Columbia** - ALIVE Research Lab  
-**Software Developer** `Jun '21 -> Aug '26`
+**Software Engineer** `Jun '21 -> Aug '26`
 
 >Founding developer on SSHRC & CIHR funded educational game studying learner agency in adolescents. Led technical architecture, team coordination, and research integration across 4-year development lifecycle. Shipped iOS application with integrated survey systems and analytics dashboard. 
 <<<

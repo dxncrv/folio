@@ -391,6 +391,7 @@
 			margin-top: 2.5rem;
 			padding: 2rem;
 			width: 100%;
+			min-width: unset;
 			border-left: none;
 			border-right: none;
 		}

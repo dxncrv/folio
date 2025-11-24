@@ -1,5 +1,4 @@
-<!--
-  Copyright (c) 2025 @dxncrv
+<!-- Copyright (c) 2025 @dxncrv
   
   Portfolio component - Demo purposes only
   License: CC BY-NC-ND 4.0

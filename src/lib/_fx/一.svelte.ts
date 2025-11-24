@@ -1,5 +1,4 @@
-/*
-  Copyright (c) 2025 @dxncrv
+/* Copyright (c) 2025 @dxncrv
   
   Portfolio fx store - Demo purposes only
   License: CC BY-NC-ND 4.0
@@ -8,7 +7,7 @@
   Commercial licensing: hello@dxncrv.com
 */
 
-// CircleFx class to manage cursor circle state and behavior.
+// 1. CircleFx class to manage cursor circle state and behavior.
 export class CircleFx {
 
 	// Timers / RAF handles
@@ -123,7 +122,7 @@ export class CircleFx {
 	};
 }
 
-// TyperFx class to manage typing effect state and behavior.
+// 2. TyperFx class to manage typing effect state and behavior.
 export class TyperFx {
 	state = $state({ text: '', typing: false, truncated: true });
 	get buttonText() { return this.state.truncated ? 'More' : 'Less'; }
