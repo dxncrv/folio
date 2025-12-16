@@ -1,4 +1,4 @@
->`Pending` Code J, Ralph R, Forde K, Moylan R, Lutrin A, Tasabehji Z, **Mehta A**, Zap N, El Banna N. The science of play: Assessing learner agency in virtual inquiry-based environments.  
+>`Pending` Code, J., Forde, K., Moylan, R., Lutrin, A., Tasabehji, Z., Ralph, R., **Mehta, A.**, Zap, N., & El Banna, N. (accepted with revisions). Expressions of learner agency in virtual inquiry: Linking agency and evidence-centered game design. Computers & Education.
 
 >`Article` Abdulai AF, Duong C, Stroulia E, Czerniak E, Chiu R, **Mehta A**, Koike K, Norman WV. A Health Professional Mentorship Platform to Improve Equitable Access to Abortion: Development, Usability, and Content Evaluation. JMIR Human Factors. 2025 Feb 19;12(1):e63364. [doi:10.2196/63364](https://doi.org/10.2196/63364)  
 

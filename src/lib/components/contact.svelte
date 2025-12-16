@@ -38,15 +38,15 @@ let showForm = false;
 
 <div class="contact-form">
 	{#if !showForm}
-		<button type="button" class="primary" onclick={() => showForm = true}>Get in touch</button>
+		<button type="button" class="primary" onclick={() => showForm = true}>Dont mail me</button>
 	{:else}
 	<form onsubmit={handleSubmit}>
 			<button class="close-btn" onclick={() => showForm = false} aria-label="Close form"><iconify-icon icon="line-md:close"></iconify-icon></button>
 			<p>Status: <span class:fail={status.startsWith('Failed')}>{status}</span></p>
 			<input type="hidden" name="access_key" value="489cc2ff-5a51-4737-a5c9-8491e6cf8038" />
-			<textarea name="message" placeholder="Hey dude, stop planting mint directly in soil, its taking over my backyard!" required></textarea>
+			<textarea name="message" placeholder="Save yourself some time and just close it all." required></textarea>
 			<div>
-				<input id="email" name="email" type="email" placeholder="angry@neighbor.com" required />
+				<input id="email" name="email" type="email" placeholder="stop@fr.com" required />
 				<button type="submit" class="submit-btn"> Submit </button>
 			</div>
 		</form>

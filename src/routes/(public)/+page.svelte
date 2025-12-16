@@ -2,7 +2,7 @@
 	import Socials from '$lib/components/socials.svelte';
 	import Contact from '$lib/components/contact.svelte';
 	import { getCanonicalUrl, DEFAULT_OG_IMAGE } from '$lib/seo';
-	import Typer from '$lib/_fx/Typer.svelte';
+	// import Typer from '$lib/_fx/Typer.svelte';
 </script>
 <svelte:head>
 	<title>Home - Aashay Mehta</title>
@@ -19,15 +19,15 @@
 </svelte:head>
 
 <main>
-	<h1>Solutions Architect</h1>
-	<p>5+ years of experience in shipping real impact from conception to measurement</p>
-	<div class="links">
+	<h1>Just close it</h1>
+	<Contact initialStatus="Ready" />
+	<Socials />
+	<!-- <p>5+ years of experience in shipping real impact from conception to measurement</p> -->
+	<!-- <div class="links">
 		<a href="/about">About</a>
 		<p>•</p>
 		<a href="/projects">Projects</a>
-	</div>
-	<Socials />
-	<Contact initialStatus="Ready" />
+	</div> -->
 </main>
 
 <style>

@@ -43,11 +43,11 @@
 <main>
 	<div class="label">
 		<enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" />
-		<h1>Aashay Mehta</h1>
+		<h1>Aash</h1>
 		<p>
-			UI/UX <b>Designer</b><br />
-			Full-stack <b>Developer</b><br />
-			& <b>Human</b>.
+			<s>UI/UX <b>Designer</b><br /></s>
+			<s>Full-stack <b>Developer</b><br /></s>
+			Barely a <b>Human</b>
 		</p>
 		<Stack/>
 		<Socials />
