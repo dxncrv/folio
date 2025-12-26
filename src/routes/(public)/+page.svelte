@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Socials from '$lib/components/socials.svelte';
-	import Contact from '$lib/components/contact.svelte';
+	// import Contact from '$lib/components/contact.svelte';
 	import { getCanonicalUrl, DEFAULT_OG_IMAGE } from '$lib/seo';
 	// import Typer from '$lib/_fx/Typer.svelte';
 </script>
@@ -19,8 +19,8 @@
 </svelte:head>
 
 <main>
-	<h1>Just close it</h1>
-	<Contact initialStatus="Ready" />
+	<h1>Aash</h1>
+	<!-- <Contact initialStatus="Ready" /> -->
 	<Socials />
 	<!-- <p>5+ years of experience in shipping real impact from conception to measurement</p> -->
 	<!-- <div class="links">

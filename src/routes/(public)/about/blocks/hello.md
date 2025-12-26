@@ -1,10 +1,6 @@
-## I'm Aash,
+## I'm Aashay Mehta,
 
-**I bridge design and code with psychology-backed precision.** From award-winning Unity simulations to modern web applications, I've spent 5+ years turning user research into pleasant digital experiences.
+**A design engineer,** mainly focused on websites, currently self-employed and working with 2 nonprofit organizations and a research lab.
 
-**My edge?** I think like a researcher, design like an architect, and code like an engineer. Whether it's leading full-stack UX projects or building data-driven prototypes, I eliminate the translation layer between design and development.
-
-AI wrote this, because I'm too deficient of dopamine for self-promo.
-
-**Ready to see my work?**  
-[Explore my work →](/projects)
+**Fullstack Developer** @ HeartLife  
+**Software Developer** @ ALIVE Research

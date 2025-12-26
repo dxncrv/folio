@@ -134,12 +134,12 @@ footer p {
 footer a {
 	display: flex;
 	font-family: var(--font-ui);
-	color: orange;
+	color: var(--accent-dim);
 	text-decoration: none;
 	transition: color 0.3s;
 }
 footer a:hover {
-	color: yellow;
+	color: var(--accent);
 }
 
 @media (max-width: 768px) {

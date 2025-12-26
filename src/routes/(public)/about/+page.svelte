@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Stack from '$lib/components/stack.svelte';
+	// import Stack from '$lib/components/stack.svelte';
 	import Letter from './blocks/letter.svelte';
 	import Socials from '$lib/components/socials.svelte';
 	import { getCanonicalUrl, DEFAULT_OG_IMAGE, generatePersonSchema, SITE_URL } from '$lib/seo';
@@ -42,15 +42,17 @@
 
 <main>
 	<div class="label">
-		<enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" />
+		<!-- <enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" /> -->
 		<h1>Aash</h1>
 		<p>
-			<s>UI/UX <b>Designer</b><br /></s>
-			<s>Full-stack <b>Developer</b><br /></s>
-			Barely a <b>Human</b>
+			Full-stack <b>Developer</b><br />
+			UI/UX <b>Designer</b><br />
 		</p>
-		<Stack/>
+		<!-- <Stack/> -->
 		<Socials />
+		<p>
+			Vancouver, CA<br />
+		</p>
 	</div>
 	<Letter markdownContent={data.markdownContent} />
 </main>

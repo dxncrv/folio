@@ -1,6 +1,15 @@
 import Redis from 'ioredis';
-import type { Project, Media } from '$lib/types';
+import type { Project, Media, CaseStudy } from '$lib/types';
 import { env } from '$env/dynamic/private';
+import projectsData from '$lib/projects.json';
+
+// Context7: /vite/glob-import - Load markdown files for dev mode
+const studyFiles = import.meta.glob('/src/routes/\\(public\\)/projects/\\[...slug\\]/studies/*.md', { query: '?raw', import: 'default', eager: true });
+
+const studiesData: CaseStudy[] = Object.entries(studyFiles).map(([path, content]) => {
+    const slug = path.split('/').pop()?.replace('.md', '') ?? '';
+    return { slug, content: content as string };
+});
 
 // Context7: /redis/ioredis/v5_4_0 - Singleton with lazy connect and optimized pooling
 let redisClient: Redis | null = null;
@@ -51,26 +60,33 @@ export const getRedisSubscriber = () => {
     return redisSubscriber;
 };
 
-import type { CaseStudy } from '$lib/types';
-
 // Small generic list store helper to avoid repeating CRUD logic for array-backed keys.
 // Context7: /redis/ioredis/v5_4_0 - Cache parsed results to reduce JSON overhead
-function createListStore<T>(key: string, idSelector: (item: T) => string) {
+function createListStore<T>(key: string, idSelector: (item: T) => string, defaultData: T[] = []) {
     const client = getRedisClient;
     let cachedData: T[] | null = null;
     let cacheKey: string | null = null;
 
     async function get(): Promise<T[]> {
-        const data = await client().get(key);
-        if (!data) {
-            cachedData = [];
-            return [];
+        try {
+            const redis = client();
+            const data = await redis.get(key);
+            if (!data) {
+                cachedData = defaultData;
+                return defaultData;
+            }
+            // Cache only if unchanged
+            if (cacheKey === data) return cachedData!;
+            cachedData = JSON.parse(data) as T[];
+            cacheKey = data;
+            return cachedData;
+        } catch (error: any) {
+            // Fallback to default data if Redis is unavailable or key not found
+            if (process.env.NODE_ENV === 'development') {
+                console.warn(`Redis error for key ${key}, falling back to default data:`, error.message);
+            }
+            return defaultData;
         }
-        // Cache only if unchanged
-        if (cacheKey === data) return cachedData!;
-        cachedData = JSON.parse(data) as T[];
-        cacheKey = data;
-        return cachedData;
     }
 
     async function set(items: T[]): Promise<void> {
@@ -109,13 +125,17 @@ function createListStore<T>(key: string, idSelector: (item: T) => string) {
 }
 
 // Create stores with folio: namespace
-const projectsStore = createListStore<Project>('folio:projects', p => p.title);
+const projectsStore = createListStore<Project>('folio:projects', p => p.title, projectsData as Project[]);
 const studiesStore = createListStore<CaseStudy>('folio:studies', cs => cs.slug);
 const mediaStore = createListStore<Media>('folio:media', m => m.id);
 
 export class RedisStore {
     // Projects
     static async getProjects(): Promise<Project[]> {
+        // In development, prefer the local JSON file as the database for projects
+        if (process.env.NODE_ENV === 'development') {
+            return projectsData as Project[];
+        }
         return projectsStore.get();
     }
 
@@ -137,6 +157,10 @@ export class RedisStore {
 
     // Case studies (renamed to "studies")
     static async getCaseStudies(): Promise<CaseStudy[]> {
+        // In development, prefer the local markdown files as the database for case studies
+        if (process.env.NODE_ENV === 'development') {
+            return studiesData;
+        }
         return studiesStore.get();
     }
 

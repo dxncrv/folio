@@ -394,19 +394,22 @@
 		.letter {
 			margin: 0;
 			margin-top: 2.5rem;
-			padding: 2rem;
+			padding: 1.5rem;
 			width: 100%;
 			min-width: unset;
 			border-left: none;
 			border-right: none;
 		}
+		.content-wrapper {
+			gap: 1.5rem;
+		}
 		.tabs {
-			top: -2.15rem;
+			top: -2.70rem;
 			flex-wrap: wrap;
 			gap: 0.25rem;
 		}
 		.tab {
-			padding: 0.5rem 1rem;
+			width: auto;
 			font-size: 0.95rem;
 		}
 	}

@@ -1,10 +1,9 @@
 <script>
 	import 'iconify-icon';
 	import { Circle } from '$lib';
-	import Grainy from '$lib/_fx/Grainy.svelte';
+	// import Grainy from '$lib/_fx/Grainy.svelte';
 	import Header from '$lib/components/header.svelte';
 	import Timemachine from '$lib/components/timemachine.svelte';
-	// import StatusCheck from '$lib/_svr/server-check.svelte';
 </script>
 <svelte:head>
 		<link rel="icon" type="image/png" href="/favicon.png" />
@@ -16,12 +15,11 @@
 		aria-label="kanban">
 		<iconify-icon icon="line-md:check-list-3-filled" width="18" height="18" aria-label="project board"></iconify-icon>
 	</a>
-	<p>© 2025 handmade with <span style="color: salmon;">♡</span> by @dxncrv</p>
+	<p>© 2025 with ♡ by @dxncrv</p>
 	<a href="/start" aria-label="start page">
-		<!-- <StatusCheck /> -->
-		<iconify-icon icon="line-md:backup-restore" width="18" height="18" aria-label="start page"></iconify-icon>
+		<iconify-icon icon="hugeicons:login-method" width="18" height="18" aria-label="start page"></iconify-icon>
 	</a>
 </footer>
 <Timemachine/>
 <Circle />
-<Grainy/>
+<!-- <Grainy/> -->
