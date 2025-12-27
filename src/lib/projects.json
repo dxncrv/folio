@@ -3,7 +3,7 @@
         "tags": ["Code", "Design"],
         "title": "CAPS-CPCA WebApp",
         "image": "caps",
-        "link": "https://staging.caps.sogc.org",
+        "link": "https://caps.sogc.org",
         "git": "https://github.com/CAPS-CPCA/CAPS-CPCA-WebApp",
         
         "desc": {

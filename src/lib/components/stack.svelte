@@ -2,15 +2,12 @@
 // Tech stack and tools
 const stack = {
 	'Excalidraw': 'material-icon-theme:excalidraw',
+	'Figma': 'material-icon-theme:figma',
 	'Svelte': 'material-icon-theme:svelte',
 	'TypeScript': 'vscode-icons:file-type-typescript',
-	'React': 'material-icon-theme:react',
-	'VSCode': 'material-icon-theme:vscode',
-	'Git': 'material-icon-theme:git',
-	'Python': 'material-icon-theme:python',
 	'C Sharp': 'material-icon-theme:csharp',
-	'Claude': 'material-icon-theme:claude',
 	'Redis': 'devicon:redis',
+	'Python': 'material-icon-theme:python',
 };
 </script>
 

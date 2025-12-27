@@ -1,196 +1,116 @@
 /* Copyright (c) 2025 @dxncrv
-  
   Portfolio fx store - Demo purposes only
   License: CC BY-NC-ND 4.0
-  
-  View/reference for learning only. No commercial use, modifications, or redistribution.
-  Commercial licensing: hello@dxncrv.com
 */
 
-// 1. CircleFx class to manage cursor circle state and behavior.
 export class CircleFx {
+	#decay: any; #hide: any; #raf: any;
+	#next = { x: 0, y: 0 };
+	#last = { x: 0, y: 0 };
 
-	// Timers / RAF handles
-	#decayTimeout: ReturnType<typeof setTimeout> | null = null;
-	#hideTimeout: ReturnType<typeof setTimeout> | null = null;
-	#raf: number | null = null;
-
-	// Internal state
-	#nextX = 0;
-	#nextY = 0;
-	#last = $state({ x: 0, y: 0 });
-
-	// Tunables
 	BASE = 32;
 	MAX_SIZE = 64;
-	SIZE_FACTOR = 0.06; // how much distance increases size
-	DECAY_DELAY = 700;
-	HIDE_DELAY = 1000;
+	cursor = $state({ x: 0, y: 0, visible: false, size: 32 });
 
-	// Public reactive cursor state
-	cursor = $state({ x: 0, y: 0, visible: false, size: this.BASE });
-
-	constructor() {
-		// Avoid initial jump
-		this.#last.x = this.cursor.x;
-		this.#last.y = this.cursor.y;
+	#isOverColored(el: Element | null): boolean {
+		if (!el || el === document.body) return false;
+		const bg = getComputedStyle(el).backgroundColor;
+		const isTransparent = !bg || bg === 'transparent' || bg.replace(/\s/g, '') === 'rgba(0,0,0,0)';
+		return !isTransparent || this.#isOverColored(el.parentElement);
 	}
 
-	// Small helpers for clarity
-	#clearTimeouts(...tids: Array<'decay' | 'hide'>) {
-		for (const t of tids) {
-			if (t === 'decay' && this.#decayTimeout) {
-				clearTimeout(this.#decayTimeout);
-				this.#decayTimeout = null;
-			}
-			if (t === 'hide' && this.#hideTimeout) {
-				clearTimeout(this.#hideTimeout);
-				this.#hideTimeout = null;
-			}
-		}
-	}
-
-	#clamp(v: number, min: number, max: number) {
-		return Math.max(min, Math.min(max, v));
-	}
-
-	// Walk up DOM from point to see if any element has a non-transparent background.
-	#isOverColoredBackground(el: Element | null) {
-		while (el && el !== document.body) {
-			const bg = getComputedStyle(el).backgroundColor;
-			if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'inherit') return true;
-			el = el.parentElement;
-		}
-		return false;
-	}
-
-	#resetSize = () => {
-		this.cursor.size = this.BASE;
-		this.#clearTimeouts('hide');
-		this.#hideTimeout = setTimeout(() => (this.cursor.visible = false), this.HIDE_DELAY);
-	};
-
-	#scheduleDecay = () => {
-		this.#clearTimeouts('hide');
-		this.#clearTimeouts('decay');
-		this.#decayTimeout = setTimeout(this.#resetSize, this.DECAY_DELAY);
-	};
-
-	#processMouse = () => {
+	#process = () => {
 		this.#raf = null;
-		const x = this.#nextX;
-		const y = this.#nextY;
-
-		this.cursor.x = x;
-		this.cursor.y = y;
-
+		const { x, y } = this.#next;
+		this.cursor.x = x; this.cursor.y = y;
+		
 		const dist = Math.hypot(x - this.#last.x, y - this.#last.y);
-		this.cursor.size = this.#clamp(this.cursor.size + dist * this.SIZE_FACTOR, this.BASE, this.MAX_SIZE);
+		this.cursor.size = Math.min(this.MAX_SIZE, Math.max(this.BASE, this.cursor.size + dist * 0.06));
+		this.#last = { x, y };
 
-		this.#last.x = x;
-		this.#last.y = y;
-
-		const el = document.elementFromPoint(x, y);
-		this.cursor.visible = !this.#isOverColoredBackground(el);
-
-		this.#scheduleDecay();
+		this.cursor.visible = !this.#isOverColored(document.elementFromPoint(x, y));
+		
+		clearTimeout(this.#hide);
+		clearTimeout(this.#decay);
+		this.#decay = setTimeout(() => {
+			this.cursor.size = this.BASE;
+			this.#hide = setTimeout(() => this.cursor.visible = false, 1000);
+		}, 700);
 	};
 
-	// Public API
 	onMove = (e: MouseEvent) => {
-		this.#clearTimeouts('hide');
-		this.#nextX = e.clientX;
-		this.#nextY = e.clientY;
-		if (this.#raf == null) this.#raf = requestAnimationFrame(this.#processMouse);
+		this.#next = { x: e.clientX, y: e.clientY };
+		if (!this.#raf) this.#raf = requestAnimationFrame(this.#process);
 	};
 
 	onLeave = () => {
-		if (this.#raf) cancelAnimationFrame(this.#raf);
+		cancelAnimationFrame(this.#raf);
 		this.#raf = null;
 		this.cursor.visible = false;
-		this.#clearTimeouts('decay', 'hide');
-		this.#resetSize();
+		clearTimeout(this.#decay);
+		clearTimeout(this.#hide);
 	};
 
-	// Context7: /sveltejs/svelte@5.37.0 - Cleanup method for proper lifecycle management
-	destroy = () => {
-		if (this.#raf) cancelAnimationFrame(this.#raf);
-		this.#clearTimeouts('decay', 'hide');
-		this.#raf = null;
-		this.#decayTimeout = null;
-		this.#hideTimeout = null;
-	};
+	destroy = () => this.onLeave();
 }
 
-// 2. TyperFx class to manage typing effect state and behavior.
 export class TyperFx {
 	state = $state({ text: '', typing: false, truncated: true });
-	get buttonText() { return this.state.truncated ? 'More' : 'Less'; }
-
 	#cfg: { maxLength: number; speed: number };
-	#int: ReturnType<typeof setInterval> | null = null;
-	#last = $state('');
-	#dots = ' ...';
+	#int: any;
+	#last = '';
 
 	constructor(cfg: { maxLength?: number; speed?: number } = {}) {
 		this.#cfg = { maxLength: cfg.maxLength ?? 30, speed: cfg.speed ?? 20 };
 	}
 
-	#finish(val: string) {
-		this.state.text = val;
-		if (this.#int) { clearInterval(this.#int); }
-		this.state.typing = false;
-		this.#last = val;
-	}
+	get buttonText() { return this.state.truncated ? 'More' : 'Less'; }
+	showButton = (len: number) => len > this.#cfg.maxLength && !this.state.typing;
+	toggle = () => this.state.truncated = !this.state.truncated;
 
-	#params(target: string) {
-		const base = this.#last.replace(this.#dots, '');
-		if (!this.state.truncated && this.#last && target.startsWith(base)) return { from: base.length, rev: false };
-		if (this.state.truncated && this.#last && !this.#last.includes(this.#dots) && target.includes(this.#dots)) return { from: 0, rev: true };
-		return { from: 0, rev: false };
-	}
-	
-	#run(target: string, from = 0, rev = false) {
-		if (this.#int) { clearInterval(this.#int); }
+	processText(full: string) {
+		const dots = ' ...';
+		const target = (!this.state.truncated || full.length <= this.#cfg.maxLength)
+			? full
+			: full.slice(0, Math.max(0, full.lastIndexOf(' ', this.#cfg.maxLength))) + dots;
+		
+		if (target === this.#last) return;
+		
+		clearInterval(this.#int);
 		this.state.typing = true;
-		if (!rev && from === 0) this.state.text = '';
-		let i = rev ? this.state.text.length : from;
-		const speed = this.#cfg.speed / (rev ? 2 : 1);
+
+		const lastBase = this.#last.replace(dots, '');
+		const targetBase = target.replace(dots, '');
+		
+		let from = 0;
+		let isRev = false;
+
+		if (target.startsWith(lastBase)) {
+			from = lastBase.length;
+		} else if (lastBase.startsWith(targetBase)) {
+			isRev = true;
+			from = this.#last.length;
+		} else {
+			this.state.text = '';
+		}
+
+		let i = from;
 		this.#int = setInterval(() => {
-			if (rev) {
+			if (isRev) {
 				if (this.state.text.length > target.length) this.state.text = this.state.text.slice(0, -1);
 				else this.#finish(target);
 			} else {
 				if (i < target.length) this.state.text = target.slice(0, ++i);
 				else this.#finish(target);
 			}
-		}, speed);
+		}, this.#cfg.speed / (isRev ? 2 : 1));
 	}
 
-	showButton = (len: number) => len > this.#cfg.maxLength && !this.state.typing;
-	toggle = () => { this.state.truncated = !this.state.truncated; };
-
-	// Context7: /sveltejs/svelte@5.37.0 - Cleanup method for proper lifecycle management
-	destroy = () => {
-		if (this.#int) {
-			clearInterval(this.#int);
-			this.#int = null;
-		}
-	};
-
-	processText(full: string) {
-		const target = (!this.state.truncated || full.length <= this.#cfg.maxLength)
-			? full
-			: ((): string => {
-				const cut = full.lastIndexOf(' ', this.#cfg.maxLength);
-				const at = cut > 0 ? cut : this.#cfg.maxLength;
-				return full.slice(0, at) + this.#dots;
-			})();
-		if (target === this.#last) return;
-		const { from, rev } = this.#params(target) as { from: number; rev: boolean };
-		this.#run(target, from, rev);
+	#finish(val: string) {
+		clearInterval(this.#int);
+		this.state.text = this.#last = val;
+		this.state.typing = false;
 	}
+
+	destroy = () => clearInterval(this.#int);
 }
-
-/* Portfolio component by @dxncrv - https://dxncrv.com */
-/* Created: 2025-08-08 - Do not use without permission */

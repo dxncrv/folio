@@ -255,8 +255,8 @@
 		height: auto;		
 	}
 	:global(.letter hr) {
-		border: 1px solid var(--font-dim);
-		margin: 0;
+		border: 1px solid var(--bg);
+		margin-top: 1rem;
 	}
 
 	:global(.letter ul) {
@@ -359,16 +359,16 @@
 	}
 
 	:global(.letter .accordion-title::before) {
-		content: '➤';
+		content: '+';
 		margin-right: 0.75rem;
 		transition: transform 0.3s;
 		display: inline-block;
 		color: var(--accent);
-		font-size: 0.75rem;
+		font-size: 1rem;
 	}
 
 	:global(.letter .accordion[open] .accordion-title::before) {
-		transform: rotate(90deg);
+		transform: rotate(45deg);
 	}
 
 	:global(.letter .accordion-content) {

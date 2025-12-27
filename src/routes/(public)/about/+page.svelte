@@ -1,5 +1,5 @@
 <script lang="ts">
-	// import Stack from '$lib/components/stack.svelte';
+	import Stack from '$lib/components/stack.svelte';
 	import Letter from './blocks/letter.svelte';
 	import Socials from '$lib/components/socials.svelte';
 	import { getCanonicalUrl, DEFAULT_OG_IMAGE, generatePersonSchema, SITE_URL } from '$lib/seo';
@@ -45,7 +45,7 @@
 		<!-- <enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" /> -->
 		<h1>Aash</h1>
 		<p>
-			Full-stack <b>Developer</b><br />
+			Fullstack <b>Developer</b><br />
 			UI/UX <b>Designer</b><br />
 		</p>
 		<!-- <Stack/> -->
@@ -58,12 +58,12 @@
 </main>
 
 <style>
-	enhanced\:img {
+	/* enhanced\:img {
 		height: 10rem;
 		width: 10rem;
 		object-fit: cover;
 		border-radius: 2rem;
-	}
+	} */
 	main {
 		display: flex;
 		margin: 2rem auto;
@@ -84,6 +84,8 @@
 		align-items: center;
 		text-align: center;
 		gap: 1rem;
+		position: sticky;
+		top: 6rem;
 	}
 	.label p {
 		font-size: calc(var(--font-size) * 1.15);
@@ -101,6 +103,7 @@
 		}
 		.label {
 			margin-top: 0;
+			position: static;
 		}
 	}
 </style>

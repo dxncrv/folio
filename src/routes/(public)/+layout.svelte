@@ -1,7 +1,7 @@
 <script>
 	import 'iconify-icon';
 	import { Circle } from '$lib';
-	// import Grainy from '$lib/_fx/Grainy.svelte';
+	import Grainy from '$lib/_fx/Grainy.svelte';
 	import Header from '$lib/components/header.svelte';
 	import Timemachine from '$lib/components/timemachine.svelte';
 </script>

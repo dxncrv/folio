@@ -2,7 +2,7 @@
 	import Socials from '$lib/components/socials.svelte';
 	// import Contact from '$lib/components/contact.svelte';
 	import { getCanonicalUrl, DEFAULT_OG_IMAGE } from '$lib/seo';
-	// import Typer from '$lib/_fx/Typer.svelte';
+	import Typer from '$lib/_fx/Typer.svelte';
 </script>
 <svelte:head>
 	<title>Home - Aashay Mehta</title>
