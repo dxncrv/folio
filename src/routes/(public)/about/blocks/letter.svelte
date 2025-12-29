@@ -404,7 +404,7 @@
 			gap: 1.5rem;
 		}
 		.tabs {
-			top: -2.70rem;
+			top: -2.69rem;
 			flex-wrap: wrap;
 			gap: 0.25rem;
 		}

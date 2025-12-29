@@ -49,12 +49,17 @@
 			UI/UX <b>Designer</b><br />
 		</p>
 		<Stack/>
-		<Socials />
 		<p>
 			Vancouver, CA<br />
 		</p>
+		<div class="desktop-only">
+			<Socials />
+		</div>
 	</div>
 	<Letter markdownContent={data.markdownContent} />
+	<div class="mobile-only">
+		<Socials />
+	</div>
 </main>
 
 <style>
@@ -91,18 +96,30 @@
 		font-size: calc(var(--font-size) * 1.15);
 		line-height: calc(var(--line-height) * 1.5);
 	}
+	.desktop-only {
+		display: block;
+	}
+	.mobile-only {
+		display: none;
+	}
 	@media (max-width: 1024px) {
 		main {
 			gap: 2rem;
 		}
 	}
 	@media (max-width: 768px) {
+		.desktop-only {
+			display: none;
+		}
+		.mobile-only {
+			display: block;
+		}
 		main {
 			flex-direction: column;
 			gap: 2rem;
 		}
 		.label {
-			margin-top: 0;
+			margin-top: 2.5rem;
 			position: static;
 		}
 	}

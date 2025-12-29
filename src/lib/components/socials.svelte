@@ -26,4 +26,4 @@
 	</a>
 {/snippet}
 
-<style>.socials{margin:0 2rem;display:flex;color:var(--accent-dim);gap:1.5rem}.socials a{font-size:1.5rem;color:var(--accent-dim);transition:color 0.2s}.socials a:hover{color:var(--accent)}</style>
+<style>.socials{margin:0 2rem;display:flex;color:var(--accent-dim);gap:1.5rem}.socials a{font-size:1.5rem;color:var(--accent-dim);transition:color 0.2s}.socials a:hover{color:var(--accent)}@media(max-width:768px){.socials{width:100%;justify-content:center;margin:1rem 0}}</style>
