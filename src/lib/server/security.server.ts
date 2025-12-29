@@ -1,4 +1,3 @@
-import { ADMIN_IP } from '$env/static/private';
 import { env } from '$env/dynamic/private';
 
 // IP whitelist for admin dashboard
@@ -11,6 +10,7 @@ const BASE_WHITELISTED_IPS = [
  * Checks if the given IP is whitelisted
  */
 export const isIPWhitelisted = (ip: string): boolean => {
+    const ADMIN_IP = env.ADMIN_IP ?? '';
     if (process.env.NODE_ENV === 'development') {
         console.log(`Checking IP: ${ip} against whitelist:`, [...BASE_WHITELISTED_IPS, ...(ADMIN_IP ? [ADMIN_IP] : [])]);
     }
