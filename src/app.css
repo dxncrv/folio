@@ -40,7 +40,7 @@ html {
 
 	--font-ui: 'Averia Libre', sans-serif;
 	--font-read: 'Hanken Grotesk', serif;
-	--font-size: 1rem;
+	--font-size: 1.1rem;
 	--line-height: 1;
 }
 
@@ -59,7 +59,7 @@ html {
 	--font-ui: 'Averia Serif Libre', serif;
 	--font-read: 'Solway', serif;
 	--font-size: 1rem;
-	--line-height: 1;
+	--line-height: 1.1;
 }
 #theme-toggler {
 	display: flex;
@@ -118,6 +118,7 @@ h2 {
 }
 
 footer {
+	color: var(--contrast);
 	width: 100%;
 	margin-top: auto;
 	display: flex;
@@ -130,6 +131,9 @@ footer {
 	padding: 1rem;
 }
 footer p {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
 	font-family: var(--font-ui);
 	color: var(--contrast);
 	transition: color 0.3s;

@@ -6,8 +6,8 @@ const stack = {
 	'Svelte': 'material-icon-theme:svelte',
 	'TypeScript': 'vscode-icons:file-type-typescript',
 	'C Sharp': 'material-icon-theme:csharp',
-	'Redis': 'devicon:redis',
 	'Python': 'material-icon-theme:python',
+	'Redis': 'devicon:redis',
 };
 </script>
 

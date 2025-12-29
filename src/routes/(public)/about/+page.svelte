@@ -42,13 +42,13 @@
 
 <main>
 	<div class="label">
-		<!-- <enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" /> -->
+		<enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" />
 		<h1>Aash</h1>
 		<p>
 			Fullstack <b>Developer</b><br />
 			UI/UX <b>Designer</b><br />
 		</p>
-		<!-- <Stack/> -->
+		<Stack/>
 		<Socials />
 		<p>
 			Vancouver, CA<br />
@@ -58,12 +58,12 @@
 </main>
 
 <style>
-	/* enhanced\:img {
+	enhanced\:img {
 		height: 10rem;
 		width: 10rem;
 		object-fit: cover;
 		border-radius: 2rem;
-	} */
+	}
 	main {
 		display: flex;
 		margin: 2rem auto;
