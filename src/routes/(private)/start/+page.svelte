@@ -2,31 +2,27 @@
 import { Projects } from '$lib/store.svelte';
 import type { Project } from '$lib/types';
 import Typer from '$lib/_fx/Typer.svelte';
-import { slugify } from '$lib/formatting';
-import { CaseStudies } from '$lib/store.svelte';
+import { deriveSlug } from '$lib';
 import SessionTimer from '$lib/components/start/session-timer.svelte';
 import Logout from '$lib/components/start/logout.svelte';
 import ProjectGrid from '$lib/components/start/project-grid.svelte';
-import MediaManager from '$lib/components/start/media-manager.svelte';
 import RedisInspector from '$lib/components/start/redis-inspector.svelte';
 
 let message = $state<string>('');
 let messageType = $state<'success' | 'error' | 'info' | ''>('');
 let showLogoutConfirm = $state(false);
-let caseStudyContents = $state<Record<string, string>>({});
 
 $effect(() => {
 	Projects.fetchProjects();
 });
 
-$effect(() => {
-	const slugs = Projects.all.map(p => slugify(p.title));
-	Promise.all(slugs.map(async (slug) => {
-		const cs = await CaseStudies.fetchBySlug(slug);
-		caseStudyContents[slug] = cs?.content || '';
-		caseStudyContents = { ...caseStudyContents };
-	}));
-});
+// Case study contents are now part of the project data
+let caseStudyContents = $derived(
+	Projects.all.reduce((acc, p) => {
+		acc[deriveSlug(p)] = p.study || '';
+		return acc;
+	}, {} as Record<string, string>)
+);
 
 function handleCreateNew() {
 	showMessage('Creating new project', 'info');
@@ -135,33 +131,31 @@ async function confirmLogout() {
 			onSaveNew={handleSaveNewProject}
 		/>
 	{/if}
-
-	<MediaManager />
 </main>
 
-	<Logout
-		show={showLogoutConfirm}
-		onCancel={closeLogoutConfirm}
-		onConfirm={confirmLogout}
-	/>
+<Logout
+	show={showLogoutConfirm}
+	onCancel={closeLogoutConfirm}
+	onConfirm={confirmLogout}
+/>
 
 <style>
-		/* =====================
-			 Layout & Main Wrapper
-			 ===================== */
-		main {
-			display: flex;
-			flex-direction: column;
-			padding: 2rem;
-			max-width: 1200px;
-			margin: 0 auto;
-			gap: 2rem;
-		}
+	/* =====================
+		 Layout & Main Wrapper
+		 ===================== */
+	main {
+		display: flex;
+		flex-direction: column;
+		padding: 2rem;
+		max-width: 1200px;
+		margin: 0 auto;
+		gap: 2rem;
+	}
 
-		/* =====================
-			 Header & Logo
-			 ===================== */
-		.logo {
+	/* =====================
+		 Header & Logo
+		 ===================== */
+	.logo {
 			position: fixed;
 			left: 2rem;
 			display: flex;

@@ -65,5 +65,3 @@ export async function fetchJson(input: RequestInfo, options?: FetchOptions) {
 
   return body;
 }
-
-export default { fetchJson, ApiError };

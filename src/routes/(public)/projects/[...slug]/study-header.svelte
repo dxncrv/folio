@@ -1,5 +1,5 @@
 <script lang=ts>
-    import { slugify } from '$lib/formatting';
+    import { deriveSlug } from '$lib';
     import { goto } from '$app/navigation';
     import { Projects } from '$lib/store.svelte';
     import { page } from '$app/state';
@@ -15,17 +15,17 @@
     const allProjects = $derived(Projects.all.length > 0 ? Projects.selected : serverProjects);
     const project = $derived(
         Projects.all.length > 0 
-            ? Projects.selected.find((p: any) => slugify(p.title) === page.params.slug)
+            ? Projects.selected.find((p: Project) => deriveSlug(p) === page.params.slug)
             : serverProject
     );
-	const projectIndex = $derived(allProjects.findIndex((p: any) => slugify(p.title) === page.params.slug));
+	const projectIndex = $derived(allProjects.findIndex((p: Project) => deriveSlug(p) === page.params.slug));
 </script>
 
 <header>
     <button
         class="primary"
         disabled={projectIndex <= 0}
-        onclick={() => goto(`/projects/${slugify(allProjects[projectIndex - 1].title)}`)}
+        onclick={() => goto(`/projects/${deriveSlug(allProjects[projectIndex - 1])}`)}
         aria-label="Previous Project"
     >
         Prev
@@ -39,7 +39,7 @@
     <button
         class="primary"
         disabled={projectIndex >= allProjects.length - 1}
-        onclick={() => goto(`/projects/${slugify(allProjects[projectIndex + 1].title)}`)}
+        onclick={() => goto(`/projects/${deriveSlug(allProjects[projectIndex + 1])}`)}
         aria-label="Next Project"
     >
         Next

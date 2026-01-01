@@ -1,6 +1,7 @@
 export interface Project {
 	tags: string[];
 	title: string;
+	slug?: string; // Optional slug for URL routing, defaults to slugified title
 	image: string;
 	link: string;
 	git: string;
@@ -8,26 +9,7 @@ export interface Project {
 	awards?: string[];
     desc: { [key: string]: string | undefined };
     tech: { [key: string]: string[] | undefined };
-	study?: { [key: string]: string };
-}
-
-export interface CaseStudy {
-    slug: string;
-    content: string;
-}
-
-export interface Facet {
-    name: string;
-    bool: boolean;
-}
-
-export interface Media {
-    id: string; // filename or relative path
-    type: 'image' | 'video';
-    path: string; // relative to static
-    alt?: string;
-    caption?: string;
-    tags?: string[];
+	study?: string; // Markdown content of the case study
 }
 
 export interface TalkMessage {
@@ -37,13 +19,6 @@ export interface TalkMessage {
     timestamp: number;
     status?: 'pending' | 'sent' | 'failed'; // Optional for optimistic UI
     expiresAt?: number; // Unix timestamp when message should disappear (0 = never)
-}
-
-export interface TalkSession {
-    username: string;
-    ip: string;
-    createdAt: number;
-    lastActive: number;
 }
 
 export interface RedisKeyInfo {

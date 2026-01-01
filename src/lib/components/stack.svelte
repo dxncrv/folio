@@ -37,6 +37,9 @@ const stack = {
 	}
 	.icon {
 		position: relative;
+		width: 18px;
+		height: 18px;
+		display: inline-block;
 	}
 	.icon::after {
 		content: attr(data-label);

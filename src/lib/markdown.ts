@@ -132,11 +132,12 @@ function parseInline(text: string): string {
 			? `<video controls src="${src}" alt="${alt}" title="${title}"></video>`
 			: `<video controls src="${src}" alt="${alt}"></video>`
 	);
-	html = html.replace(/!\[([^\]]*)\]\(([^)]+?)(?:\s+"([^"]*)")?\)/g, (_, alt, src, title) =>
-		title
-			? `<img src="${src}" alt="${alt}" title="${title}">`
-			: `<img src="${src}" alt="${alt}">`
-	);
+	html = html.replace(/!\[([^\]]*)\]\(([^)]+?)(?:\s+"([^"]*)")?\)/g, (_, alt, src, title) => {
+		const img = title
+			? `<img src="${src}" alt="${alt}" title="${title}" class="loading" onload="this.parentElement.classList.remove('shimmer'); this.classList.remove('loading')">`
+			: `<img src="${src}" alt="${alt}" class="loading" onload="this.parentElement.classList.remove('shimmer'); this.classList.remove('loading')">`;
+		return `<span class="shimmer img-wrapper">${img}</span>`;
+	});
 	html = html.replace(/\[([^\]]+)\]\(([^)]+?)(?:\s+"([^"]*)")?\)/g, (_, linkText, url, title) =>
 		title
 			? `<a href="${url}" title="${title}">${linkText}</a>`

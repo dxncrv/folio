@@ -56,11 +56,11 @@
 			<Dot />
 	</menu>
 	<menu class="nav-filters">
-		{#each Facets.facets as { name, bool }}
+		<!-- {#each Facets.facets as { name, bool }}
 		<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
 				{name}
 			</button>
-		{/each}
+		{/each} -->
 		<div id="theme-toggler">
 			{@render themeBtn('light','Toggle Light Theme','light','line-md:moon-alt-to-sunny-outline-loop-transition')}
 			{@render themeBtn('dark','Toggle Dark Theme','dark','line-md:sunny-outline-to-moon-loop-transition')}
@@ -69,10 +69,6 @@
 </nav>
 
 <style>
-#starticon {
-	color: var(--font-color);
-}
-
 nav {
 	display: flex;
 	flex-wrap: wrap-reverse;
@@ -104,7 +100,7 @@ menu > a {
 	transition: color 0.3s ease-in-out;
 }
 
-menu > button {
+/* menu > button {
 	user-select: none;
 	color: var(--font-color);
 	font-size: 1rem;
@@ -131,20 +127,22 @@ menu > button:active {
 
 menu > button:disabled {
 	color: var(--bg-dim);
-}
+} */
 
 .active {
 	color: var(--accent);
 }
 
-menu > a:first-of-type,
-menu > button:first-of-type {
+menu > a:first-of-type
+/* menu > button:first-of-type */
+{
 	border-top-left-radius: 0.75rem;
 	border-bottom-left-radius: 0.75rem;
 }
 
-menu > a:last-of-type,
-menu > button:last-of-type {
+menu > a:last-of-type
+/* menu > button:last-of-type */
+{
 	border-top-right-radius: 0.75rem;
 	border-bottom-right-radius: 0.75rem;
 }

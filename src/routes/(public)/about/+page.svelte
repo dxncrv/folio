@@ -6,6 +6,7 @@
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
+	let loaded = $state(false);
 
 	const personSchema = generatePersonSchema({
 		description: 'User Interaction and Experience Designer, Full-stack Developer, and Human. Solutions Architect with 5+ years of experience building user-centered digital experiences.',
@@ -42,7 +43,14 @@
 
 <main>
 	<div class="label">
-		<enhanced:img src="/static/assets/aashay.jpg" alt="Aashay Mehta" />
+		<div class="img-container" class:shimmer={!loaded}>
+			<enhanced:img 
+				src="/static/assets/aashay.jpg" 
+				alt="Aashay Mehta" 
+				onload={() => loaded = true}
+				class:loading={!loaded}
+			/>
+		</div>
 		<h1>Aash</h1>
 		<p>
 			Fullstack <b>Developer</b><br />
@@ -63,6 +71,12 @@
 </main>
 
 <style>
+	.img-container {
+		height: 10rem;
+		width: 10rem;
+		border-radius: 2rem;
+		overflow: hidden;
+	}
 	enhanced\:img {
 		height: 10rem;
 		width: 10rem;

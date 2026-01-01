@@ -212,3 +212,45 @@ button.icon-btn:disabled {
 	color: var(--font-dim);
 	cursor: not-allowed;
 }
+
+/* Shimmer effect */
+.shimmer {
+	position: relative;
+	overflow: hidden;
+	background: var(--bg);
+}
+
+.shimmer::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	left: 0;
+	transform: translateX(-100%);
+	background: linear-gradient(
+		90deg,
+		rgba(255, 255, 255, 0) 0%,
+		rgba(255, 255, 255, 0.05) 50%,
+		rgba(255, 255, 255, 0) 100%
+	);
+	animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+/* Hide alt text while loading or in shimmer */
+.shimmer img,
+img.loading {
+	color: transparent;
+	text-indent: -9999px;
+}
+
+.img-wrapper {
+	display: inline-block;
+	line-height: 0;
+}

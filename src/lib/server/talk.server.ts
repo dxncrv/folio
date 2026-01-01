@@ -10,6 +10,7 @@
 import type { Cookies } from '@sveltejs/kit';
 import { getRedisClient } from './redis.server';
 import type { TalkMessage } from '$lib/types';
+import { REDIS_PREFIX } from '$lib';
 
 // ============================================================================
 // Configuration Constants

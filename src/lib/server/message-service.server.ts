@@ -86,8 +86,9 @@
  */
 import type { Redis } from 'ioredis';
 import type { TalkMessage } from '$lib/types';
+import { REDIS_PREFIX } from '$lib';
 
-const NS = 'canvas:talk:';
+const NS = REDIS_PREFIX.TALK;
 const ZSET_KEY = `${NS}messages`; // Sorted set (timestamp → id)
 const HASH_PREFIX = `${NS}msg:`; // Hash (id → JSON)
 const VERSION_KEY = `${NS}version`;
@@ -114,37 +115,6 @@ class ZsetHashAdapter implements StorageAdapter {
 	constructor(private client: Redis) {}
 
 	async getAll(limit: number): Promise<TalkMessage[]> {
-		// FUTURE: If message structure changes, uncomment and adapt migration code below
-		// This pattern enables backward-compatible upgrades to message schema
-		
-		// const keyType = await this.client.type(ZSET_KEY);
-		// if (keyType === 'list') {
-		// 	console.log('[ZsetHashAdapter] Detected LIST type, migrating to ZSET+HASH...');
-		// 	const rawMessages = await this.client.lrange(ZSET_KEY, 0, -1);
-		// 	const messages = rawMessages
-		// 		.map(raw => {
-		// 			try { return JSON.parse(raw) as TalkMessage; } 
-		// 			catch { return null; }
-		// 		})
-		// 		.filter((m): m is TalkMessage => m !== null);
-		// 	
-		// 	if (messages.length > 0) {
-		// 		const pipeline = this.client.pipeline();
-		// 		messages.forEach(msg => {
-		// 			pipeline.zadd(ZSET_KEY + ':new', msg.timestamp, msg.id);
-		// 			pipeline.set(`${HASH_PREFIX}${msg.id}`, JSON.stringify(msg));
-		// 		});
-		// 		pipeline.rename(ZSET_KEY, ZSET_KEY + ':old');
-		// 		pipeline.rename(ZSET_KEY + ':new', ZSET_KEY);
-		// 		await pipeline.exec();
-		// 		console.log(`[ZsetHashAdapter] Migrated ${messages.length} messages`);
-		// 	} else {
-		// 		await this.client.del(ZSET_KEY);
-		// 	}
-		// } else if (keyType !== 'zset' && keyType !== 'none') {
-		// 	throw new Error(`Unexpected key type '${keyType}' for ${ZSET_KEY}`);
-		// }
-		
 		// Get last N message IDs from sorted set (sorted by timestamp)
 		const ids = await this.client.zrevrange(ZSET_KEY, 0, limit - 1);
 		if (!ids.length) return [];

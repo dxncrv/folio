@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { slugify } from '$lib/formatting';
-	import { Projects, CaseStudies } from '$lib/store.svelte';
+	import { Projects } from '$lib/store.svelte';
 	import { getCanonicalUrl, SITE_URL, generateBreadcrumbSchema } from '$lib/seo';
 	import StudyHeader from './study-header.svelte';
 	import StudyBody from './study-body.svelte';
@@ -27,24 +26,14 @@
 	// This ensures the project is available during initial SSR before client hydration
 	const project = $derived(
 		Projects.all.length > 0 
-			? Projects.selected.find((p: any) => slugify(p.title) === slug)
-			: data.projects.find((p: any) => slugify(p.title) === slug)
-	);
-
-	// Derive case study from server data for SSR, fallback to store
-	const caseStudy = $derived(
-		CaseStudies.all.length > 0
-			? CaseStudies.all.find((cs) => cs.slug === slug)
-			: data.caseStudy
+			? Projects.selected.find((p: any) => p.slug === slug)
+			: data.project
 	);
 
 	// Initialize stores with server-loaded data for client-side interactivity
 	$effect(() => {
 		if (data.projects && data.projects.length > 0) {
 			Projects.initialize(data.projects);
-		}
-		if (data.caseStudy) {
-			CaseStudies.initializeOne(data.caseStudy);
 		}
 	});
 </script>
@@ -80,7 +69,7 @@
 				"keywords": "${project.tags.join(', ')}",
 				${project.image ? `"image": "${project.image}",` : ''}
 				"datePublished": "${project.date || new Date().toISOString()}",
-				"articleBody": "${caseStudy?.content?.substring(0, 500).replace(/"/g, '\\"') || ''}"
+				"articleBody": "${project.study?.substring(0, 500).replace(/"/g, '\\"') || ''}"
 			}
 		</script>`}
 		
@@ -95,7 +84,7 @@
 
 <main>
 	<StudyHeader {project} projects={data.projects} />
-	<StudyBody {caseStudy} {slug} />
+	<StudyBody study={project?.study || ''} />
 </main>
 
 <style>

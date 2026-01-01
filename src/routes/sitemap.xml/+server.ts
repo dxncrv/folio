@@ -2,17 +2,15 @@ import { RedisStore } from '$lib/server';
 
 export async function GET() {
 	try {
-		const [projects, caseStudies] = await Promise.all([
-			RedisStore.getProjects(),
-			RedisStore.getCaseStudies()
-		]);
+		const projects = await RedisStore.getProjects();
 
 		const baseUrl = 'https://dxncrv.com';
 		const today = new Date().toISOString().split('T')[0];
 
 		// Generate sitemap XML with current date as lastmod
-		// Note: Project and CaseStudy types don't include date fields
-		// In the future, consider adding updatedAt/createdAt to these types
+		// Filter to only projects with study content for dynamic pages
+		const studyProjects = projects.filter(p => p.study);
+		
 		const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 	<!-- Static pages -->
@@ -36,11 +34,11 @@ export async function GET() {
 	</url>
 	
 	<!-- Dynamic case study pages -->
-	${caseStudies
+	${studyProjects
 		.map(
-			(cs) => `
+			(p) => `
 	<url>
-		<loc>${baseUrl}/projects/${cs.slug}</loc>
+		<loc>${baseUrl}/projects/${p.slug || p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}</loc>
 		<lastmod>${today}</lastmod>
 		<changefreq>monthly</changefreq>
 		<priority>0.7</priority>

@@ -1,8 +1,6 @@
 <script lang="ts">
 	import Socials from '$lib/components/socials.svelte';
-	// import Contact from '$lib/components/contact.svelte';
 	import { getCanonicalUrl, DEFAULT_OG_IMAGE } from '$lib/seo';
-	import Typer from '$lib/_fx/Typer.svelte';
 </script>
 <svelte:head>
 	<title>Home - Aashay Mehta</title>
@@ -20,40 +18,15 @@
 
 <main>
 	<h1>Aash</h1>
-	<!-- <Contact initialStatus="Ready" /> -->
 	<Socials />
-	<!-- <p>5+ years of experience in shipping real impact from conception to measurement</p> -->
-	<!-- <div class="links">
-		<a href="/about">About</a>
-		<p>•</p>
-		<a href="/projects">Projects</a>
-	</div> -->
 </main>
 
 <style>
-	.links {
-		display: flex;
-		gap: 1rem;
-		margin-top: 1rem;
-		margin-bottom: 1rem;
-	}
-	.links a {
-		font-family: var(--font-ui);
-		font-size: 1.2rem;
-		color: var(--accent);
-		text-decoration: none;
-		transition: color 0.2s;
-	}
 	h1 {
 		user-select: none;
 		color: var(--accent);
 		font-family: var(--font-ui);
 		font-size: 5rem;
-	}
-	p {
-		max-width: 650px;
-		font-family: var(--font-ui);
-		font-size: 1rem;
 	}
 	main {
 		display: flex;
@@ -72,11 +45,6 @@
 			font-size: 4rem;
 			text-wrap: wrap;
 			text-align: center;
-		}
-		p {
-			padding: 0 2rem;
-			text-align: center;
-			line-height: 1.75;
 		}
 	}
 </style>

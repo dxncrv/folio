@@ -1,15 +1,29 @@
 import Redis from 'ioredis';
-import type { Project, Media, CaseStudy } from '$lib/types';
+import type { Project } from '$lib/types';
 import { env } from '$env/dynamic/private';
 import projectsData from '$lib/projects.json';
+import { deriveSlug, REDIS_PREFIX } from '$lib';
 
 // Context7: /vite/glob-import - Load markdown files for dev mode
 const studyFiles = import.meta.glob('/src/routes/\\(public\\)/projects/\\[...slug\\]/studies/*.md', { query: '?raw', import: 'default', eager: true });
 
-const studiesData: CaseStudy[] = Object.entries(studyFiles).map(([path, content]) => {
-    const slug = path.split('/').pop()?.replace('.md', '') ?? '';
-    return { slug, content: content as string };
-});
+/**
+ * Load and merge study content from markdown files into projects
+ * Maps slug to content for later association with projects
+ */
+function loadStudiesIntoProjects(projects: Project[]): Project[] {
+	return projects.map((p) => {
+		const slug = deriveSlug(p);
+		const studyPath = Object.keys(studyFiles).find(path => path.includes(`/${slug}.md`));
+		const content = studyPath ? (studyFiles[studyPath] as string) : undefined;
+		
+		return {
+			...p,
+			slug,
+			study: content || p.study
+		};
+	});
+}
 
 // Context7: /redis/ioredis/v5_4_0 - Singleton with lazy connect and optimized pooling
 let redisClient: Redis | null = null;
@@ -125,18 +139,21 @@ function createListStore<T>(key: string, idSelector: (item: T) => string, defaul
 }
 
 // Create stores with folio: namespace
-const projectsStore = createListStore<Project>('folio:projects', p => p.title, projectsData as Project[]);
-const studiesStore = createListStore<CaseStudy>('folio:studies', cs => cs.slug);
-const mediaStore = createListStore<Media>('folio:media', m => m.id);
+const projectsStore = createListStore<Project>(REDIS_PREFIX.PROJECTS, p => p.title, projectsData as Project[]);
 
 export class RedisStore {
     // Projects
     static async getProjects(): Promise<Project[]> {
+        let projects: Project[];
         // In development, prefer the local JSON file as the database for projects
         if (process.env.NODE_ENV === 'development') {
-            return projectsData as Project[];
+            projects = projectsData as Project[];
+        } else {
+            projects = await projectsStore.get();
         }
-        return projectsStore.get();
+
+        // Merge study content from markdown files into projects
+        return loadStudiesIntoProjects(projects);
     }
 
     static async setProjects(projects: Project[]): Promise<void> {
@@ -144,61 +161,18 @@ export class RedisStore {
     }
 
     static async addProject(project: Project): Promise<Project[]> {
-        return projectsStore.add(project);
+        const projects = await projectsStore.add(project);
+        return loadStudiesIntoProjects(projects);
     }
 
     static async updateProject(title: string, updatedProject: Project): Promise<Project[]> {
-        return projectsStore.update(title, updatedProject);
+        const projects = await projectsStore.update(title, updatedProject);
+        return loadStudiesIntoProjects(projects);
     }
 
     static async deleteProject(title: string): Promise<Project[]> {
-        return projectsStore.remove(title);
-    }
-
-    // Case studies (renamed to "studies")
-    static async getCaseStudies(): Promise<CaseStudy[]> {
-        // In development, prefer the local markdown files as the database for case studies
-        if (process.env.NODE_ENV === 'development') {
-            return studiesData;
-        }
-        return studiesStore.get();
-    }
-
-    static async setCaseStudies(caseStudies: CaseStudy[]): Promise<void> {
-        return studiesStore.set(caseStudies);
-    }
-
-    static async addCaseStudy(caseStudy: CaseStudy): Promise<CaseStudy[]> {
-        return studiesStore.add(caseStudy);
-    }
-
-    static async updateCaseStudy(slug: string, updated: CaseStudy): Promise<CaseStudy[]> {
-        return studiesStore.update(slug, updated);
-    }
-
-    static async deleteCaseStudy(slug: string): Promise<CaseStudy[]> {
-        return studiesStore.remove(slug);
-    }
-
-    // Media
-    static async getMedia(): Promise<Media[]> {
-        return mediaStore.get();
-    }
-
-    static async setMedia(media: Media[]): Promise<void> {
-        return mediaStore.set(media);
-    }
-
-    static async addMedia(item: Media): Promise<Media[]> {
-        return mediaStore.add(item);
-    }
-
-    static async updateMedia(id: string, updated: Media): Promise<Media[]> {
-        return mediaStore.update(id, updated);
-    }
-
-    static async deleteMedia(id: string): Promise<Media[]> {
-        return mediaStore.remove(id);
+        const projects = await projectsStore.remove(title);
+        return loadStudiesIntoProjects(projects);
     }
 
     // --- Session management ---
@@ -236,8 +210,7 @@ export class RedisStore {
  * Redis Key Structure Documentation:
  * 
  * FOLIO NAMESPACE (persistent data):
- * - folio:projects: Array of Project objects
- * - folio:studies: Array of CaseStudy objects (renamed from caseStudies)
+ * - folio:projects: Array of Project objects (includes study content merged from markdown)
  * - folio:media: Array of Media objects
  * 
  * CHAT STORAGE (canvas:talk:*):

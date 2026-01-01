@@ -1,5 +1,7 @@
 <script lang="ts">
-	import { insertImage, insertVideo, insertLink, insertText } from '$lib/editorTools';
+	import { insertImage, insertVideo, insertLink, insertText } from '$lib';
+	import { fetchJson } from '$lib/apiClient';
+	import type { Project } from '$lib/types';
 
 	let { initialContent = $bindable(''), slug = '' } = $props();
 
@@ -36,21 +38,32 @@
 		return () => window.removeEventListener('insert-media', handleInsertMedia as EventListener);
 	});
 
-	import { fetchJson } from '$lib/apiClient';
-
-	async function apiCall(endpoint: string, options: RequestInit) {
-		return fetchJson(endpoint, options);
+	/**
+	 * Update a project's study content via the projects API
+	 */
+	async function updateProjectStudy(projects: Project[], targetSlug: string, newContent: string): Promise<void> {
+		const projectIndex = projects.findIndex((p) => (p.slug || p.title) === targetSlug);
+		
+		if (projectIndex === -1) {
+			throw new Error(`Project with slug "${targetSlug}" not found`);
+		}
+		
+		projects[projectIndex].study = newContent;
+		
+		await fetchJson('/api/projects', {
+			method: 'PUT',
+			requiresAuth: true,
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(projects)
+		});
 	}
 
 	async function save() {
 		loading = true;
 		error = '';
 		try {
-			await apiCall(exists ? `/api/case-studies/${slug}` : '/api/case-studies', {
-				method: exists ? 'PUT' : 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ slug, content })
-			});
+			const projects = (await fetchJson('/api/projects')) as Project[];
+			await updateProjectStudy(projects, slug, content);
 			initialContent = content;
 			editing = false;
 		} catch (e) {
@@ -65,7 +78,8 @@
 		loading = true;
 		error = '';
 		try {
-			await apiCall(`/api/case-studies/${slug}`, { method: 'DELETE' });
+			const projects = (await fetchJson('/api/projects')) as Project[];
+			await updateProjectStudy(projects, slug, '');
 			content = '';
 			initialContent = '';
 			editing = false;

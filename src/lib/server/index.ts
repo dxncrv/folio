@@ -19,9 +19,6 @@ export { isIPWhitelisted, isAuthorizedWrite } from './security.server';
 // API utilities and response helpers
 export { respondJson, normalizeHandlerResults, withHandler, withAdmin } from './api-utils.server';
 
-// Media scanning
-export { scanMedia } from './media-scanner.server';
-
 // Talk chat utilities
 export {
 	MAX_MESSAGE_LENGTH,

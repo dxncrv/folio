@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { Project } from '$lib/types';
-import { slugify } from '$lib/formatting';
+import { deriveSlug } from '$lib';
 import Editor from '$lib/components/editor.svelte';
 
 interface Props {
@@ -87,7 +87,7 @@ async function handleDelete() {
 	</div>
 	<Editor
 		initialContent={caseStudyContent || ''}
-		slug={slugify(project.title)}
+		slug={deriveSlug(project)}
 	/>
 </div>
 

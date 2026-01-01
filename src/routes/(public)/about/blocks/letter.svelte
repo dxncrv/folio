@@ -249,9 +249,13 @@
     :global(.letter h2) {
         margin-left: 1.5rem;
     }
-	:global(.letter img) {
+	:global(.letter .img-wrapper) {
 		width: 100%;
 		max-width: 12rem;
+		border-radius: 0.5rem;
+	}
+	:global(.letter img) {
+		width: 100%;
 		height: auto;		
 	}
 	:global(.letter hr) {

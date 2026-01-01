@@ -1,6 +1,6 @@
 <script lang="ts">
 import type { Project } from '$lib/types';
-import { slugify } from '$lib/formatting';
+import { deriveSlug } from '$lib';
 import ProjectCard from './project-card.svelte';
 
 interface Props {
@@ -53,7 +53,8 @@ function showCreateForm() {
 			"code": [],
 			"design": []
 		},
-		"study": {}
+		"slug": "new-project",
+		"study": ""
 	};
 	newProjectJson = JSON.stringify(template, null, 2);
 	isCreatingNew = true;
@@ -101,7 +102,7 @@ async function saveNewProject() {
 	{#each projects as project (project.title)}
 		<ProjectCard
 			{project}
-			caseStudyContent={caseStudyContents[slugify(project.title)] || ''}
+			caseStudyContent={caseStudyContents[deriveSlug(project)] || ''}
 			{onSave}
 			{onDelete}
 		/>

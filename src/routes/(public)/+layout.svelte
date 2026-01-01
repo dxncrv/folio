@@ -18,5 +18,14 @@
 	</a>
 	</p>
 </footer>
+
+<style>
+	footer p {
+		display: flex;
+		align-items: center;
+		min-height: 24px;
+		gap: 0.5rem;
+	}
+</style>
 <Timemachine/>
 <Circle />
