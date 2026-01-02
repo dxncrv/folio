@@ -111,7 +111,7 @@ function processAccordions(text: string): string {
 		const id = `accordion-${Math.random().toString(36).substr(2, 9)}`;
 		
 		return `<details class="accordion" data-accordion-id="${id}">
-			<summary class="accordion-title">${parsedTitle}</summary>
+			<summary class="accordion-title"><span>${parsedTitle}</span></summary>
 			<div class="accordion-content">${parsedContent}</div>
 		</details>`;
 	});

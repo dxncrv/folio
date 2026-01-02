@@ -42,6 +42,8 @@ html {
 	--font-read: 'Hanken Grotesk', serif;
 	--font-size: 1.1rem;
 	--line-height: 1;
+
+	--shimmer-color: rgba(255, 255, 255, 0.05);
 }
 
 /* Light mode theme toggle variables and styles */
@@ -60,6 +62,8 @@ html {
 	--font-read: 'Solway', serif;
 	--font-size: 1rem;
 	--line-height: 1.1;
+
+	--shimmer-color: rgba(0, 0, 0, 0.05);
 }
 #theme-toggler {
 	display: flex;
@@ -230,9 +234,9 @@ button.icon-btn:disabled {
 	transform: translateX(-100%);
 	background: linear-gradient(
 		90deg,
-		rgba(255, 255, 255, 0) 0%,
-		rgba(255, 255, 255, 0.05) 50%,
-		rgba(255, 255, 255, 0) 100%
+		transparent 0%,
+		var(--shimmer-color) 50%,
+		transparent 100%
 	);
 	animation: shimmer 1.5s infinite;
 }

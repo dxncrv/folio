@@ -2,7 +2,8 @@
 
 A **Design Engineer**, mainly focused on websites across the full stack, plus database and cloud infrastructure. Currently, self-employed and working with health related nonprofit orgs, and a research lab.
 
-## `0.49/1.00 FTE`
+## [Consulting](./about#resume) - `82/160 Hours`
 
-**Fullstack Developer** @ HeartLife  
-**Software Developer** @ ALIVE
+**Fullstack Engineer** @ HeartLife  
+**Software Developer** @ ALIVE Lab  
+**Fullstack Developer** @ The SOGC

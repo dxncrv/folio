@@ -96,6 +96,7 @@
 	<div class="tabs">
 		{#each files as file, i}
 			<button
+				id={file.name.toLowerCase()}
 				class="tab"
 				class:active={activeTab === i}
 				class:loading={isLoading}
@@ -240,6 +241,10 @@
 		50% { opacity: 0.5; }
 	}
 
+	:global(.letter em) {
+		font-size: 0.9rem;
+	}
+
     :global(.letter h1) {
         font-family: var(--font-ui);
         color: var(--accent);
@@ -353,9 +358,13 @@
 		line-height: calc(var(--line-height) * 2);
 		user-select: none;
 		display: flex;
-		align-items: center;
+		align-items: baseline;
 		gap: 0.25rem;
 		position: relative;
+	}
+
+	:global(.letter .accordion-title span) {
+		flex: 1;
 	}
 
 	:global(.letter .accordion-title::-webkit-details-marker) {
@@ -363,16 +372,18 @@
 	}
 
 	:global(.letter .accordion-title::before) {
-		content: '+';
+		content: '✖';
 		margin-right: 0.75rem;
 		transition: transform 0.3s;
 		display: inline-block;
 		color: var(--accent);
 		font-size: 1rem;
+		transform: rotate(45deg);
+
 	}
 
 	:global(.letter .accordion[open] .accordion-title::before) {
-		transform: rotate(45deg);
+		transform: rotate(0deg);
 	}
 
 	:global(.letter .accordion-content) {
