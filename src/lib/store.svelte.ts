@@ -13,8 +13,7 @@
 import type { Project } from './types';
 import { ProjectService } from './services';
 
-// FacetsClass: facets array is derived from unique tags in data
-// Context7: /sveltejs/svelte@5.37.0 - Memoize tag extraction with equality check
+// FacetsClass: facets array is derived from unique tags in data [DEPRECIATED]
 class FacetsClass {
 	#lastTags: string[] = [];
 	#cachedFacets: { name: string; bool: boolean }[] = [];

@@ -1,6 +1,5 @@
 <script lang="ts">
 	// Importing and utility functions
-	import { Facets } from '$lib/store.svelte';
 	import { themeStore } from '$lib/theme.svelte';
 	import { page } from '$app/state';
 	import { Dot } from '$lib';
@@ -47,20 +46,15 @@
 <nav class:hidden={isHidden}>
 	<menu class="nav-links">
 		{#each nav as { name, href }}
-			<a
-				class:active={isActive(page.url.pathname ?? '', href)}
-				{href}
-				>{name}
-			</a>
-			{/each}
-			<Dot />
+		<a
+		class:active={isActive(page.url.pathname ?? '', href)}
+		{href}
+		>{name}
+	</a>
+	{/each}
+	<Dot />
 	</menu>
 	<menu class="nav-filters">
-		<!-- {#each Facets.facets as { name, bool }}
-		<button class:isOn={bool} onclick={() => Facets.toggle(name)}>
-				{name}
-			</button>
-		{/each} -->
 		<div id="theme-toggler">
 			{@render themeBtn('light','Toggle Light Theme','light','line-md:moon-alt-to-sunny-outline-loop-transition')}
 			{@render themeBtn('dark','Toggle Dark Theme','dark','line-md:sunny-outline-to-moon-loop-transition')}
@@ -100,35 +94,6 @@ menu > a {
 	transition: color 0.3s ease-in-out;
 }
 
-/* menu > button {
-	user-select: none;
-	color: var(--font-color);
-	font-size: 1rem;
-	font-family: var(--font-ui);
-	padding: 0.35rem 1rem;
-	background: var(--bg);
-	border: none;
-	transition: color 0.3s ease-in-out;
-}
-
-menu > button:hover {
-	cursor: pointer;
-	color: var(--contrast);
-}
-
-menu > button.isOn {
-	color: var(--accent);
-	background: var(--bg);
-}
-
-menu > button:active {
-	color: var(--accent);
-}
-
-menu > button:disabled {
-	color: var(--bg-dim);
-} */
-
 .active {
 	color: var(--accent);
 }
@@ -159,6 +124,7 @@ menu > a:active:not(.active) {
 @media (max-width: 768px) {
 	nav {
 		position: fixed;
+		flex-direction: row-reverse;
 		flex-wrap: wrap;
 		bottom: 0;
 		margin: 0;
@@ -189,6 +155,7 @@ menu > a:active:not(.active) {
 	#theme-toggler {
 		position: absolute;
 		bottom: 0.25rem;
+		left: 0.25rem;
 	}
 }
 </style>

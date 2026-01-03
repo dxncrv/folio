@@ -1,6 +1,5 @@
 <script lang="ts">
     import Card from '$lib/components/project-card.svelte';
-	import Statusbar from '$lib/components/statusbar.svelte';
     import { Facets, Projects } from '$lib/store.svelte';
     import { getCanonicalUrl } from '$lib/seo';
     import type { PageData } from './$types';
@@ -27,7 +26,56 @@
     );
     // Optimize: Extract length check to avoid recomputation
     const hasProjects = $derived(selectedProjects.length > 0);
+
+    // Mobile infinite scroll state
+    let mobileVisibleCount = $state(3);
+    let isMobile = $state(false);
+    let ticking = $state(false);
+
+    // Check if mobile on mount
+    $effect(() => {
+        if (typeof window !== 'undefined') {
+            const checkMobile = () => {
+                isMobile = window.innerWidth <= 768;
+                // Reset count when switching to desktop
+                if (!isMobile) {
+                    mobileVisibleCount = selectedProjects.length;
+                }
+            };
+            checkMobile();
+            window.addEventListener('resize', checkMobile);
+            return () => window.removeEventListener('resize', checkMobile);
+        }
+    });
+
+    function handleScroll() {
+        if (!isMobile || !ticking) {
+            requestAnimationFrame(() => {
+                if (isMobile && mobileVisibleCount < selectedProjects.length) {
+                    const scrollHeight = document.documentElement.scrollHeight;
+                    const scrollTop = window.scrollY;
+                    const clientHeight = window.innerHeight;
+                    
+                    // Load more when user scrolls past 80% of the page
+                    if (scrollTop + clientHeight >= scrollHeight * 0.8) {
+                        mobileVisibleCount = Math.min(mobileVisibleCount + 3, selectedProjects.length);
+                    }
+                }
+                ticking = false;
+            });
+            ticking = true;
+        }
+    }
+
+    // Displayed projects based on device
+    const displayedProjects = $derived(
+        isMobile 
+            ? selectedProjects.slice(0, mobileVisibleCount)
+            : selectedProjects.slice(Projects.range.min, Projects.range.max)
+    );
 </script>
+
+<svelte:window onscroll={handleScroll} />
 
 <svelte:head>
 	<title>Projects - Aashay Mehta</title>
@@ -63,19 +111,16 @@
 </svelte:head>
 
 <main class:no-projects={!hasProjects}>
-    {#if hasProjects}
-        <Statusbar />
-    {:else}
-        <p>Select either code or design projects to view.</p>
-    {/if}
 	<div id="view">
-		{#each selectedProjects.slice(Projects.range.min, Projects.range.max) as project}
+		{#each displayedProjects as project, i}
 			{#key project.title}
-				<Card {project} />
+				<div class="card-wrapper" class:fade-in={isMobile && i >= 3} style={isMobile ? `--delay: ${(i % 3) * 0.1}s` : ''}>
+					<Card {project} />
+				</div>
 			{/key}
 		{/each}
 	</div>
-	{#if hasProjects}
+	{#if hasProjects && !isMobile}
 		<div class="btn-wrapper">
 			<button
 				class="primary"
@@ -116,6 +161,9 @@
         justify-content: center;
         align-items: start;
     }
+    .card-wrapper {
+        width: 100%;
+    }
     .btn-wrapper {
         display: flex;
         justify-content: center;
@@ -124,16 +172,30 @@
     }
     @media (max-width: 768px) {
         main {
-            margin: 1rem;
+            margin: 1.15rem;
             width: 100%;
             border-left: none;
             border-right: none;
         }
-        main > * {
-            padding: 1rem;
-        }
         #view {
+            padding: 1rem;
             grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        .card-wrapper.fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+            animation-delay: var(--delay, 0s);
+            opacity: 0;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         .btn-wrapper {
             margin-bottom: 1rem;

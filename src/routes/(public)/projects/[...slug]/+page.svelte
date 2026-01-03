@@ -97,7 +97,11 @@
 	}
 	@media (max-width: 768px) {
 		main {
-			margin: 1rem;
+			margin: 1rem 0rem;
+			border: none;
+			border-top: 1px solid var(--font-dim);
+			border-bottom: 1px solid var(--font-dim);
+			width: auto;
 		}
 	}
 </style>
