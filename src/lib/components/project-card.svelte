@@ -37,7 +37,7 @@
         </h2>
     </a>
     <!-- Tech used -->
-    <Typer text={project.desc} />
+    <!-- <Typer text={project.desc} /> -->
     <ProjectTags tech={project.tech} />
 </div>
 
