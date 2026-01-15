@@ -143,7 +143,7 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: space-between;
+        justify-content: center;
         /* border: 1px solid var(--bg); */
         border-radius: 1rem;
     }

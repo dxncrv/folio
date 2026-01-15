@@ -45,5 +45,5 @@
 
 **Master of Digital Media**  
 ![Centre for Digital Media Logo](https://dxncrv.github.io/v3-react-portfolio/assets/Insignias.0c65ca2b.png)  
-*Centre for Digital Media, CGPA 4.23*  
+*Centre for Digital Media*  
 `Sep 2020 - Sep 2021`

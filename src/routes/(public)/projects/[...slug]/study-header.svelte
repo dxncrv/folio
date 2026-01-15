@@ -110,7 +110,7 @@
 		display: flex;
 		padding: 1rem;
 		gap: 1rem;
-		justify-content: space-between;
+		justify-content: center;
 		align-items: center;
         border-bottom: 1px solid var(--font-dim);
 	}
