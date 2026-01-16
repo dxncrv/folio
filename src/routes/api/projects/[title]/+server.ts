@@ -1,19 +1,38 @@
-import { RedisStore, withAdmin } from '$lib/server';
+import { withAdmin } from '$lib/server';
 import type { Project } from '$lib/types';
 import type { RequestHandler } from './$types';
 
-export const PUT: RequestHandler = withAdmin(async ({ params, request }) => {
-	const title = decodeURIComponent(params.title ?? '');
-	const updatedProject: Project = await request.json();
-	if (!updatedProject.title || !updatedProject.tags || !Array.isArray(updatedProject.tags)) {
-		return { error: 'Invalid project data' } as any;
+async function findByTitle(pb: any, title: string) {
+	try {
+		// Escape quotes in title for filter string
+		const safeTitle = title.replace(/"/g, '\\"');
+		return await pb.collection('projects').getFirstListItem(`title="${safeTitle}"`);
+	} catch {
+		return null;
 	}
-	const projects = await RedisStore.updateProject(title, updatedProject);
-	return projects;
+}
+
+export const PUT: RequestHandler = withAdmin(async ({ params, request, locals }) => {
+	const title = decodeURIComponent(params.title ?? '');
+	const record = await findByTitle(locals.pb, title);
+	
+	if (!record) {
+		return { error: 'Project not found', status: 404 } as any;
+	}
+
+	const updatedProject: Project = await request.json();
+	await locals.pb.collection('projects').update(record.id, updatedProject);
+	
+	return await locals.pb.collection('projects').getFullList({ sort: '-created' });
 });
 
-export const DELETE: RequestHandler = withAdmin(async ({ params }) => {
+export const DELETE: RequestHandler = withAdmin(async ({ params, locals }) => {
 	const title = decodeURIComponent(params.title ?? '');
-	const projects = await RedisStore.deleteProject(title);
-	return projects;
+	const record = await findByTitle(locals.pb, title);
+	
+	if (record) {
+		await locals.pb.collection('projects').delete(record.id);
+	}
+	// Return updated list
+	return await locals.pb.collection('projects').getFullList({ sort: '-created' });
 });

@@ -1,5 +1,4 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
-import { isAuthorizedWrite } from './security.server';
 
 // Small helper to return JSON with status
 export function respondJson(data: unknown, status = 200) {
@@ -45,7 +44,10 @@ export function withHandler(fn: (event: any) => Promise<any>): RequestHandler {
 // Helper to create a RequestHandler that enforces admin write auth before running handler
 export function withAdmin(fn: (event: any) => Promise<any>): RequestHandler {
     return async (event: any) => {
-        if (!(await isAuthorizedWrite(event.request))) {
+        // Check admin_session cookie set by /start/login
+        const session = event.cookies?.get('admin_session');
+        
+        if (session !== 'authenticated') {
             return json({ error: 'Forbidden' }, { status: 403 });
         }
         return await normalizeHandlerResults(() => fn(event));

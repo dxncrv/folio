@@ -1,5 +1,4 @@
 import type { PageServerLoad } from './$types';
-import { RedisStore } from '$lib/server';
 import { error } from '@sveltejs/kit';
 
 /**
@@ -16,15 +15,27 @@ import { error } from '@sveltejs/kit';
  * - Add breadcrumb navigation for case study hierarchy
  * - Add prefetching of related case studies in +layout for faster nav
  */
-export const load: PageServerLoad = async ({ params, setHeaders }) => {
+export const load: PageServerLoad = async ({ params, setHeaders, locals, depends, parent }) => {
+	// Re-use projects data from parent layout to avoid redundant fetches
+	await parent();
+
+	// Explicitly depend on params.slug to ensure this load function reruns when slug changes
+	depends(`app:project:${params.slug}`);
 	try {
-		const projects = await RedisStore.getProjects();
+		// Fetch project with expanded studies relation
+		const project = await locals.pb.collection('projects').getFirstListItem(
+			`slug="${params.slug}"`,
+			{ expand: 'studies' }
+		);
 
-		// Find the matching project by slug
-		const project = projects.find((p) => p.slug === params.slug);
-
-		if (!project) {
-			throw error(404, 'Project not found');
+		// Extract study content from the expanded relation
+		let studyContent = '';
+		if (project.expand?.studies) {
+			// studies can be a single object or array, handle both
+			const study = Array.isArray(project.expand.studies) 
+				? project.expand.studies[0] 
+				: project.expand.studies;
+			studyContent = study?.content || '';
 		}
 
 		// Set cache headers for better performance and SEO crawling
@@ -33,14 +44,13 @@ export const load: PageServerLoad = async ({ params, setHeaders }) => {
 		});
 
 		return {
-			projects,
-			project
+			project: {
+				...project,
+				study: studyContent // Add study content to project object for backward compatibility
+			}
 		};
 	} catch (err: any) {
-		if (err.status === 404) {
-			throw err;
-		}
-		console.error('Failed to load project study:', err);
-		throw error(500, 'Failed to load project data');
+		console.error('Failed to load project:', err);
+		throw error(404, 'Project not found');
 	}
 };

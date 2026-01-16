@@ -1,44 +1,35 @@
 import { json } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
-import { RedisStore } from '$lib/server';
-
 /**
  * POST /start/login
  * Expects JSON: { token: string }
- * If the token matches ADMIN_TOKEN, sets an HttpOnly cookie `admin_token` and returns ok.
+ * Authenticates against ADMIN_TOKEN environment variable.
  */
 export const POST = async ({ request, cookies }) => {
   try {
     const body = await request.json();
-    const token = (body?.token ?? '').toString();
+    const token = (body?.token ?? '').toString().trim();
+    const ADMIN_TOKEN = env.ADMIN_TOKEN ?? '';
 
-    if (!env.ADMIN_TOKEN) {
-      return json({ error: 'Server not configured' }, { status: 500 });
+    if (!ADMIN_TOKEN || token !== ADMIN_TOKEN) {
+      return json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    if (token === env.ADMIN_TOKEN) {
-      // Create a session token and store mapping in Redis
-      const sessionToken = (globalThis.crypto && typeof globalThis.crypto.randomUUID === 'function')
-        ? globalThis.crypto.randomUUID()
-        : String(Date.now()) + Math.random().toString(36).slice(2);
-      // session TTL in seconds — set to 1 hour
-      const ttl = 60 * 60; // 3600 seconds = 1 hour
-      await RedisStore.setAdminSession(sessionToken, env.ADMIN_TOKEN, ttl);
+    // Session duration: 24 hours
+    const expiresAt = Date.now() + (24 * 60 * 60 * 1000);
+    const maxAge = 24 * 60 * 60; // 24 hours in seconds
 
-      cookies.set('admin_token', sessionToken, {
-        httpOnly: true,
-        sameSite: 'strict',
-        secure: env.NODE_ENV === 'production',
-        path: '/',
-        maxAge: ttl
-      });
+    // Set admin session cookie
+    cookies.set('admin_session', 'authenticated', {
+      path: '/',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge
+    });
 
-      const expiresAt = Date.now() + ttl * 1000;
-      return json({ ok: true, expiresAt });
-    }
-
-    return json({ error: 'Forbidden' }, { status: 403 });
+    return json({ ok: true, expiresAt });
   } catch (err) {
     return json({ error: 'Invalid request' }, { status: 400 });
   }

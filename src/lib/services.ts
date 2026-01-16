@@ -1,10 +1,7 @@
-// Pure API service functions - no state management
-// This layer provides reusable API calls that can be used by stores, server code, or components
-// TODO: Implement optimal caching strategy without overengineering:
-// - Cache frequently accessed data (projects, case studies) in Redis with TTL
-// - Use Vercel Edge Network for static data caching
-// - Consider client-side caching for user-specific data
-// - Avoid complex cache invalidation logic; prefer time-based expiration
+/**
+ * Pure API service functions - no state management
+ * This layer provides reusable API calls that can be used by stores, server code, or components
+ */
 import { fetchJson } from './apiClient';
 import type { Project } from './types';
 
@@ -49,16 +46,6 @@ export const ProjectService = {
 	async delete(title: string): Promise<Project[]> {
 		return await fetchJson(`/api/projects/${encodeURIComponent(title)}`, {
 			method: 'DELETE',
-			requiresAuth: true
-		});
-	},
-
-	/**
-	 * Initialize projects from JSON file (requires admin auth)
-	 */
-	async initializeFromJson(): Promise<{ projects: Project[]; message: string }> {
-		return await fetchJson('/api/projects/init', {
-			method: 'POST',
 			requiresAuth: true
 		});
 	}

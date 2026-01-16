@@ -6,6 +6,9 @@ Modular architecture: ChatAuth, ChatHeader, ChatMessages, ChatInput, ChatEditMod
 	import { fade } from 'svelte/transition';
 	import { MediaQuery } from 'svelte/reactivity';
 	import { talkAuth } from './chat/talk-auth.svelte';
+	import PocketBase from 'pocketbase';
+	import { env } from '$env/dynamic/public';
+
 	import { talkMessages } from './chat/talk-messages.svelte';
 	import ChatAuth from './chat/ChatAuth.svelte';
 	import ChatHeader from './chat/ChatHeader.svelte';
@@ -41,37 +44,32 @@ Modular architecture: ChatAuth, ChatHeader, ChatMessages, ChatInput, ChatEditMod
 		})();
 	});
 
-	// SSE + polling for real-time updates
+	// PB Realtime updates
 	$effect(() => {
 		if (!isLive || !isAuthenticated) return;
 		
-		console.log('[Talk] 🔄 SSE + polling started');
-		let eventSource: EventSource | null = null;
-		let fallbackPoll: ReturnType<typeof setInterval> | null = null;
+		console.log('[Talk] 🔄 Realtime started');
+		const url = env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+		const pb = new PocketBase(url);
 		let liveTimeout: ReturnType<typeof setTimeout> | null = null;
 
 		try {
-			eventSource = new EventSource('/api/talk/stream', { withCredentials: true });
-			eventSource.addEventListener('message', () => talkMessages.fetch());
-			eventSource.addEventListener('error', () => {
-				console.log('[SSE] Connection lost, activating fallback polling');
-				eventSource?.close();
-				eventSource = null;
-				if (!fallbackPoll) fallbackPoll = setInterval(() => talkMessages.fetch(), 5000);
+			pb.collection('messages').subscribe('*', (e) => {
+				talkMessages.handleRealtimeEvent(e.action, e.record);
 			});
-		} catch {
-			fallbackPoll = setInterval(() => talkMessages.fetch(), 5000);
+		} catch (e) {
+			console.error('PB Subscribe error', e);
 		}
 
 		// 5-minute timeout for live mode
 		liveTimeout = setTimeout(() => {
 			console.log('[Talk] ⏱️ Live mode timed out');
+			pb.collection('messages').unsubscribe('*');
 			isLive = false;
 		}, 5 * 60 * 1000);
 
 		return () => {
-			eventSource?.close();
-			if (fallbackPoll) clearInterval(fallbackPoll);
+			pb.collection('messages').unsubscribe('*');
 			if (liveTimeout) clearTimeout(liveTimeout);
 			console.log('[Talk] ⏹️ Live updates stopped');
 		};

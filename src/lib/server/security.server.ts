@@ -26,26 +26,10 @@ export async function isAuthorizedWrite(request: Request): Promise<boolean> {
     const tokenHeader = headers.get('x-admin-token') ?? '';
     const ADMIN_TOKEN = env.ADMIN_TOKEN ?? '';
 
-    // Header check (existing behavior)
+    // Header check (legacy fallback for x-admin-token)
     if (ADMIN_TOKEN && tokenHeader && tokenHeader === ADMIN_TOKEN) return true;
 
-    // Cookie check: parse `cookie` header for `admin_token` (now a session token)
-    const cookieHeader = headers.get('cookie') ?? '';
-    const match = cookieHeader.match(/(?:^|; )admin_token=([^;]+)/);
-    const sessionToken = match ? match[1] : null;
-
-    if (sessionToken) {
-        try {
-            const { RedisStore } = await import('$lib/server/redis.server');
-            const stored = await RedisStore.getAdminSession(sessionToken);
-            // stored holds the admin token (if session valid)
-            if (stored && ADMIN_TOKEN && stored === ADMIN_TOKEN) return true;
-        } catch (err) {
-            console.error('Session validation error', err);
-            return false;
-        }
-    }
-
+    // Primary auth is handled via PocketBase session in withAdmin wrapper
     return false;
 }
 

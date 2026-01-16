@@ -1,28 +1,33 @@
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { error } from '@sveltejs/kit';
-import { isIPWhitelisted } from '$lib/server';
+import { createPBClient } from '$lib/server/pb';
 
-function getClientIP(event: Parameters<Handle>[0]['event']): string {
-	const h = event.request.headers;
+const authentication: Handle = async ({ event, resolve }) => {
+	event.locals.pb = createPBClient();
+
+	// load the store data from the request cookie string
+	event.locals.pb.authStore.loadFromCookie(event.request.headers.get('cookie') || '');
+
 	try {
-		return (h.get('x-forwarded-for')?.split(',')[0] || h.get('x-real-ip') || event.getClientAddress() || '').trim();
-	} catch {
-		return ''; // Prerendering
-	}
-}
-
-const ipWhitelist: Handle = ({ event, resolve }) => {
-	if (event.url.pathname.startsWith('/start')) {
-		const clientIP = getClientIP(event);
-		if (clientIP && !isIPWhitelisted(clientIP)) {
-			console.warn(`BLOCKED /start from ${clientIP}`);
-			throw error(403, 'Access denied: You are not authorized.');
+		// get an up-to-date auth store state by verifying and refreshing the loaded auth model (if any)
+		if (event.locals.pb.authStore.isValid) {
+			await event.locals.pb.collection('users').authRefresh();
 		}
-		if (clientIP) console.debug(`ALLOWED /start from ${clientIP}`);
+	} catch (_) {
+		// clear the auth store on failed refresh
+		event.locals.pb.authStore.clear();
 	}
-	return resolve(event);
+
+	event.locals.user = event.locals.pb.authStore.record;
+
+	const response = await resolve(event);
+
+	// send back the default 'pb_auth' cookie to the client with the latest store state
+	response.headers.append('set-cookie', event.locals.pb.authStore.exportToCookie({ httpOnly: false }));
+
+	return response;
 };
+
 
 const themeHandler: Handle = async ({ event, resolve }) => {
 	let theme: string | undefined;
@@ -39,4 +44,4 @@ const themeHandler: Handle = async ({ event, resolve }) => {
 	});
 };
 
-export const handle = sequence(ipWhitelist, themeHandler) satisfies Handle;
+export const handle = sequence(authentication, themeHandler) satisfies Handle;

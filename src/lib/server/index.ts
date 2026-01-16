@@ -10,14 +10,12 @@
  * ```
  */
 
-// Redis and storage
-export { getRedisClient, getRedisSubscriber, RedisStore, RedisInspector } from './redis.server';
-
 // Security and authentication
-export { isIPWhitelisted, isAuthorizedWrite } from './security.server';
+// export { isIPWhitelisted, isAuthorizedWrite } from './security.server';
 
 // API utilities and response helpers
 export { respondJson, normalizeHandlerResults, withHandler, withAdmin } from './api-utils.server';
+
 
 // Talk chat utilities
 export {
@@ -32,9 +30,7 @@ export {
 	getAuthUser
 } from './talk.server';
 
-// Message service with versioning and pub/sub
-export { MessageService, CHANNEL, type MessageEvent } from './message-service.server';
+// PocketBase utilities
+export { createPBClient, POCKETBASE_URL } from './pb';
 
-// Shared pub/sub manager
-export { pubsubManager } from './pubsub.server';
 

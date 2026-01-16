@@ -17,7 +17,7 @@
 </svelte:head>
 
 <main>
-	<p>I make webs</p>
+	<!-- <p>I make webs</p> -->
 	<h1>Aash</h1>
 	<Socials />
 </main>

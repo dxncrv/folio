@@ -126,7 +126,7 @@ class projectsClass {
 
 	// Initialize store with server-loaded data (for SSR)
 	initialize(projects: Project[]) {
-		if (!this.#initialized && projects.length > 0) {
+		if (projects.length > 0) {
 			this.all = projects;
 			this.#initialized = true;
 		}
@@ -154,14 +154,6 @@ class projectsClass {
 	async deleteProject(title: string) {
 		return this.withLoading(async () => {
 			this.all = await ProjectService.delete(title);
-		});
-	}
-
-	async initializeFromJson() {
-		return this.withLoading(async () => {
-			const result = await ProjectService.initializeFromJson();
-			this.all = result.projects;
-			return result;
 		});
 	}
 }

@@ -16,11 +16,8 @@ export default defineConfig({
 			]
 		}
 	},
-	optimizeDeps: {
-		include: ['ioredis']
-	},
 	plugins: [
-    enhancedImages(),
-    sveltekit()
-  ]
+		enhancedImages(),
+		sveltekit()
+	]
 });

@@ -6,19 +6,19 @@ A personal portfolio website showcasing design and development work. Built with 
 
 - 🎨 **Project showcase** with dynamic filtering and case studies
 - 📝 **Markdown-based content** for easy case study authoring
-- 🔒 **Admin interface** for content management with session-based auth
+- 🔒 **Admin interface** for content management with PocketBase auth
 - 🎪 **Experimental canvas** for incubating new projects
 - 💬 **Real-time chat** feature under `/talk`
 - 📱 **Responsive design** optimized for all devices
-- 🚀 **Redis persistence** with JSON fallback for development
+- 🗄️ **PocketBase backend** for data persistence and file storage
 
 ## Tech Stack
 
-- **Frontend**: SvelteKit 5 (Svelte 5 runes), TypeScript
+- **Frontend**: SvelteKit 2 + Svelte 5 (runes), TypeScript
 - **Styling**: Custom CSS with design tokens
 - **State Management**: Service layer + reactive stores pattern
-- **Database**: Redis (ioredis) with fallback to JSON
-- **Deployment**: Vercel
+- **Database**: PocketBase (SQLite-based, self-hosted)
+- **Deployment**: Node.js adapter (any Node.js hosting platform)
 - **Package Manager**: pnpm 10.x
 
 ## Architecture
@@ -28,7 +28,7 @@ This project follows a **layered architecture** for better separation of concern
 ```
 Components → Stores → Services → API Client → API Endpoints
               ↓                                    ↓
-           UI State                          Redis/JSON
+           UI State                           PocketBase
 ```
 
 ### Key Principles
@@ -42,8 +42,9 @@ Components → Stores → Services → API Client → API Endpoints
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 20+
 - pnpm 10+ (specified in `package.json`)
+- PocketBase (download from https://pocketbase.io)
 
 ### Installation
 
@@ -55,6 +56,9 @@ cd folio
 # Install dependencies
 pnpm install
 
+# Start PocketBase (in a separate terminal)
+./pb/pocketbase serve
+
 # Start development server
 pnpm dev
 ```
@@ -63,15 +67,22 @@ The site will be available at `http://localhost:5173`
 
 ### Environment Setup
 
-Create a `.env` file for full functionality:
+Create a `.env` file:
 
 ```bash
-# Required for write operations
-REDIS_URL=your_redis_connection_string
-ADMIN_TOKEN=your_secret_admin_token
-```
+# PocketBase connection
+PUBLIC_POCKETBASE_URL=http://127.0.0.1:8090
 
-**Without Redis**: Read operations fall back to `src/lib/projects.json`, but write operations will fail.
+# Admin credentials for PocketBase
+PB_ADMIN_EMAIL=your_admin_email
+PB_ADMIN_PASSWORD=your_admin_password
+
+# Legacy admin token (optional fallback)
+ADMIN_TOKEN=your_secret_admin_token
+
+# IP whitelist for /start admin route (optional)
+ADMIN_IP=your_ip_address
+```
 
 ## Project Structure
 
@@ -79,22 +90,22 @@ ADMIN_TOKEN=your_secret_admin_token
 src/
 ├── lib/
 │   ├── services.ts          # API service layer
-│   ├── store.svelte.ts      # Reactive stores
+│   ├── store.svelte.ts      # Reactive stores (Svelte 5 runes)
 │   ├── apiClient.ts         # Enhanced fetch with auth
 │   ├── types.ts             # TypeScript interfaces
+│   ├── pocketbase-types.ts  # PocketBase collection types
 │   ├── markdown.ts          # Markdown parser
-│   ├── formatting.ts        # String utilities
-│   ├── utils.ts             # General helpers
+│   ├── seo.ts               # SEO utilities
+│   ├── theme.svelte.ts      # Theme management
 │   ├── components/          # Reusable UI components
 │   │   ├── start/          # Admin components
-│   │   └── talk/           # Chat components
+│   │   └── chat/           # Chat components
 │   ├── _fx/                # Visual effects
 │   └── server/             # Server-side utilities
 │       ├── index.ts        # Barrel export
-│       ├── redis.server.ts
+│       ├── pb.ts           # PocketBase client
 │       ├── security.server.ts
 │       ├── api-utils.server.ts
-│       ├── media-scanner.server.ts
 │       └── talk.server.ts
 ├── routes/
 │   ├── (public)/           # Public pages
@@ -106,12 +117,12 @@ src/
 │   │   └── talk/
 │   └── api/                # REST API endpoints
 │       ├── projects/
-│       ├── case-studies/
-│       ├── media/
 │       └── talk/
+├── hooks.server.ts         # Server hooks (auth, IP whitelist, theme)
 └── static/                 # Static assets
     ├── assets/
     └── videos/
+pb/                         # PocketBase binary and data
 ```
 
 ## Development
@@ -129,6 +140,9 @@ pnpm format
 
 # Build for production
 pnpm build
+
+# Preview production build
+pnpm preview
 ```
 
 ## Architecture Patterns
@@ -147,22 +161,53 @@ const projects = await ProjectService.fetchAll();
 const newProjects = await ProjectService.create(project);
 ```
 
-### Store Pattern
+### Store Pattern (Svelte 5 Runes)
 
-Stores manage reactive state and delegate to services:
+Stores manage reactive state using `$state` and `$derived`:
 
 ```typescript
 import { Projects } from '$lib/store.svelte';
+
+// Access reactive state
+const allProjects = Projects.all;
+const filteredProjects = Projects.selected;
+
+// Trigger actions
+await Projects.fetchProjects();
+```
+
+### Server Utilities
+
+Server-side utilities are centralized via barrel export:
+
+```typescript
+import { withAdmin, respondJson, createPBClient } from '$lib/server';
+
+// Use in API endpoints
+export const POST = withAdmin(async ({ request, locals }) => {
+  // locals.pb is the authenticated PocketBase client
+  const data = await request.json();
+  return respondJson({ success: true });
+});
+```
 
 ## Content Management
 
 ### Admin Interface
 
-Access the admin dashboard at `/start` (requires auth):
+Access the admin dashboard at `/start` (requires auth + IP whitelist):
 
 - Manage projects and case studies
 - Upload and organize media
 - View real-time content updates
+
+### PocketBase Admin
+
+Access PocketBase admin UI at `http://127.0.0.1:8090/_/`:
+
+- Manage collections (projects, studies, users, messages)
+- Configure rules and permissions
+- View logs and analytics
 
 ### Markdown Content
 
@@ -174,32 +219,31 @@ Case studies support rich markdown with custom syntax:
 
 ## Deployment
 
-### Vercel
+### Any Node.js Platform
 
 ```bash
-# Install Vercel CLI
-pnpm add -g vercel
+# Build the application
+pnpm build
 
-# Deploy
-vercel
+# Start the server
+node build
 ```
 
-Set environment variables in Vercel dashboard:
-- `REDIS_URL`
-- `ADMIN_TOKEN`
+Set environment variables:
+- `PUBLIC_POCKETBASE_URL` - PocketBase server URL
+- `PB_ADMIN_EMAIL` / `PB_ADMIN_PASSWORD` - Admin credentials
+- `ADMIN_TOKEN` - Legacy admin token (optional)
 
-### Other Platforms
+### PocketBase Hosting
 
-Compatible with any Node.js hosting platform. Ensure:
-
-1. Node.js 18+ runtime
-2. Environment variables are set
-3. Build command: `pnpm build`
-4. Start command: `node build`
+PocketBase can be:
+- Self-hosted alongside the Node.js app
+- Deployed to a VPS or cloud server
+- Run as a systemd service for production
 
 ## Design System
 
-The project is designed to support multiple sub-projects under `/(canvas)`:
+The project supports multiple sub-projects under `/(canvas)`:
 
 - **Shared design tokens**: Define once in root `app.css`
 - **Component library**: Reusable components in `src/lib/components`
@@ -209,5 +253,3 @@ The project is designed to support multiple sub-projects under `/(canvas)`:
 ## License
 
 See [LICENSE](LICENSE) file.
-
----

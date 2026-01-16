@@ -19,16 +19,14 @@
         body: JSON.stringify({ token })
       });
 
-      // Set session and reload
-      const expires = body?.expiresAt ? Number(body.expiresAt) : Date.now() + 5000;
-      const ttl = Math.max(1, Math.floor((expires - Date.now()) / 1000));
+      // Login successful, PocketBase cookie is set by the server hook
       
-      try {
-        localStorage.setItem('admin_token_expires', String(expires));
-        document.cookie = `admin_token_expires=${expires}; path=/; max-age=${ttl}`;
-      } catch {}
+      // Store expiry for UI timer (optional)
+      if (body?.expiresAt) {
+          localStorage.setItem('admin_token_expires', String(body.expiresAt));
+      }
 
-      location.reload();
+      location.href = '/start';
     } catch (err) {
       msg = err instanceof ApiError ? err.body?.error || 'Invalid password' : 'Network error';
       if (msg.toLowerCase().includes('forbidden')) {

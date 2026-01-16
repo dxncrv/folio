@@ -16,15 +16,6 @@ export interface FetchOptions extends RequestInit {
   requiresAuth?: boolean; // Flag for admin endpoints that need authentication
 }
 
-/**
- * Get admin token from cookie (client-side only)
- * Looks for 'admin_token' cookie set by the server
- */
-function getAdminToken(): string | null {
-  if (typeof document === 'undefined') return null;
-  const match = document.cookie.match(/(?:^|; )admin_token=([^;]+)/);
-  return match ? match[1] : null;
-}
 
 /**
  * Enhanced fetch wrapper with automatic auth header injection
@@ -37,17 +28,9 @@ function getAdminToken(): string | null {
 export async function fetchJson(input: RequestInfo, options?: FetchOptions) {
   const { requiresAuth, ...init } = options || {};
   
-  // Auto-inject auth headers for admin requests
-  if (requiresAuth) {
-    const token = getAdminToken();
-    if (token) {
-      init.headers = {
-        ...init.headers,
-        'x-admin-token': token
-      };
-    }
-  }
-  
+  // Note: Modern auth uses the 'pb_auth' cookie which is automatically 
+  // included in same-origin requests by the browser.
+
   const res = await fetch(input, init);
   const contentType = res.headers.get('content-type') || '';
   let body: any = null;

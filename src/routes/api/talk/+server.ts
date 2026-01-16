@@ -7,25 +7,8 @@ import {
 	validateMessage,
 	setSessionCookie,
 	clearSessionCookie,
-	getAuthUser,
-	MessageService
+	getAuthUser
 } from '$lib/server';
-import { getRedisClient } from '$lib/server/redis.server';
-import type { TalkMessage } from '$lib/types';
-
-// Singleton service instance
-let messageService: MessageService | null = null;
-const getService = () => {
-	if (!messageService) {
-		const client = getRedisClient();
-		messageService = new MessageService(client, client);
-	}
-	return messageService;
-};
-
-// Modern RequestHandler patterns for API routes
-// Storage: ZSET (message IDs sorted by timestamp) + HASH (message data)
-// See MessageService for implementation details
 
 type TalkAction = 'login' | 'logout' | 'session' | 'message' | 'edit' | 'delete';
 
@@ -34,35 +17,33 @@ interface TalkRequest {
 	readonly username?: string;
 	readonly text?: string;
 	readonly messageId?: string;
-	readonly expiresIn?: number; // Expiration time in seconds (for disappearing messages)
+	readonly expiresIn?: number;
 }
 
-/**
- * Action: Login user and create session
- */
+function mapMessage(record: any) {
+    return {
+        id: record.id,
+        username: record.username,
+        text: record.text,
+        timestamp: new Date(record.created).getTime(),
+        status: 'sent'
+    };
+}
+
 const handleLogin = (data: TalkRequest, cookies: Cookies): Response => {
 	const username = validateUsername(data.username);
 	if (!username) {
-		return json(
-			{ error: `Username must be 1-${USERNAME_MAX_LENGTH} characters` },
-			{ status: 400 }
-		);
+		return json({ error: `Username must be 1-${USERNAME_MAX_LENGTH} characters` }, { status: 400 });
 	}
 	setSessionCookie(cookies, username);
 	return json({ username });
 };
 
-/**
- * Action: Logout user and clear session
- */
 const handleLogout = (_: TalkRequest, cookies: Cookies): Response => {
 	clearSessionCookie(cookies);
 	return json({ success: true });
 };
 
-/**
- * Action: Check session validity
- */
 const handleSession = (_: TalkRequest, cookies: Cookies): Response => {
 	const username = getAuthUser(cookies);
 	return username
@@ -70,158 +51,88 @@ const handleSession = (_: TalkRequest, cookies: Cookies): Response => {
 		: json({ authenticated: false }, { status: 401 });
 };
 
-/**
- * Action: Send a chat message (requires auth)
- */
-const handleMessage = async (data: TalkRequest, cookies: Cookies): Promise<Response> => {
+const handleMessage = async (data: TalkRequest, cookies: Cookies, locals: App.Locals): Promise<Response> => {
 	const username = getAuthUser(cookies);
-	if (!username) {
-		return json({ error: 'Not authenticated' }, { status: 401 });
-	}
+	if (!username) return json({ error: 'Not authenticated' }, { status: 401 });
 
 	const text = validateMessage(data.text);
-	if (!text) {
-		return json(
-			{ error: `Message must be 1-${MAX_MESSAGE_LENGTH} characters` },
-			{ status: 400 }
-		);
-	}
+	if (!text) return json({ error: `Message must be 1-${MAX_MESSAGE_LENGTH} characters` }, { status: 400 });
 
-	// Validate expiresIn (0-60 seconds)
-	let expiresIn = data.expiresIn;
-	if (expiresIn !== undefined) {
-		if (typeof expiresIn !== 'number' || expiresIn < 0 || expiresIn > 60) {
-			return json({ error: 'expiresIn must be between 0-60 seconds' }, { status: 400 });
-		}
-		// Round to nearest 5 seconds
-		expiresIn = Math.round(expiresIn / 5) * 5;
+	try {
+        const record = await locals.pb.collection('messages').create({
+            username,
+            text
+            // expiresIn ignored for now
+        });
+		return json({ ...mapMessage(record), version: 1 });
+	} catch (e) {
+		return json({ error: 'Failed' }, { status: 500 });
 	}
-
-	const { message, version } = await getService().addMessage(username, text, expiresIn);
-	return json({ ...message, version });
 };
 
-/**
- * Action: Edit a chat message (requires auth and ownership)
- */
-const handleEdit = async (data: TalkRequest, cookies: Cookies): Promise<Response> => {
+const handleEdit = async (data: TalkRequest, cookies: Cookies, locals: App.Locals): Promise<Response> => {
 	const username = getAuthUser(cookies);
-	if (!username) {
-		return json({ error: 'Not authenticated' }, { status: 401 });
-	}
-
-	if (!data.messageId) {
-		return json({ error: 'Message ID required' }, { status: 400 });
-	}
+	if (!username) return json({ error: 'Not authenticated' }, { status: 401 });
+	if (!data.messageId) return json({ error: 'Message ID required' }, { status: 400 });
 
 	const text = validateMessage(data.text);
-	if (!text) {
-		return json(
-			{ error: `Message must be 1-${MAX_MESSAGE_LENGTH} characters` },
-			{ status: 400 }
-		);
-	}
+	if (!text) return json({ error: 'Invalid message' }, { status: 400 });
 
 	try {
-		const { message, version } = await getService().updateMessage(data.messageId, username, text);
-		return json({ ...message, version });
-	} catch (error) {
-		const message = error instanceof Error ? error.message : 'Failed to edit message';
-		const status = message.includes('Unauthorized') ? 403 : message.includes('not found') ? 404 : 500;
-		return json({ error: message }, { status });
+        // Enforce ownership
+        const record = await locals.pb.collection('messages').getOne(data.messageId);
+        if (record.username !== username) return json({ error: 'Unauthorized' }, { status: 403 });
+
+        const updated = await locals.pb.collection('messages').update(data.messageId, { text });
+		return json({ ...mapMessage(updated), version: 1 });
+	} catch (e) {
+		return json({ error: 'Failed' }, { status: 500 });
 	}
 };
 
-/**
- * Action: Delete a chat message (requires auth and ownership)
- */
-const handleDelete = async (data: TalkRequest, cookies: Cookies): Promise<Response> => {
+const handleDelete = async (data: TalkRequest, cookies: Cookies, locals: App.Locals): Promise<Response> => {
 	const username = getAuthUser(cookies);
-	if (!username) {
-		return json({ error: 'Not authenticated' }, { status: 401 });
-	}
-
-	if (!data.messageId) {
-		return json({ error: 'Message ID required' }, { status: 400 });
-	}
+	if (!username) return json({ error: 'Not authenticated' }, { status: 401 });
+	if (!data.messageId) return json({ error: 'Message ID required' }, { status: 400 });
 
 	try {
-		const { version } = await getService().deleteMessage(data.messageId, username);
-		return json({ success: true, version });
-	} catch (error) {
-		const message = error instanceof Error ? error.message : 'Failed to delete message';
-		const status = message.includes('Unauthorized') ? 403 : message.includes('not found') ? 404 : 500;
-		return json({ error: message }, { status });
+        const record = await locals.pb.collection('messages').getOne(data.messageId);
+        if (record.username !== username) return json({ error: 'Unauthorized' }, { status: 403 });
+
+        await locals.pb.collection('messages').delete(data.messageId);
+		return json({ success: true, version: 1 });
+	} catch (e) {
+		return json({ error: 'Failed' }, { status: 500 });
 	}
 };
 
-// ============================================================================
-// Action Dispatcher - Strategy pattern routing
-// ============================================================================
-
-type ActionHandler = (data: TalkRequest, cookies: Cookies) => Promise<Response> | Response;
-
-const actionHandlers: Record<TalkAction, ActionHandler> = {
-	login: handleLogin,
-	logout: handleLogout,
-	session: handleSession,
-	message: handleMessage,
-	edit: handleEdit,
-	delete: handleDelete
-} as const;
-
-// ============================================================================
-// HTTP Handlers - RequestHandler best practices
-// ============================================================================
-
-/**
- * GET /api/talk
- * Fetch all messages or check session (via ?action=session)
- * Returns { version, messages } for delta support
- */
-export const GET: RequestHandler = async ({ url, cookies }) => {
+export const POST: RequestHandler = async ({ request, cookies, locals }) => {
 	try {
-		const action = url.searchParams.get('action') as TalkAction | null;
-
-		if (action === 'session') {
-			return handleSession({ action: 'session' }, cookies);
+		const data: TalkRequest = await request.json();
+		switch (data.action) {
+			case 'login': return handleLogin(data, cookies);
+			case 'logout': return handleLogout(data, cookies);
+			case 'session': return handleSession(data, cookies);
+			case 'message': return handleMessage(data, cookies, locals);
+			case 'edit': return handleEdit(data, cookies, locals);
+			case 'delete': return handleDelete(data, cookies, locals);
+			default: return json({ error: 'Invalid action' }, { status: 400 });
 		}
-
-		const limit = Math.max(1, Math.min(1000, parseInt(url.searchParams.get('limit') || '200', 10)));
-		
-		const service = getService();
-		const [version, messages] = await Promise.all([
-			service.getVersion(),
-			service.getMessages(limit)
-		]);
-		
-		return json({ version, messages });
 	} catch (error) {
-		console.error('[talk] GET error:', error);
-		return json({ error: 'Request failed' }, { status: 500 });
+		return json({ error: 'Invalid request' }, { status: 400 });
 	}
 };
 
-/**
- * POST /api/talk
- * Action-based routing: { action: 'login'|'logout'|'session'|'message', ...data }
- */
-export const POST: RequestHandler = async ({ request, cookies }) => {
-	try {
-		const data = (await request.json()) as TalkRequest;
-
-		if (!data.action) {
-			return json({ error: 'Action field required' }, { status: 400 });
-		}
-
-		const handler = actionHandlers[data.action];
-		if (!handler) {
-			return json({ error: `Unknown action: ${data.action}` }, { status: 400 });
-		}
-
-		return await handler(data, cookies);
-	} catch (error) {
-		console.error('[talk] POST error:', error);
-		return json({ error: 'Request failed' }, { status: 500 });
-	}
+export const GET: RequestHandler = async ({ locals }) => {
+    // Return last 50 messages
+    try {
+        const records = await locals.pb.collection('messages').getList(1, 50, {
+            sort: '-created'
+        });
+        const messages = records.items.reverse().map(mapMessage);
+        return json({ version: Date.now(), messages });
+    } catch {
+        return json({ version: Date.now(), messages: [] });
+    }
 };
+

@@ -1,14 +1,25 @@
 <script lang="ts">
-    import images from '$lib/images/index';
     import { Typer, slugify } from '$lib';
     import ProjectTags from './project-tags.svelte';
     
+    // Get PB URL from environment (injected by SvelteKit into browser globals)
+    import { dev } from '$app/environment';
+    
     let { project } = $props();
-    let loaded = $state(false);
+    let imageLoaded = $state(false);
+    
+    // Construct PocketBase file URL
+    const getPBFileUrl = (collectionId: string, recordId: string, filename: string): string => {
+        // Use the public PocketBase URL from environment variables
+        const pbUrl = import.meta.env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+        return `${pbUrl}/api/files/${collectionId}/${recordId}/${filename}`;
+    };
     
     const utils = $derived({
         studyLink: 'projects/' + (project.slug || slugify(project.title)),
-        imageSrc: (images as Record<string, any>)[project.image] ?? '',
+        imageSrc: project.image && project.collectionId && project.id 
+            ? getPBFileUrl(project.collectionId, project.id, project.image)
+            : '',
         tidyLink: project.link.replace(/^https?:\/\/(www\.)?/, '').split(/[/?#]/)[0]
     });
 </script>
@@ -22,47 +33,32 @@
     {/if} -->
     <!-- Project metadata -->
     <a data-sveltekit-preload-data href={utils.studyLink}>
-        <div class="img-container" class:shimmer={!loaded}>
-            <enhanced:img 
-                src={utils.imageSrc} 
-                alt={project.title} 
-                loading="lazy" 
-                onload={() => loaded = true}
-                class:loading={!loaded}
-            />
+        <!-- Image container with shimmer shown immediately -->
+        <div class="img-container" class:loaded={imageLoaded}>
+            {#if utils.imageSrc}
+                <img 
+                    src={utils.imageSrc} 
+                    alt={project.title} 
+                    loading="lazy" 
+                    onload={() => imageLoaded = true}
+                    onerror={() => imageLoaded = true}
+                    class:fade-in={imageLoaded}
+                />
+            {/if}
         </div>
-        <h2>
+        <!-- Title with skeleton shimmer while content loads -->
+        <h2 class:loaded={imageLoaded}>
             <span class="title">{project.title}</span>
             <iconify-icon class="case-study" icon="line-md:chevron-right-circle" height="24" width="24" ></iconify-icon>
         </h2>
     </a>
-    <!-- Tech used -->
-    <!-- <Typer text={project.desc} /> -->
-    <ProjectTags tech={project.tech} />
+    <!-- Tags with skeleton shimmer -->
+    <div class:loaded={imageLoaded}>
+        <ProjectTags tech={project.tech} />
+    </div>
 </div>
 
 <style>
-    .toastylink {
-        display: flex;
-        flex-direction: row;
-        gap: 0.5rem;
-        position: absolute;
-        top: -0.9rem;
-        right: 1rem;
-        color: rgb(15, 166, 236);
-        font-family: var(--font-ui);
-        text-decoration: none;
-        background: var(--body-bg);
-        padding: 0.25rem 0.75rem;
-        border-radius: 12px;
-    }
-
-    .toastylink:hover {
-        background: var(--bg);
-        border-color: var(--accent);
-        color: var(--accent);
-    }
-
     .project {
         position: relative;
         max-width: 25rem;
@@ -88,6 +84,7 @@
         gap: 1.25rem;
         text-decoration: none;
         transition: color 0.3s ease;
+        position: relative;
     }
 
     a:hover :where(.case-study, .title) {
@@ -114,22 +111,73 @@
     h2 {
         display: flex;
         align-items: center;
+        transition: opacity 0.4s ease;
+    }
+
+    h2:not(.loaded) {
+        opacity: 0.5;
+        color: var(--font-dim);
+    }
+
+    /* Skeleton shimmer for title while loading */
+    h2:not(.loaded)::after {
+        content: '';
+        display: block;
+        position: absolute;
+        width: 100%;
+        height: 1.5em;
+        border-radius: 0.25rem;
+        background: var(--font-dim);
+        opacity: 0.1;
+        animation: shimmer 1.5s infinite;
     }
 
     .img-container {
         width: 100%;
-        height: auto;
+        height: 150px;
         border-radius: 0.5rem;
         overflow: hidden;
+        background: var(--bg);
+        /* Show shimmer by default until image loads */
+        position: relative;
     }
 
-    enhanced\:img {
+    .img-container::after {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        transform: translateX(-100%);
+        background-image: linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0) 0,
+            var(--shimmer-color) 20%,
+            var(--shimmer-color) 60%,
+            rgba(255, 255, 255, 0)
+        );
+        animation: shimmer 1.5s infinite;
+        content: '';
+        pointer-events: none;
+    }
+
+    /* Remove shimmer once image is loaded */
+    .img-container.loaded::after {
+        animation: none;
+        display: none;
+    }
+
+    img {
         width: 100%;
-        height: auto;
+        height: 100%;
         border-radius: 0.5rem;
         object-fit: contain;
-        transition: scale 0.3s ease;
-        min-height: 150px;
+        transition: opacity 0.4s ease;
+        opacity: 0;
+    }
+
+    img.fade-in {
+        opacity: 1;
     }
 
     @media (max-width: 768px) {

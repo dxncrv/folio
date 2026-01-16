@@ -23,19 +23,25 @@
 
 	const slug = $derived(page.params.slug || '');
 	
-	// This ensures the project is available during initial SSR before client hydration
-	const project = $derived(
-		Projects.all.length > 0 
-			? Projects.selected.find((p: any) => p.slug === slug)
-			: data.project
-	);
+	// Use logical OR to prefer data.project (which has the case study content)
+	// especially during hydration and client-side navigation.
+	const project = $derived(data.project || Projects.all.find((p: any) => p.slug === slug));
 
-	// Initialize stores with server-loaded data for client-side interactivity
+	// Initialize stores with all projects if available
 	$effect(() => {
 		if (data.projects && data.projects.length > 0) {
 			Projects.initialize(data.projects);
 		}
 	});
+
+	// Construct PocketBase image URL
+	const getImageUrl = (project: any): string => {
+		if (!project?.image || !project?.collectionId || !project?.id) return '';
+		const pbUrl = import.meta.env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+		return `${pbUrl}/api/files/${project.collectionId}/${project.id}/${project.image}`;
+	};
+
+	const imageUrl = $derived(project ? getImageUrl(project) : '');
 </script>
 
 <svelte:head>
@@ -47,12 +53,12 @@
 		<meta property="og:description" content={project.desc || `Case study for ${project.title}`} />
 		<meta property="og:type" content="article" />
 		<meta property="og:url" content={getCanonicalUrl(`/projects/${slug}`)} />
-		{#if project.image}
-			<meta property="og:image" content={project.image.startsWith('http') ? project.image : `${SITE_URL}${project.image}`} />
+		{#if imageUrl}
+			<meta property="og:image" content={imageUrl} />
 			<meta property="og:image:width" content="1200" />
 			<meta property="og:image:height" content="630" />
 			<meta name="twitter:card" content="summary_large_image" />
-			<meta name="twitter:image" content={project.image.startsWith('http') ? project.image : `${SITE_URL}${project.image}`} />
+			<meta name="twitter:image" content={imageUrl} />
 		{/if}
 		
 		<!-- Article Schema -->

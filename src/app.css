@@ -46,6 +46,36 @@ html {
 	--shimmer-color: rgba(255, 255, 255, 0.05);
 }
 
+.shimmer {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg);
+}
+
+.shimmer::after {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0,
+        var(--shimmer-color) 20%,
+        var(--shimmer-color) 60%,
+        rgba(255, 255, 255, 0)
+    );
+    animation: shimmer 1.5s infinite;
+    content: '';
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
 /* Light mode theme toggle variables and styles */
 [data-theme='light'] {
 	--accent: hsl(200, 100%, 40%);

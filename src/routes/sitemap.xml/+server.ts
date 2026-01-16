@@ -1,8 +1,8 @@
-import { RedisStore } from '$lib/server';
+import type { RequestHandler } from './$types';
 
-export async function GET() {
+export const GET: RequestHandler = async ({ locals }) => {
 	try {
-		const projects = await RedisStore.getProjects();
+		const projects = await locals.pb.collection('projects').getFullList();
 
 		const baseUrl = 'https://dxncrv.com';
 		const today = new Date().toISOString().split('T')[0];
@@ -36,7 +36,7 @@ export async function GET() {
 	<!-- Dynamic case study pages -->
 	${studyProjects
 		.map(
-			(p) => `
+			(p: any) => `
 	<url>
 		<loc>${baseUrl}/projects/${p.slug || p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')}</loc>
 		<lastmod>${today}</lastmod>

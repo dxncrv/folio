@@ -236,13 +236,22 @@ function createTalkMessages() {
 			// Context7: Add minimum delay to ensure pending state is visible
 			await new Promise(resolve => setTimeout(resolve, 150));
 			
-			// Context7: Replace optimistic message with server response, mark as sent
-			messages = messages.map(m => 
-				m.id === tempId ? { ...serverMessage, status: 'sent' as const } : m
-			);
+			// Check if realtime event already inserted the real message
+			const alreadyReflected = messages.some(m => m.id === serverMessage.id);
 			
+			if (alreadyReflected) {
+				// Realtime beat update. Remove optimistic message.
+				messages = messages.filter(m => m.id !== tempId);
+			} else {
+				// Update optimistic message with real ID and 'sent' status
+				messages = messages.map(m => 
+					m.id === tempId ? { ...serverMessage, status: 'sent' as const } : m
+				);
+			}
+
 			if (version) lastSeenVersion = version;
 			return true;
+
 		} catch (e) {
 			console.error('Send error:', e);
 			// Context7: Mark as failed on exception (timeout, network error, etc)
@@ -369,6 +378,26 @@ function createTalkMessages() {
 		return await send(failedMsg.text, username);
 	};
 
+	const handleRealtimeEvent = (action: string, record: any) => {
+		const message = {
+			id: record.id,
+			username: record.username,
+			text: record.text,
+			timestamp: new Date(record.created).getTime(),
+			status: 'sent' as const
+		};
+		
+		if (action === 'create') {
+			if (!messages.some(m => m.id === message.id)) {
+				messages = [...messages, message].sort((a,b) => a.timestamp - b.timestamp);
+			}
+		} else if (action === 'update') {
+			messages = messages.map(m => m.id === message.id ? message : m);
+		} else if (action === 'delete') {
+			messages = messages.filter(m => m.id !== record.id);
+		}
+	};
+
 	// Context7: Return public API - wrap state in getters to preserve reactivity
 	// This prevents "state_referenced_locally" warnings when accessing from components
 	return {
@@ -386,6 +415,7 @@ function createTalkMessages() {
 		delete: deleteMsg,
 		retry,
 		clear,
+		handleRealtimeEvent,
 		cleanupExpired: cleanupExpiredMessages
 	} as const;
 }
