@@ -1,31 +1,33 @@
 # SvelteKit Production Dockerfile
 # Railway will use this for the 'folio' service
 
-FROM node:20-alpine AS builder
-
-# Enable pnpm via corepack
+# 1. Base stage: Configure pnpm
+FROM node:20-alpine AS base
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable && corepack prepare pnpm@10 --activate
-
 WORKDIR /app
 
-# Copy package files first for better layer caching
+# 2. Prod Deps stage: Install only production dependencies
+FROM base AS prod-deps
 COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --prod --frozen-lockfile
 
-# Install all dependencies (including dev for build)
+# 3. Builder stage: Build the application
+FROM base AS builder
+COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
-
-# Copy source code
 COPY . .
-
-# Build the SvelteKit app
 RUN pnpm build
 
-# Production stage - minimal image
-FROM node:20-alpine AS runtime
-
+# 4. Runtime stage: Minimal image for production
+FROM base AS runtime
 WORKDIR /app
 
-# Copy built output and package files
+# Copy production node_modules from prod-deps
+COPY --from=prod-deps /app/node_modules ./node_modules
+
+# Copy built app and package.json from builder
 COPY --from=builder /app/build ./build
 COPY --from=builder /app/package.json ./
 

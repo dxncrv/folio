@@ -3,6 +3,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 import { createPBClient } from '$lib/server/pb';
 
 const authentication: Handle = async ({ event, resolve }) => {
+	console.log(`[Request] ${event.request.method} ${event.url.pathname}`);
 	event.locals.pb = createPBClient();
 
 	// load the store data from the request cookie string
@@ -11,9 +12,11 @@ const authentication: Handle = async ({ event, resolve }) => {
 	try {
 		// get an up-to-date auth store state by verifying and refreshing the loaded auth model (if any)
 		if (event.locals.pb.authStore.isValid) {
+			console.log(`[Auth] refreshing session for: ${event.locals.pb.authStore.model?.email}`);
 			await event.locals.pb.collection('users').authRefresh();
 		}
-	} catch (_) {
+	} catch (err) {
+		console.error(`[Auth] refresh failed:`, err);
 		// clear the auth store on failed refresh
 		event.locals.pb.authStore.clear();
 	}
