@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { env } from '$env/dynamic/public';
 	import { Projects } from '$lib/store.svelte';
 	import { getCanonicalUrl, SITE_URL, generateBreadcrumbSchema } from '$lib/seo';
 	import StudyHeader from './study-header.svelte';
@@ -37,7 +38,7 @@
 	// Construct PocketBase image URL
 	const getImageUrl = (project: any): string => {
 		if (!project?.image || !project?.collectionId || !project?.id) return '';
-		const pbUrl = import.meta.env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+		const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8080';
 		return `${pbUrl}/api/files/${project.collectionId}/${project.id}/${project.image}`;
 	};
 

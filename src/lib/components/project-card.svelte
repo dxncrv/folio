@@ -1,9 +1,7 @@
 <script lang="ts">
     import { Typer, slugify } from '$lib';
     import ProjectTags from './project-tags.svelte';
-    
-    // Get PB URL from environment (injected by SvelteKit into browser globals)
-    import { dev } from '$app/environment';
+    import { env } from '$env/dynamic/public';
     
     let { project } = $props();
     let imageLoaded = $state(false);
@@ -11,7 +9,7 @@
     // Construct PocketBase file URL
     const getPBFileUrl = (collectionId: string, recordId: string, filename: string): string => {
         // Use the public PocketBase URL from environment variables
-        const pbUrl = import.meta.env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+        const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8080';
         return `${pbUrl}/api/files/${collectionId}/${recordId}/${filename}`;
     };
     

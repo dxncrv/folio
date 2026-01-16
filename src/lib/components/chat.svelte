@@ -49,7 +49,7 @@ Modular architecture: ChatAuth, ChatHeader, ChatMessages, ChatInput, ChatEditMod
 		if (!isLive || !isAuthenticated) return;
 		
 		console.log('[Talk] 🔄 Realtime started');
-		const url = env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+		const url = env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8080';
 		const pb = new PocketBase(url);
 		let liveTimeout: ReturnType<typeof setTimeout> | null = null;
 
