@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { POCKETBASE_URL } from '$lib/server/pb';
+import { POCKETBASE_PUBLIC_URL } from '$lib/server/pb';
 
 // Server-side guard
 export const load: PageServerLoad = async ({ cookies }) => {
@@ -10,6 +10,6 @@ export const load: PageServerLoad = async ({ cookies }) => {
     throw redirect(303, '/start/login');
   }
   return {
-    pbDashboardUrl: `${POCKETBASE_URL}/_/`
+    pbDashboardUrl: `${POCKETBASE_PUBLIC_URL}/_/`
   };
 };
