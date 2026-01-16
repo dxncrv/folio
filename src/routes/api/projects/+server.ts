@@ -3,15 +3,23 @@ import type { Project } from '$lib/types';
 import type { RequestHandler } from './$types';
 
 async function fetchProjects(pb: any) {
-	// Use getList to avoid skipTotal parameter issues with PB v0.35
-	const result = await pb.collection('projects').getList(1, 100, { 
-		sort: '+order,-id',
-		expand: 'studies'
-	});
-	return result.items;
+	console.log('[API Projects] Attempting to fetch from PocketBase...');
+	try {
+		// Use getList to avoid skipTotal parameter issues with PB v0.35
+		const result = await pb.collection('projects').getList(1, 100, { 
+			sort: '+order,-id',
+			expand: 'studies'
+		});
+		console.log(`[API Projects] Successfully fetched ${result.items.length} projects`);
+		return result.items;
+	} catch (error) {
+		console.error('[API Projects] Fetch failed:', error);
+		throw error;
+	}
 }
 
 export const GET: RequestHandler = withHandler(async ({ locals }) => {
+	console.log('[API GET /projects] Handler called');
 	return await fetchProjects(locals.pb);
 });
 
