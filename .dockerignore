@@ -1,0 +1,39 @@
+# Node.js
+node_modules/
+.pnpm-store/
+
+# SvelteKit build artifacts (we rebuild in Docker)
+.svelte-kit/
+build/
+
+# PocketBase data (NEVER ship local data to production)
+pb/pb_data/
+pb/pocketbase.exe
+
+# Git
+.git/
+.github/
+
+# IDE and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Environment files (Railway injects these)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test and cache
+coverage/
+.turbo/
+.cache/
+
+# Vite timestamp files
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*

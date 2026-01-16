@@ -28,3 +28,8 @@ docs/
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# PocketBase local files (NEVER commit data or local binary)
+pb/pb_data/
+pb/pocketbase.exe
+pb/pocketbase

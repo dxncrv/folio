@@ -1,0 +1,25 @@
+# Railway configuration for monorepo deployment
+# This file configures how Railway builds and deploys each service
+#
+# SETUP INSTRUCTIONS:
+# 1. In Railway dashboard, create two services from the same GitHub repo
+# 2. For 'folio' service:
+#    - Set "Root Directory" to "/" (or leave blank)
+#    - Set "Dockerfile Path" to "Dockerfile"
+#    - Add env vars: POCKETBASE_INTERNAL_URL, PUBLIC_POCKETBASE_URL
+# 3. For 'pb-folio' service:
+#    - Set "Root Directory" to "pb"
+#    - Set "Dockerfile Path" to "Dockerfile"
+#    - IMPORTANT: Add a persistent volume mounted at /pb/pb_data
+#
+# Railway reads this file for default build configuration,
+# but service-specific settings in the dashboard override these.
+
+[build]
+builder = "dockerfile"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 100
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
