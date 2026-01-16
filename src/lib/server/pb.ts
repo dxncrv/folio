@@ -1,5 +1,6 @@
 import PocketBase from 'pocketbase';
 import { env } from '$env/dynamic/private';
+import { env as publicEnv } from '$env/dynamic/public';
 import type { TypedPocketBase } from '$lib/pocketbase-types';
 
 // Use internal URL for server-side requests (Railway private networking)
@@ -14,7 +15,8 @@ if (internalUrl && !internalUrl.startsWith('http')) {
 export const POCKETBASE_URL = internalUrl;
 
 // Public URL for browser-side links (Dashboard, etc.)
-export const POCKETBASE_PUBLIC_URL = env.PUBLIC_POCKETBASE_URL || POCKETBASE_URL;
+// Always use PUBLIC_POCKETBASE_URL for public access, never fall back to internal URL
+export const POCKETBASE_PUBLIC_URL = publicEnv.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
 
 console.log(`[PocketBase] Server-side client initialized with URL: ${POCKETBASE_URL}`);
 
