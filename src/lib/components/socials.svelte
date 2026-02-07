@@ -8,6 +8,7 @@
 
 	const socials: Social[] = [
 		{ href: "mailto:hello@dxncrv.com", icon: "line-md:email", label: "Email" },
+		{ href: "https://orcid.org/0009-0006-2784-2488", icon: "simple-icons:orcid", label: "ORCID" },
 		{ href: "https://github.com/dxncrv", icon: "line-md:github-twotone", label: "GitHub" },
 		// { href: "https://www.linkedin.com/in/dxncrv/", icon: "line-md:linkedin", label: "LinkedIn" },
 		// { href: "https://www.instagram.com/dxncrv/", icon: "line-md:instagram", label: "Instagram" }
