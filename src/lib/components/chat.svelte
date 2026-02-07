@@ -44,34 +44,61 @@ Modular architecture: ChatAuth, ChatHeader, ChatMessages, ChatInput, ChatEditMod
 		})();
 	});
 
-	// PB Realtime updates
+	// PB Realtime updates with visibility optimization
 	$effect(() => {
 		if (!isLive || !isAuthenticated) return;
 		
-		console.log('[Talk] 🔄 Realtime started');
-		const url = env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8080';
-		const pb = new PocketBase(url);
+		let pb: PocketBase | null = null;
 		let liveTimeout: ReturnType<typeof setTimeout> | null = null;
+		
+		const startRealtime = () => {
+			console.log('[Talk] 🔄 Realtime started');
+			const url = env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+			pb = new PocketBase(url);
+			
+			try {
+				pb.collection('messages').subscribe('*', (e) => {
+					talkMessages.handleRealtimeEvent(e.action, e.record);
+				});
+			} catch (e) {
+				console.error('PB Subscribe error', e);
+			}
+		};
 
-		try {
-			pb.collection('messages').subscribe('*', (e) => {
-				talkMessages.handleRealtimeEvent(e.action, e.record);
-			});
-		} catch (e) {
-			console.error('PB Subscribe error', e);
-		}
+		const stopRealtime = () => {
+			if (pb) {
+				pb.collection('messages').unsubscribe('*');
+				pb = null;
+				console.log('[Talk] ⏹️ Realtime stopped');
+			}
+		};
+
+		const handleVisibility = () => {
+			if (document.visibilityState === 'visible') {
+				if (!pb) {
+					startRealtime();
+					talkMessages.fetch(); // Refresh to catch up
+				}
+			} else {
+				stopRealtime();
+			}
+		};
+
+		// Initial start
+		startRealtime();
+		document.addEventListener('visibilitychange', handleVisibility);
 
 		// 5-minute timeout for live mode
 		liveTimeout = setTimeout(() => {
 			console.log('[Talk] ⏱️ Live mode timed out');
-			pb.collection('messages').unsubscribe('*');
+			stopRealtime();
 			isLive = false;
 		}, 5 * 60 * 1000);
 
 		return () => {
-			pb.collection('messages').unsubscribe('*');
+			stopRealtime();
+			document.removeEventListener('visibilitychange', handleVisibility);
 			if (liveTimeout) clearTimeout(liveTimeout);
-			console.log('[Talk] ⏹️ Live updates stopped');
 		};
 	});
 

@@ -2,6 +2,8 @@
 	import '../app.css';
 	import { setThemeStore, themeStore } from '$lib/theme.svelte';
 
+	let { children } = $props();
+
 	// Initialize theme context for all child components
 	setThemeStore(themeStore);
 </script>
@@ -14,4 +16,4 @@
 	<meta name="twitter:card" content="summary_large_image" />
 </svelte:head>
 
-<slot/>
+{@render children()}

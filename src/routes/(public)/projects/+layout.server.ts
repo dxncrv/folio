@@ -4,12 +4,15 @@ export const load: LayoutServerLoad = async ({ locals }) => {
     // Prefetch project list in layout to share with children and speed up initial render
     console.log('[Projects Layout] Fetching projects from PocketBase...');
     try {
-        const result = await locals.pb.collection('projects').getList(1, 100, {
-            sort: '+order,-id'
+        // Optimization: Use getFullList with skipTotal for performance
+        const items = await locals.pb.collection('projects').getFullList({
+            sort: '+order,-id',
+            skipTotal: true,
+            requestKey: 'projects-layout' // Deduplicate concurrent loads
         });
-        console.log(`[Projects Layout] Fetched ${result.items.length} projects`);
+        console.log(`[Projects Layout] Fetched ${items.length} projects`);
         return { 
-            projects: result.items 
+            projects: items 
         };
     } catch (error) {
         console.error('[Projects Layout] Load failed:', error);

@@ -6,17 +6,18 @@
     let { project } = $props();
     let imageLoaded = $state(false);
     
-    // Construct PocketBase file URL
-    const getPBFileUrl = (collectionId: string, recordId: string, filename: string): string => {
+    // Construct PocketBase file URL with optional thumbnail optimization
+    const getPBFileUrl = (collectionId: string, recordId: string, filename: string, thumb = ''): string => {
         // Use the public PocketBase URL from environment variables
-        const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8080';
-        return `${pbUrl}/api/files/${collectionId}/${recordId}/${filename}`;
+        const pbUrl = env.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
+        const url = `${pbUrl}/api/files/${collectionId}/${recordId}/${filename}`;
+        return thumb ? `${url}?thumb=${thumb}` : url;
     };
     
     const utils = $derived({
         studyLink: 'projects/' + (project.slug || slugify(project.title)),
         imageSrc: project.image && project.collectionId && project.id 
-            ? getPBFileUrl(project.collectionId, project.id, project.image)
+            ? getPBFileUrl(project.collectionId, project.id, project.image, '600x0')
             : '',
         tidyLink: project.link.replace(/^https?:\/\/(www\.)?/, '').split(/[/?#]/)[0]
     });

@@ -5,21 +5,28 @@ import type { RequestHandler } from './$types';
 async function fetchProjects(pb: any) {
 	console.log('[API Projects] Attempting to fetch from PocketBase...');
 	try {
-		// Use getList to avoid skipTotal parameter issues with PB v0.35
-		const result = await pb.collection('projects').getList(1, 100, { 
+		// Use getFullList with skipTotal for maximum performance in PB v0.35+
+		const items = await pb.collection('projects').getFullList({ 
 			sort: '+order,-id',
-			expand: 'studies'
+			expand: 'studies',
+			skipTotal: true
 		});
-		console.log(`[API Projects] Successfully fetched ${result.items.length} projects`);
-		return result.items;
+		console.log(`[API Projects] Successfully fetched ${items.length} projects`);
+		return items;
 	} catch (error) {
 		console.error('[API Projects] Fetch failed:', error);
 		throw error;
 	}
 }
 
-export const GET: RequestHandler = withHandler(async ({ locals }) => {
+export const GET: RequestHandler = withHandler(async ({ locals, setHeaders }) => {
 	console.log('[API GET /projects] Handler called');
+	
+	// Optimization: Cache results for 1 minute to reduce egress and PB load
+	setHeaders({
+		'cache-control': 'public, max-age=60'
+	});
+
 	return await fetchProjects(locals.pb);
 });
 

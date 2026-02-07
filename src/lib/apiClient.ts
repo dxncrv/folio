@@ -28,8 +28,11 @@ export interface FetchOptions extends RequestInit {
 export async function fetchJson(input: RequestInfo, options?: FetchOptions) {
   const { requiresAuth, ...init } = options || {};
   
-  // Note: Modern auth uses the 'pb_auth' cookie which is automatically 
-  // included in same-origin requests by the browser.
+  // Ensure credentials are sent for same-origin requests to include 'pb_auth' 
+  // and 'admin_session' cookies automatically.
+  if (!init.credentials) {
+    init.credentials = 'same-origin';
+  }
 
   const res = await fetch(input, init);
   const contentType = res.headers.get('content-type') || '';

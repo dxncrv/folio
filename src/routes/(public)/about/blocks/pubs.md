@@ -1,4 +1,4 @@
->`Pending` Code, J., Forde, K., Moylan, R., Lutrin, A., Tasabehji, Z., Ralph, R., **Mehta, A.**, Zap, N., & El Banna, N. (accepted with revisions). Expressions of learner agency in virtual inquiry: Linking agency and evidence-centered game design. Computers & Education.
+>`Article` Code, J., Forde, K., Moylan, R., Lutrin, A., Tasabehji, Z., Ralph, R., **Mehta, A.**, Zap, N., & El Banna, N. (2026). Expressions of learner agency in virtual inquiry: Linking agency and evidence-centered game design. Computers & Education. [doi:10.1016/j.compedu.2026.105590](https://doi.org/10.1016/j.compedu.2026.105590)
 
 >`Chapter` Ralph, R., **Mehta, A**. Beyond Concrete: Understanding the Essential Role of Soft Skills for Teacher Candidates. In: Smith, C., Salinitri, G., Nguyen, X.T. (eds) Mentoring to Support Teacher Candidate Development. Springer Texts in Education. Springer, Cham. [doi:10.1007/978-3-032-02333-9](https://doi.org/10.1007/978-3-032-02333-9_2)
 
