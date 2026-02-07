@@ -31,5 +31,6 @@ vite.config.ts.timestamp-*
 
 # PocketBase local files (NEVER commit data or local binary)
 pb/pb_data/
+pb/pb_schema.json
 pb/pocketbase.exe
 pb/pocketbase

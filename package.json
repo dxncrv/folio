@@ -12,7 +12,11 @@
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
-		"lint": "prettier --check . && eslint ."
+		"lint": "prettier --check . && eslint .",
+		"pb:pull": "node pb/scripts/pull.js",
+		"pb:push": "node pb/scripts/push.js",
+		"pb:typegen": "node pb/scripts/typegen.js",
+		"pb:sync": "node pb/scripts/pull.js && node pb/scripts/typegen.js --from-file"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",
