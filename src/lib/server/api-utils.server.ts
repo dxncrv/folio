@@ -1,8 +1,43 @@
-import { json, type RequestHandler } from '@sveltejs/kit';
+import { json, type RequestHandler, type RequestEvent } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
+import type { TypedPocketBase } from '$lib/pocketbase-types';
+
+// Cached superuser token to avoid re-authenticating on every write request
+let cachedSuperuserToken: string | null = null;
+let tokenExpiresAt = 0;
 
 // Small helper to return JSON with status
 export function respondJson(data: unknown, status = 200) {
     return json(data, { status });
+}
+
+/**
+ * Authenticate the PB client as superuser so PB collection rules pass.
+ * Caches the token in memory (~24h) to avoid re-authenticating per request.
+ */
+async function authenticateSuperuser(pb: TypedPocketBase): Promise<void> {
+    const email = env.PB_ADMIN_EMAIL;
+    const password = env.PB_ADMIN_PASSWORD;
+
+    if (!email || !password) {
+        console.warn('[withAdmin] PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD not set — PB writes may fail due to collection rules');
+        return;
+    }
+
+    // Reuse cached token if still valid (with 5-min buffer)
+    if (cachedSuperuserToken && Date.now() < tokenExpiresAt - 300_000) {
+        pb.authStore.save(cachedSuperuserToken);
+        return;
+    }
+
+    try {
+        const authData = await pb.collection('_superusers').authWithPassword(email, password);
+        cachedSuperuserToken = authData.token;
+        // PB superuser tokens last 24h by default
+        tokenExpiresAt = Date.now() + 23 * 60 * 60 * 1000;
+    } catch (err) {
+        console.error('[withAdmin] Superuser auth failed:', err);
+    }
 }
 
 // Utility to normalize thrown errors into json responses. If thrown error message contains
@@ -37,21 +72,23 @@ export async function normalizeHandlerResults<T>(fn: () => Promise<T>, notFoundM
 }
 
 // Helper to create a RequestHandler that normalizes errors for any handler that returns data
-export function withHandler(fn: (event: any) => Promise<any>): RequestHandler {
-    return async (event: any) => await normalizeHandlerResults(() => fn(event));
+export function withHandler(fn: (event: RequestEvent) => Promise<any>): RequestHandler {
+    return async (event) => await normalizeHandlerResults(() => fn(event));
 }
 
-// Helper to create a RequestHandler that enforces admin write auth before running handler
-export function withAdmin(fn: (event: any) => Promise<any>): RequestHandler {
-    return async (event: any) => {
+// Helper to create a RequestHandler that enforces admin session and authenticates PB as superuser
+export function withAdmin(fn: (event: RequestEvent) => Promise<any>): RequestHandler {
+    return async (event) => {
         // Check admin_session cookie set by /start/login
         const session = event.cookies?.get('admin_session');
         
         if (session !== 'authenticated') {
             return json({ error: 'Forbidden' }, { status: 403 });
         }
+
+        // Authenticate PB client as superuser so collection write rules pass
+        await authenticateSuperuser(event.locals.pb);
+
         return await normalizeHandlerResults(() => fn(event));
     };
 }
-
-export default { respondJson, normalizeHandlerResults, withHandler, withAdmin };

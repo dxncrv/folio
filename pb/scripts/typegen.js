@@ -10,6 +10,7 @@
  * Outputs to: src/lib/pocketbase-types.ts
  */
 
+import PocketBase from 'pocketbase';
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -42,31 +43,13 @@ const LOCAL_URL = process.env.POCKETBASE_URL || 'http://127.0.0.1:8090';
 const ADMIN_EMAIL = process.env.PB_LOCAL_ADMIN_EMAIL || process.env.PB_ADMIN_EMAIL;
 const ADMIN_PASSWORD = process.env.PB_LOCAL_ADMIN_PASSWORD || process.env.PB_ADMIN_PASSWORD;
 
-async function authAdmin(baseUrl, email, password) {
-	const res = await fetch(`${baseUrl}/api/admins/auth-with-password`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ identity: email, password })
-	});
-	if (!res.ok) {
-		const res2 = await fetch(`${baseUrl}/api/collections/_superusers/auth-with-password`, {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({ identity: email, password })
-		});
-		if (!res2.ok) throw new Error(`Auth failed: ${res2.status}`);
-		return (await res2.json()).token;
-	}
-	return (await res.json()).token;
-}
-
-async function getCollections(baseUrl, token) {
-	const res = await fetch(`${baseUrl}/api/collections?perPage=200`, {
-		headers: { 'Authorization': token }
-	});
-	if (!res.ok) throw new Error(`Failed to fetch collections: ${res.status}`);
-	const data = await res.json();
-	return data.items || data;
+async function fetchCollections(url, email, password) {
+	const pb = new PocketBase(url);
+	pb.autoCancellation(false);
+	console.log(`🔐 Authenticating on ${url}...`);
+	await pb.collection('_superusers').authWithPassword(email, password);
+	console.log('📥 Fetching collections schema...');
+	return await pb.collections.getFullList();
 }
 
 /** Map PocketBase field types to TypeScript types */
@@ -168,10 +151,7 @@ async function main() {
 			console.error('❌ Missing PB_ADMIN_EMAIL / PB_ADMIN_PASSWORD (or PB_LOCAL_ADMIN_*)');
 			process.exit(1);
 		}
-		console.log(`🔐 Authenticating on ${LOCAL_URL}...`);
-		const token = await authAdmin(LOCAL_URL, ADMIN_EMAIL, ADMIN_PASSWORD);
-		console.log('📥 Fetching collections schema...');
-		collections = await getCollections(LOCAL_URL, token);
+		collections = await fetchCollections(LOCAL_URL, ADMIN_EMAIL, ADMIN_PASSWORD);
 	}
 
 	console.log(`⚙️  Generating types for ${collections.length} collections...`);

@@ -35,19 +35,3 @@ export interface TalkMessage {
     status?: 'pending' | 'sent' | 'failed'; // Optional for optimistic UI
     expiresAt?: number; // Unix timestamp when message should disappear (0 = never)
 }
-
-export interface RedisKeyInfo {
-    key: string;
-    type: string;
-    ttl: number;
-    size?: number;
-}
-
-export interface RedisStats {
-    totalKeys: number;
-    memoryUsed: string;
-    memoryUsedBytes: number;
-    connectedClients: number;
-    version: string;
-    uptime: number;
-}

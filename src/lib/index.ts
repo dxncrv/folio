@@ -4,14 +4,6 @@ export { default as Typer } from './_fx/Typer.svelte';
 export { default as Circle } from './_fx/Circle.svelte';
 
 /**
- * Application Constants
- */
-export const REDIS_PREFIX = {
-	PROJECTS: 'folio:projects',
-	TALK: 'canvas:talk:'
-} as const;
-
-/**
  * Formatting Utilities
  */
 export function slugify(str: string): string {

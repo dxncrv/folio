@@ -10,28 +10,16 @@ export class ApiError extends Error {
 }
 
 /**
- * Extended fetch options with optional auth flag
+ * Enhanced fetch wrapper with JSON parsing and error handling.
+ * Auth is cookie-based (admin_session / talk_username) — credentials are sent automatically.
  */
-export interface FetchOptions extends RequestInit {
-  requiresAuth?: boolean; // Flag for admin endpoints that need authentication
-}
-
-
-/**
- * Enhanced fetch wrapper with automatic auth header injection
- * 
- * @param input - URL or Request object
- * @param options - Fetch options with optional requiresAuth flag
- * @returns Parsed JSON response body
- * @throws ApiError with status and body on failure
- */
-export async function fetchJson(input: RequestInfo, options?: FetchOptions) {
-  const { requiresAuth, ...init } = options || {};
-  
-  // Ensure credentials are sent for same-origin requests to include 'pb_auth' 
-  // and 'admin_session' cookies automatically.
-  if (!init.credentials) {
+export async function fetchJson(input: RequestInfo, init?: RequestInit) {
+  // Ensure credentials are sent for same-origin requests to include
+  // 'admin_session' and 'talk_username' cookies automatically.
+  if (init && !init.credentials) {
     init.credentials = 'same-origin';
+  } else if (!init) {
+    init = { credentials: 'same-origin' };
   }
 
   const res = await fetch(input, init);

@@ -18,8 +18,6 @@ export const POCKETBASE_URL = internalUrl;
 // Always use PUBLIC_POCKETBASE_URL for public access, never fall back to internal URL
 export const POCKETBASE_PUBLIC_URL = publicEnv.PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:8090';
 
-console.log(`[PocketBase] Server-side client initialized with URL: ${POCKETBASE_URL}`);
-
 export function createPBClient() {
     const pb = new PocketBase(POCKETBASE_URL) as TypedPocketBase;
     

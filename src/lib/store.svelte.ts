@@ -15,23 +15,12 @@ import { ProjectService } from './services';
 
 // FacetsClass: facets array is derived from unique tags in data [DEPRECIATED]
 class FacetsClass {
-	#lastTags: string[] = [];
-	#cachedFacets: { name: string; bool: boolean }[] = [];
-
-	// facets: derived array of unique tags from data, each with a boolean for selection.
+	// Pure derivation — no side effects per Svelte 5 docs.
+	// $derived already uses push-pull reactivity so manual memoization is unnecessary.
+	// toggle() overrides the derived value (allowed since Svelte 5.25).
 	facets = $derived.by(() => {
 		const allTags = Projects.all.flatMap(project => project.tags);
-		const uniqueTags = Array.from(new Set(allTags)).sort();
-		
-		// Skip recomputation if tags haven't changed
-		if (uniqueTags.length === this.#lastTags.length && 
-		    uniqueTags.every((tag, i) => tag === this.#lastTags[i])) {
-			return this.#cachedFacets;
-		}
-		
-		this.#lastTags = uniqueTags;
-		this.#cachedFacets = uniqueTags.map(tag => ({ name: tag, bool: true }));
-		return this.#cachedFacets;
+		return Array.from(new Set(allTags)).sort().map(tag => ({ name: tag, bool: true }));
 	});
 
 	// toggle: toggles the boolean value for a given facet name.

@@ -17,36 +17,33 @@ export const ProjectService = {
 	},
 
 	/**
-	 * Create a new project (requires admin auth)
+	 * Create a new project (requires admin session cookie)
 	 */
 	async create(project: Project): Promise<Project[]> {
 		return await fetchJson('/api/projects', {
 			method: 'POST',
-			requiresAuth: true,
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(project)
 		});
 	},
 
 	/**
-	 * Update an existing project by title (requires admin auth)
+	 * Update an existing project by title (requires admin session cookie)
 	 */
 	async update(originalTitle: string, updatedProject: Project): Promise<Project[]> {
 		return await fetchJson(`/api/projects/${encodeURIComponent(originalTitle)}`, {
 			method: 'PUT',
-			requiresAuth: true,
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(updatedProject)
 		});
 	},
 
 	/**
-	 * Delete a project by title (requires admin auth)
+	 * Delete a project by title (requires admin session cookie)
 	 */
 	async delete(title: string): Promise<Project[]> {
 		return await fetchJson(`/api/projects/${encodeURIComponent(title)}`, {
-			method: 'DELETE',
-			requiresAuth: true
+			method: 'DELETE'
 		});
 	}
 };

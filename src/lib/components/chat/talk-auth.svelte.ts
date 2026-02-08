@@ -57,9 +57,11 @@ function createTalkAuth() {
 		sessionRestored = true;
 
 		try {
-			const res = await fetch('/api/talk?action=session', {
-				method: 'GET',
-				credentials: 'include'
+			const res = await fetch('/api/talk', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ action: 'session' })
 			});
 			if (res.ok) {
 				const data = await res.json();

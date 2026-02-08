@@ -16,9 +16,6 @@ RUN unzip /tmp/pb.zip -d /pb/ && rm /tmp/pb.zip
 # Copy migrations (these define your schema)
 COPY pb_migrations/ /pb/pb_migrations/
 
-# Copy hooks (server-side logic)
-COPY pb_hooks/ /pb/pb_hooks/
-
 # Create data directory (Railway volume should mount here)
 RUN mkdir -p /pb/pb_data
 

@@ -52,7 +52,6 @@
 		
 		await fetchJson('/api/projects', {
 			method: 'PUT',
-			requiresAuth: true,
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify(projects)
 		});

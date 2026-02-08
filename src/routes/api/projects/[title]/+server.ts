@@ -23,7 +23,7 @@ export const PUT: RequestHandler = withAdmin(async ({ params, request, locals })
 	const updatedProject: Project = await request.json();
 	await locals.pb.collection('projects').update(record.id, updatedProject);
 	
-	return await locals.pb.collection('projects').getFullList({ sort: '-created' });
+	return await locals.pb.collection('projects').getFullList({ sort: '+order,-id', expand: 'studies', skipTotal: true });
 });
 
 export const DELETE: RequestHandler = withAdmin(async ({ params, locals }) => {
@@ -33,6 +33,5 @@ export const DELETE: RequestHandler = withAdmin(async ({ params, locals }) => {
 	if (record) {
 		await locals.pb.collection('projects').delete(record.id);
 	}
-	// Return updated list
-	return await locals.pb.collection('projects').getFullList({ sort: '-created' });
+	return await locals.pb.collection('projects').getFullList({ sort: '+order,-id', expand: 'studies', skipTotal: true });
 });
