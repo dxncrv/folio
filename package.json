@@ -16,7 +16,8 @@
 		"pb:pull": "node pb/scripts/pull.js",
 		"pb:push": "node pb/scripts/push.js",
 		"pb:typegen": "node pb/scripts/typegen.js",
-		"pb:sync": "node pb/scripts/pull.js && node pb/scripts/typegen.js --from-file"
+		"pb:sync": "node pb/scripts/pull.js && node pb/scripts/typegen.js --from-file",
+		"pb:replicate": "node pb/scripts/replicate.js"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.1",
