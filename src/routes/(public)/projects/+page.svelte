@@ -6,25 +6,34 @@
 
     let { data } = $props<{ data: PageData }>();
 
-    // Initialize store with server-loaded data immediately for SSR hydration
+    // null  = still waiting (streaming cold-start)
+    // array = loaded (cache hit or stream resolved)
+    let loadedProjects = $state<any[] | null>(null);
+
+    // data.projects is RecordModel[] on cache hit, Promise<RecordModel[]> on cold-start stream.
+    // The $effect handles both so the rest of the component stays clean.
     $effect(() => {
-        if (data.projects && data.projects.length > 0) {
-            Projects.initialize(data.projects);
+        const p = data.projects as any;
+        if (!p) return;
+        if (Array.isArray(p)) {
+            loadedProjects = p;
+            if (p.length > 0) Projects.initialize(p);
+        } else if (typeof p.then === 'function') {
+            p.then((items: any[]) => {
+                loadedProjects = items ?? [];
+                if (items?.length > 0) Projects.initialize(items);
+            }).catch(() => {
+                loadedProjects = [];
+            });
         }
     });
 
-    // Optimize: Cache Facets.selected() to avoid multiple calls
     const selectedFacets = $derived(Facets.selected());
-    
-    // Derive display data directly from server data for SSR indexing
-    // This ensures content is rendered in initial HTML before hydration
-    const projects = $derived(Projects.all.length > 0 ? Projects.selected : data.projects);
     const selectedProjects = $derived(
-        projects.filter((project: any) => 
+        Projects.selected.filter((project: any) =>
             project.tags.some((tag: string) => selectedFacets.includes(tag))
         )
     );
-    // Optimize: Extract length check to avoid recomputation
     const hasProjects = $derived(selectedProjects.length > 0);
 
     // Mobile infinite scroll state
@@ -85,9 +94,9 @@
 	<meta property="og:description" content="Portfolio of design and development projects" />
 	<meta property="og:type" content="website" />
 	<meta property="og:url" content={getCanonicalUrl('/projects')} />
-	
-	<!-- Context7: /sveltejs/kit - JSON-LD structured data for SEO -->
-	{@html `<script type="application/ld+json">
+
+	{#if loadedProjects && loadedProjects.length > 0}
+		{@html `<script type="application/ld+json">
 		{
 			"@context": "https://schema.org",
 			"@type": "CollectionPage",
@@ -98,7 +107,7 @@
 				"name": "Aashay Mehta"
 			},
 			"hasPart": ${JSON.stringify(
-				data.projects.map((p: any) => ({
+				loadedProjects.map((p: any) => ({
 					"@type": "CreativeWork",
 					"name": p.title,
 					"description": p.desc,
@@ -107,34 +116,46 @@
 				}))
 			)}
 		}
-	</script>`}
+		</script>`}
+	{/if}
 </svelte:head>
 
-<main class:no-projects={!hasProjects}>
-	<div id="view">
-		{#each displayedProjects as project, i}
-			{#key project.title}
-				<div class="card-wrapper" class:fade-in={isMobile && i >= 3} style={isMobile ? `--delay: ${(i % 3) * 0.1}s` : ''}>
-					<Card {project} />
-				</div>
-			{/key}
-		{/each}
-	</div>
-	{#if hasProjects && !isMobile}
-		<div class="btn-wrapper">
-			<button
-				class="primary"
-				onclick={Projects.range.prev}
-				disabled={Projects.range.min === 0}>Prev</button
-			>
-			<button
-				class="primary"
-				onclick={Projects.range.next}
-				disabled={Projects.range.max >= selectedProjects.length}>Next</button
-			>
+{#if loadedProjects === null}
+	<!-- Cold-start: page shell is already visible; skeleton signals something is loading -->
+	<main class="skeleton-view">
+		<div id="view">
+			{#each [0, 1, 2] as _}
+				<div class="card-skeleton shimmer"></div>
+			{/each}
 		</div>
-	{/if}
-</main>
+	</main>
+{:else}
+	<main class:no-projects={!hasProjects}>
+		<div id="view">
+			{#each displayedProjects as project, i}
+				{#key project.title}
+					<div class="card-wrapper" class:fade-in={isMobile && i >= 3} style={isMobile ? `--delay: ${(i % 3) * 0.1}s` : ''}>
+						<Card {project} />
+					</div>
+				{/key}
+			{/each}
+		</div>
+		{#if hasProjects && !isMobile}
+			<div class="btn-wrapper">
+				<button
+					class="primary"
+					onclick={Projects.range.prev}
+					disabled={Projects.range.min === 0}>Prev</button
+				>
+				<button
+					class="primary"
+					onclick={Projects.range.next}
+					disabled={Projects.range.max >= selectedProjects.length}>Next</button
+				>
+			</div>
+		{/if}
+	</main>
+{/if}
 
 <style>
     main {
@@ -169,6 +190,14 @@
         justify-content: center;
         gap: 2rem;
         margin: 0 0 2rem;
+    }
+    /* Skeleton card — mirrors the real project card dimensions */
+    .card-skeleton {
+        width: 100%;
+        max-width: 25rem;
+        height: 22rem;
+        border-radius: 1rem;
+        border: 1px solid var(--outline);
     }
     @media (max-width: 768px) {
         main {

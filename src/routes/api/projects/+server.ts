@@ -1,4 +1,5 @@
 import { withHandler, withAdmin } from '$lib/server';
+import { invalidateProjectsCache } from '$lib/server/projects-cache.server';
 import type { Project } from '$lib/types';
 import type { RequestHandler } from './$types';
 
@@ -22,5 +23,6 @@ export const POST: RequestHandler = withAdmin(async ({ request, locals }) => {
 		return { error: 'Invalid project data' } as any;
 	}
 	await locals.pb.collection('projects').create(project);
+	invalidateProjectsCache();
 	return await fetchProjects(locals.pb);
 });
