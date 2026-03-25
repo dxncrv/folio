@@ -29,4 +29,7 @@ export {
 // PocketBase utilities
 export { createPBClient, POCKETBASE_URL } from './pb';
 
+// Projects cache utilities
+export { getCachedProjects, setCachedProjects, invalidateProjectsCache } from './projects-cache.server';
+
 

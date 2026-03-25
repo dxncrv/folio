@@ -1,4 +1,5 @@
 import { withAdmin } from '$lib/server';
+import { invalidateProjectsCache } from '$lib/server/projects-cache.server';
 import type { Project } from '$lib/types';
 import type { RequestHandler } from './$types';
 
@@ -22,7 +23,7 @@ export const PUT: RequestHandler = withAdmin(async ({ params, request, locals })
 
 	const updatedProject: Project = await request.json();
 	await locals.pb.collection('projects').update(record.id, updatedProject);
-	
+	invalidateProjectsCache();
 	return await locals.pb.collection('projects').getFullList({ sort: '+order,-id', expand: 'studies', skipTotal: true });
 });
 
@@ -33,5 +34,6 @@ export const DELETE: RequestHandler = withAdmin(async ({ params, locals }) => {
 	if (record) {
 		await locals.pb.collection('projects').delete(record.id);
 	}
+	invalidateProjectsCache();
 	return await locals.pb.collection('projects').getFullList({ sort: '+order,-id', expand: 'studies', skipTotal: true });
 });

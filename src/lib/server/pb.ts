@@ -21,27 +21,43 @@ export const POCKETBASE_PUBLIC_URL = publicEnv.PUBLIC_POCKETBASE_URL || 'http://
 export function createPBClient() {
     const pb = new PocketBase(POCKETBASE_URL) as TypedPocketBase;
     
-    // Recovery Strategy: Handle cold-starts/network blips by retrying once with a slight delay
-    // This is vital for Free Tier hosting (like Railway) where the backend may be sleeping.
+    // Recovery Strategy: Handle cold-starts/network blips by retrying with exponential backoff.
+    // Railway free tier can take 5–20s to wake PocketBase — we need to survive that window.
     pb.beforeSend = function (url, options) {
         // Only retry GET requests (idempotent) to avoid side effects
         if (options.method === 'GET') {
             options.fetch = async (input, init) => {
-                const maxRetries = 2;
+                // 4 attempts: waits up to ~8s per attempt + 2s/4s/6s between = ~30s ceiling
+                const maxRetries = 4;
+                // Delay between retries: 2s, 4s, 6s
+                const retryDelays = [2000, 4000, 6000];
                 let lastError;
-                
+
                 for (let i = 0; i < maxRetries; i++) {
+                    // Bail immediately if the parent SvelteKit request was cancelled
+                    if (init?.signal?.aborted) throw init.signal.reason ?? new Error('Request aborted');
+
                     try {
-                        const response = await fetch(input, init);
-                        // If it's a 5xx error or connection issue, it might be the server spinning up
+                        // 8s timeout per attempt prevents indefinite hangs on a sleeping server
+                        const timeoutSignal = AbortSignal.timeout(8000);
+                        const signal = init?.signal
+                            ? (typeof AbortSignal.any === 'function'
+                                ? AbortSignal.any([init.signal, timeoutSignal])
+                                : timeoutSignal)
+                            : timeoutSignal;
+
+                        const response = await fetch(input, { ...init, signal });
                         if (response.ok || response.status < 500) return response;
                         throw new Error(`Server returned ${response.status}`);
                     } catch (err) {
                         lastError = err;
-                        console.warn(`[PocketBase] Fetch attempt ${i + 1} failed, retrying...`, err);
+                        // Stop retrying if the parent request was cancelled
+                        if (init?.signal?.aborted) throw init.signal.reason ?? err;
+
                         if (i < maxRetries - 1) {
-                            // Exponential backoff: 500ms, then 1500ms
-                            await new Promise(r => setTimeout(r, 500 * (i + 1))); 
+                            const delay = retryDelays[i];
+                            console.warn(`[PocketBase] Attempt ${i + 1}/${maxRetries} failed, retrying in ${delay}ms...`);
+                            await new Promise(r => setTimeout(r, delay));
                         }
                     }
                 }

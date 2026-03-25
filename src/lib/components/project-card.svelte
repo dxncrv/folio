@@ -24,12 +24,6 @@
 </script>
 
 <div class="project">
-    <!-- {#if project.link}
-    <a class="toastylink" href={project.link} target="_blank" rel="noopener noreferrer">
-        {utils.tidyLink}
-        <iconify-icon icon="line-md:link" height="16" width="16"></iconify-icon>
-    </a>
-    {/if} -->
     <!-- Project metadata -->
     <a data-sveltekit-preload-data href={utils.studyLink}>
         <!-- Image container with shimmer shown immediately -->
@@ -137,7 +131,6 @@
         border-radius: 0.5rem;
         overflow: hidden;
         background: var(--bg);
-        /* Show shimmer by default until image loads */
         position: relative;
     }
 
